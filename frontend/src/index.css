@@ -276,8 +276,8 @@ a {
 }
 
 .scorecard-cell {
-  min-width: 80px;
-  height: 80px;
+  min-width: 134px;
+  height: 134px;
   vertical-align: top;
 }
 
@@ -295,7 +295,7 @@ a {
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 76px;
+  min-height: 130px;
   padding: 2px;
   cursor: default;
 }
@@ -333,8 +333,8 @@ a {
 
 .at-bat-cell-main {
   position: relative;
-  width: 54px;
-  height: 54px;
+  width: 108px;
+  height: 108px;
   display: flex;
   align-items: center;
   justify-content: center;

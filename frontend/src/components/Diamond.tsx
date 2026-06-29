@@ -1,7 +1,7 @@
 import type { Cell } from '@mlb-scorecards/shared';
 
-const SIZE = 54;
-const R = 20;
+const SIZE = 108;
+const R = 40;
 const CX = SIZE / 2;
 const CY = SIZE / 2;
 
