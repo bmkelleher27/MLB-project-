@@ -34,7 +34,7 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
           const cells = team.cellsBySlot[slot.slot] ?? [];
           const currentName = slot.players[slot.players.length - 1]?.name ?? '';
           return (
-            <tr key={slot.slot}>
+            <tr key={slot.slot} className={slot.slot % 2 === 0 ? 'scorecard-row-stripe' : undefined}>
               <td className="scorecard-col-player">
                 <span className="lineup-slot-number">{slot.slot}</span> {currentName}
               </td>

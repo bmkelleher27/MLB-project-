@@ -16,6 +16,10 @@ export function addDays(iso: string, delta: number): string {
   return toIso(date);
 }
 
+export function formatGameTime(isoDateTime: string): string {
+  return new Date(isoDateTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
 export function formatDisplayDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
   const date = new Date(y, m - 1, d);

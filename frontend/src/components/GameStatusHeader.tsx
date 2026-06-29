@@ -13,6 +13,16 @@ function MiniBases({ bases }: { bases: BaseState }) {
   );
 }
 
+function TeamLine({ r, h, e }: { r: number; h: number; e: number }) {
+  return (
+    <span className="team-line">
+      <span className="team-line-stat">R{r}</span>
+      <span className="team-line-stat">H{h}</span>
+      <span className="team-line-stat">E{e}</span>
+    </span>
+  );
+}
+
 export function GameStatusHeader({ scorecard }: { scorecard: Scorecard }) {
   const isLive = scorecard.status.abstractGameState === 'Live';
 
@@ -21,15 +31,11 @@ export function GameStatusHeader({ scorecard }: { scorecard: Scorecard }) {
       <div className="game-status-teams">
         <div className="game-status-team">
           <span className="team-name">{scorecard.teams.away.team.name}</span>
-          <span className="team-line">
-            R{scorecard.totals.away.r} H{scorecard.totals.away.h} E{scorecard.totals.away.e}
-          </span>
+          <TeamLine r={scorecard.totals.away.r} h={scorecard.totals.away.h} e={scorecard.totals.away.e} />
         </div>
         <div className="game-status-team">
           <span className="team-name">{scorecard.teams.home.team.name}</span>
-          <span className="team-line">
-            R{scorecard.totals.home.r} H{scorecard.totals.home.h} E{scorecard.totals.home.e}
-          </span>
+          <TeamLine r={scorecard.totals.home.r} h={scorecard.totals.home.h} e={scorecard.totals.home.e} />
         </div>
       </div>
       <div className="game-status-state">

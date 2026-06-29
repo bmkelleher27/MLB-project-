@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { ScheduleGame } from '@mlb-scorecards/shared';
+import { formatGameTime } from '../lib/date';
 
 function statusLabel(game: ScheduleGame): string {
   if (game.status.abstractGameState === 'Live') {
@@ -16,7 +17,11 @@ export function GameCard({ game }: { game: ScheduleGame }) {
 
   return (
     <Link to={`/game/${game.gamePk}`} className={`game-card${isLive ? ' game-card-live' : ''}`}>
-      <div className="game-card-status">{statusLabel(game)}</div>
+      <div className="game-card-status">
+        {isLive && <span className="live-dot" />}
+        {statusLabel(game)}
+        {!showScore && <span className="game-card-time">{formatGameTime(game.gameDate)}</span>}
+      </div>
       <div className="game-card-team">
         <span className="game-card-team-name">{game.away.name}</span>
         {showScore && <span className="game-card-team-score">{game.away.score ?? 0}</span>}

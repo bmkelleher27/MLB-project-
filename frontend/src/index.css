@@ -10,6 +10,8 @@
   --out-bg: #f2e3e3;
   --scored-bg: #e1f3e6;
   --rbi-bg: #fdeeca;
+  --row-stripe: #f3f4f6;
+  --total-bg: #d6e6f7;
 
   font: 16px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
@@ -109,9 +111,12 @@ a {
 
 .game-card-live {
   border-color: var(--live);
+  border-width: 2px;
 }
 
 .game-card-status {
+  display: flex;
+  align-items: center;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -121,6 +126,30 @@ a {
 
 .game-card-live .game-card-status {
   color: var(--live);
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  margin-right: 5px;
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.game-card-time {
+  margin-left: 6px;
+  font-weight: 400;
+  text-transform: none;
 }
 
 .game-card-team {
@@ -153,6 +182,7 @@ a {
 }
 
 .game-status-header {
+  max-width: 760px;
   border: 1px solid var(--border);
   background: var(--panel-bg);
   border-radius: 8px;
@@ -181,9 +211,16 @@ a {
 }
 
 .team-line {
+  display: flex;
+  gap: 4px;
   font-size: 13px;
   color: var(--text-muted);
   font-family: ui-monospace, Consolas, monospace;
+}
+
+.team-line-stat {
+  display: inline-block;
+  min-width: 26px;
 }
 
 .game-status-state {
@@ -282,9 +319,14 @@ a {
   vertical-align: top;
 }
 
+.scorecard-row-stripe > .scorecard-col-player,
+.scorecard-row-stripe > .scorecard-cell {
+  background: var(--row-stripe);
+}
+
 .scorecard-total {
   font-weight: 700;
-  background: var(--accent-bg);
+  background: var(--total-bg);
 }
 
 /* At-bat cell */
