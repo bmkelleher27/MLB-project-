@@ -11,6 +11,8 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
 const app = express();
 app.use(cors());
 
+app.get('/healthz', (_req, res) => res.sendStatus(200));
+
 app.use('/api/schedule', scheduleRouter);
 app.use('/api/game', gameRouter);
 
