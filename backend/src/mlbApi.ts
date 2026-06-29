@@ -69,11 +69,27 @@ export interface RawLiveFeed {
 
 export interface RawBoxscoreTeam {
   team: { id: number; name: string; abbreviation?: string };
+  pitchers: number[];
   players: Record<
     string,
     {
       person: { id: number; fullName: string };
       battingOrder?: string;
+      stats?: {
+        pitching?: {
+          inningsPitched?: string;
+          hits?: number;
+          runs?: number;
+          earnedRuns?: number;
+          baseOnBalls?: number;
+          strikeOuts?: number;
+          homeRuns?: number;
+          numberOfPitches?: number;
+          wins?: number;
+          losses?: number;
+          saves?: number;
+        };
+      };
     }
   >;
 }

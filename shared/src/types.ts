@@ -42,10 +42,25 @@ export interface LineupSlot {
   players: LineupSlotPlayer[];
 }
 
+export interface PitchingLine {
+  id: number;
+  name: string;
+  inningsPitched: string;
+  hits: number;
+  runs: number;
+  earnedRuns: number;
+  walks: number;
+  strikeouts: number;
+  homeRuns: number;
+  pitches: number;
+  decision: 'W' | 'L' | 'S' | null;
+}
+
 export interface TeamScorecard {
   team: { id: number; name: string; abbreviation: string };
   lineup: LineupSlot[];
   cellsBySlot: Record<number, Cell[]>;
+  pitching: PitchingLine[];
 }
 
 export interface InningLineHalf {

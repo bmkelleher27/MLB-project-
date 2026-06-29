@@ -4,6 +4,7 @@ import type { Scorecard } from '@mlb-scorecards/shared';
 import { fetchScorecard } from '../api/client';
 import { getSocket } from '../api/socket';
 import { GameStatusHeader } from '../components/GameStatusHeader';
+import { PitchingTable } from '../components/PitchingTable';
 import { ScorecardTable } from '../components/ScorecardTable';
 
 export function ScorecardPage() {
@@ -61,12 +62,14 @@ export function ScorecardPage() {
               totals={scorecard.totals.away}
               side="away"
             />
+            <PitchingTable teamName={scorecard.teams.away.team.name} pitching={scorecard.teams.away.pitching} />
             <ScorecardTable
               team={scorecard.teams.home}
               linescore={scorecard.linescore}
               totals={scorecard.totals.home}
               side="home"
             />
+            <PitchingTable teamName={scorecard.teams.home.team.name} pitching={scorecard.teams.home.pitching} />
           </div>
         </>
       )}

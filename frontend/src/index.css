@@ -329,6 +329,20 @@ a {
   background: var(--total-bg);
 }
 
+.pitching-table {
+  max-width: 560px;
+}
+
+.pitching-decision {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
 /* At-bat cell */
 
 .at-bat-cell {

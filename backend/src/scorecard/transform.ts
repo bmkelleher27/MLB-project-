@@ -5,6 +5,7 @@ import type {
   HalfInning,
   InningLine,
   LineupSlot,
+  PitchingLine,
   Scorecard,
   TeamScorecard,
 } from '@mlb-scorecards/shared';
@@ -60,6 +61,33 @@ function buildSlotMap(team: RawBoxscoreTeam): { byId: Map<number, number>; lineu
         .map((p) => ({ id: p.id, name: p.name, entrySeq: p.entrySeq })),
     }));
   return { byId, lineup };
+}
+
+function buildPitchingLines(team: RawBoxscoreTeam): PitchingLine[] {
+  return team.pitchers.map((id) => {
+    const player = team.players[`ID${id}`];
+    const stats = player?.stats?.pitching;
+    const decision: PitchingLine['decision'] = stats?.wins
+      ? 'W'
+      : stats?.losses
+        ? 'L'
+        : stats?.saves
+          ? 'S'
+          : null;
+    return {
+      id,
+      name: player?.person.fullName ?? '',
+      inningsPitched: stats?.inningsPitched ?? '0.0',
+      hits: stats?.hits ?? 0,
+      runs: stats?.runs ?? 0,
+      earnedRuns: stats?.earnedRuns ?? 0,
+      walks: stats?.baseOnBalls ?? 0,
+      strikeouts: stats?.strikeOuts ?? 0,
+      homeRuns: stats?.homeRuns ?? 0,
+      pitches: stats?.numberOfPitches ?? 0,
+      decision,
+    };
+  });
 }
 
 function buildTeamScorecard(
@@ -167,6 +195,7 @@ function buildTeamScorecard(
     },
     lineup,
     cellsBySlot,
+    pitching: buildPitchingLines(team),
   };
 }
 
