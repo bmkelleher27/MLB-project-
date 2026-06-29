@@ -432,6 +432,17 @@ a {
   fill: #b91c1c;
 }
 
+.diamond-advancement-label {
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--live);
+  pointer-events: none;
+}
+
+.diamond-advancement-out {
+  fill: #b91c1c;
+}
+
 .at-bat-code {
   position: relative;
   font-size: 12px;

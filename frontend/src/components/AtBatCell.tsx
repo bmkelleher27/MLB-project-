@@ -22,7 +22,7 @@ export function AtBatCell({ cell }: { cell: Cell }) {
         </div>
       )}
       <div className="at-bat-cell-main">
-        <Diamond progress={progress} />
+        <Diamond progress={progress} advancement={cell.advancement} />
         <span className="at-bat-code">{cell.code}</span>
       </div>
     </div>
