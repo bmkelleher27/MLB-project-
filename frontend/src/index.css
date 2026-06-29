@@ -276,8 +276,8 @@ a {
 }
 
 .scorecard-cell {
-  min-width: 56px;
-  height: 56px;
+  min-width: 64px;
+  height: 64px;
   vertical-align: top;
 }
 
@@ -295,7 +295,7 @@ a {
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 52px;
+  min-height: 60px;
   padding: 2px;
   cursor: default;
 }
@@ -333,8 +333,8 @@ a {
 
 .at-bat-cell-main {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -367,22 +367,11 @@ a {
   fill: #b91c1c;
 }
 
-.diamond-stair {
-  fill: var(--panel-bg);
-  stroke: var(--border);
-  stroke-width: 1;
-}
-
 .at-bat-code {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 12px;
-  height: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 8px;
+  position: relative;
+  font-size: 12px;
   font-weight: 700;
+  background: var(--panel-bg);
+  padding: 0 2px;
   white-space: nowrap;
 }
