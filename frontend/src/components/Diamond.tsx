@@ -11,6 +11,13 @@ const SECOND = { x: CX, y: CY - R };
 const THIRD = { x: CX - R, y: CY };
 const NODES = [HOME, FIRST, SECOND, THIRD, HOME];
 
+// Small boxed grid attached to the diamond's home-first edge - the traditional
+// paper-scorecard spot for writing the play notation, kept clear of the diamond itself.
+const STAIR = 6;
+const STAIR_X0 = 18;
+const STAIR_Y0 = 18;
+const CANVAS_SIZE = STAIR_X0 + STAIR * 2;
+
 function pt(p: { x: number; y: number }): string {
   return `${p.x},${p.y}`;
 }
@@ -59,10 +66,13 @@ export function Diamond({ progress }: { progress: DiamondProgress }) {
   const terminal = base > 0 ? NODES[base === 4 ? 0 : base] : null;
 
   return (
-    <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="diamond">
+    <svg width={CANVAS_SIZE} height={CANVAS_SIZE} viewBox={`0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}`} className="diamond">
       <path d={outline} className="diamond-outline" fill="none" />
       {path && <path d={path} className={`diamond-path${scored ? ' diamond-scored' : ''}`} fill="none" />}
       {isOut && terminal && <circle cx={terminal.x} cy={terminal.y} r={2.5} className="diamond-out-marker" />}
+      <rect x={STAIR_X0 + STAIR} y={STAIR_Y0} width={STAIR} height={STAIR} className="diamond-stair" />
+      <rect x={STAIR_X0} y={STAIR_Y0 + STAIR} width={STAIR} height={STAIR} className="diamond-stair" />
+      <rect x={STAIR_X0 + STAIR} y={STAIR_Y0 + STAIR} width={STAIR} height={STAIR} className="diamond-stair" />
     </svg>
   );
 }

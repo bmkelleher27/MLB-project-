@@ -333,8 +333,8 @@ a {
 
 .at-bat-cell-main {
   position: relative;
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -367,10 +367,22 @@ a {
   fill: #b91c1c;
 }
 
+.diamond-stair {
+  fill: var(--panel-bg);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
 .at-bat-code {
-  position: relative;
-  font-size: 11px;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
   font-weight: 700;
-  background: var(--panel-bg);
-  padding: 0 2px;
+  white-space: nowrap;
 }
