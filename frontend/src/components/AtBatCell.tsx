@@ -5,9 +5,13 @@ const OUT_CIRCLES: Record<number, string> = { 1: '①', 2: '②', 3: '③' };
 
 export function AtBatCell({ cell }: { cell: Cell }) {
   const outBadge = cell.isOut && cell.outNumber ? OUT_CIRCLES[cell.outNumber] ?? `(${cell.outNumber})` : null;
+  const progress = progressFromCell(cell);
+  const scored = progress.base === 4 && !progress.isOut;
+  const out = cell.isOut || progress.isOut;
+  const stateClass = scored ? ' at-bat-cell-scored' : out ? ' at-bat-cell-out' : '';
 
   return (
-    <div className="at-bat-cell" title={cell.description}>
+    <div className={`at-bat-cell${stateClass}`} title={cell.description}>
       <span className="at-bat-count">
         {cell.count.balls}-{cell.count.strikes}
       </span>
@@ -18,7 +22,7 @@ export function AtBatCell({ cell }: { cell: Cell }) {
         </div>
       )}
       <div className="at-bat-cell-main">
-        <Diamond progress={progressFromCell(cell)} />
+        <Diamond progress={progress} />
         <span className="at-bat-code">{cell.code}</span>
       </div>
     </div>

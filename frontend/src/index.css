@@ -8,6 +8,7 @@
   --accent-bg: #e7f0fa;
   --live: #1c8a4c;
   --out-bg: #f2e3e3;
+  --scored-bg: #e1f3e6;
   --rbi-bg: #fdeeca;
 
   font: 16px/1.45 system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -298,6 +299,14 @@ a {
   min-height: 130px;
   padding: 2px;
   cursor: default;
+}
+
+.at-bat-cell-scored {
+  background: var(--scored-bg);
+}
+
+.at-bat-cell-out {
+  background: var(--out-bg);
 }
 
 .at-bat-count {
