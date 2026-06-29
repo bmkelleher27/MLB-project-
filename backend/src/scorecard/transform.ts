@@ -119,7 +119,6 @@ function buildTeamScorecard(
         rbi: play.result.rbi,
         basesReached,
         advancement: [],
-        scored: basesReached === 'HR',
       };
 
       if (slot !== undefined) {
@@ -152,7 +151,6 @@ function buildTeamScorecard(
           isOut: runner.movement.isOut,
           atBatIndex: play.about.atBatIndex,
         });
-        if (toBase === 'HOME' && !runner.movement.isOut) owningCell.scored = true;
       }
 
       if (runner.movement.isOut || toBase === 'HOME') {

@@ -349,6 +349,10 @@ a {
   stroke: var(--live);
 }
 
+.diamond-out-marker {
+  fill: #b91c1c;
+}
+
 .at-bat-code {
   position: relative;
   font-size: 11px;

@@ -29,7 +29,6 @@ export interface Cell {
   rbi: number;
   basesReached: BasesReached;
   advancement: Advancement[];
-  scored: boolean;
 }
 
 export interface LineupSlotPlayer {

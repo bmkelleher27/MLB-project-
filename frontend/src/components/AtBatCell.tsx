@@ -1,5 +1,5 @@
 import type { Cell } from '@mlb-scorecards/shared';
-import { Diamond } from './Diamond';
+import { Diamond, progressFromCell } from './Diamond';
 
 const OUT_CIRCLES: Record<number, string> = { 1: '①', 2: '②', 3: '③' };
 
@@ -16,7 +16,7 @@ export function AtBatCell({ cell }: { cell: Cell }) {
         {cell.rbi > 0 && <span className="at-bat-rbi-badge">{cell.rbi} RBI</span>}
       </div>
       <div className="at-bat-cell-main">
-        <Diamond reached={cell.basesReached} scored={cell.scored} />
+        <Diamond progress={progressFromCell(cell)} />
         <span className="at-bat-code">{cell.code}</span>
       </div>
       {cell.advancement.length > 0 && (
