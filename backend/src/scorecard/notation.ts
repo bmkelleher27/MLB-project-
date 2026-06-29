@@ -86,24 +86,25 @@ export function buildBatterCode(play: RawPlay, batterRunner: RawRunner | undefin
       .filter((r) => r.movement.isOut)
       .sort((a, b) => (a.movement.outNumber ?? 0) - (b.movement.outNumber ?? 0));
     const chain = combinedOutChain(outRunners);
-    return { code: chain.length ? `${chain.join('-')} DP` : 'DP', description };
+    return { code: chain.length ? chain.join('-') : 'DP', description };
   }
   if (eventType === 'triple_play') {
     const outRunners = [...play.runners]
       .filter((r) => r.movement.isOut)
       .sort((a, b) => (a.movement.outNumber ?? 0) - (b.movement.outNumber ?? 0));
     const chain = combinedOutChain(outRunners);
-    return { code: chain.length ? `${chain.join('-')} TP` : 'TP', description };
+    return { code: chain.length ? chain.join('-') : 'TP', description };
   }
   if (eventType === 'force_out') {
     // Batter reaches safely; the out belongs to a preceding runner - borrow their chain.
+    // No "FC" label needed - the batter showing safe on first already implies the choice.
     const outRunner = play.runners.find((r) => r.movement.isOut);
     const chain = outRunner ? creditChain(outRunner.credits) : [];
-    return { code: chain.length ? `FC${chain.join('-')}` : 'FC', description };
+    return { code: chain.length ? chain.join('-') : 'FC', description };
   }
   if (eventType === 'fielders_choice' || eventType === 'fielders_choice_out') {
     const chain = creditChain(batterCredits);
-    return { code: chain.length ? `FC${chain.join('-')}` : 'FC', description };
+    return { code: chain.length ? chain.join('-') : 'FC', description };
   }
   if (eventType === 'sac_bunt') {
     const chain = creditChain(batterCredits);

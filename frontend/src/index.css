@@ -289,24 +289,35 @@ a {
 /* At-bat cell */
 
 .at-bat-cell {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 52px;
   padding: 2px;
   cursor: default;
 }
 
+.at-bat-count {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  font-size: 9px;
+  color: var(--text-muted);
+  font-family: ui-monospace, Consolas, monospace;
+}
+
 .at-bat-cell-top {
+  position: absolute;
+  top: 2px;
+  right: 3px;
   display: flex;
   gap: 3px;
   align-items: center;
   font-size: 9px;
   color: var(--text-muted);
-  min-height: 11px;
-}
-
-.at-bat-count {
-  font-family: ui-monospace, Consolas, monospace;
 }
 
 .at-bat-out-badge {
@@ -338,11 +349,14 @@ a {
 .diamond-outline {
   stroke: var(--border);
   stroke-width: 1.5;
+  stroke-linejoin: round;
 }
 
 .diamond-path {
   stroke: var(--text-muted);
   stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 .diamond-scored {
@@ -359,25 +373,4 @@ a {
   font-weight: 700;
   background: var(--panel-bg);
   padding: 0 2px;
-}
-
-.at-bat-advancement {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  justify-content: center;
-  margin-top: 1px;
-}
-
-.advancement-chip {
-  font-size: 8px;
-  background: var(--out-bg);
-  border-radius: 3px;
-  padding: 0 2px;
-  color: var(--text-muted);
-}
-
-.advancement-out {
-  background: var(--out-bg);
-  color: #b91c1c;
 }
