@@ -507,3 +507,97 @@ a {
   padding: 0 2px;
   white-space: nowrap;
 }
+
+/* ── Mobile optimizations ─────────────────────────────────────────── */
+
+/* #1 - Compact cells: shrink container and SVG diamond proportionally */
+@media (max-width: 600px) {
+  .scorecard-cell {
+    min-width: 80px;
+    height: 80px;
+  }
+  .at-bat-cell {
+    min-height: 76px;
+  }
+  .at-bat-cell-main {
+    width: 64px;
+    height: 64px;
+  }
+  .diamond {
+    width: 64px;
+    height: 64px;
+  }
+  .at-bat-code {
+    font-size: 10px;
+  }
+  .at-bat-count {
+    font-size: 8px;
+  }
+  .scorecard-col-player {
+    min-width: 100px;
+    font-size: 11px;
+  }
+}
+
+/* #2 - Tighter page padding on narrow screens */
+@media (max-width: 480px) {
+  .scorecard-page,
+  .landing-page {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+/* #3 - Larger touch targets for date picker and back link */
+@media (max-width: 480px) {
+  .date-picker button {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+  .back-link {
+    display: inline-block;
+    padding: 10px 0;
+    font-size: 15px;
+  }
+}
+
+/* #4 - Right-edge gradient to indicate horizontal scrollability */
+@media (max-width: 768px) {
+  .scorecard-table-wrapper {
+    position: relative;
+  }
+  .scorecard-table-wrapper::after {
+    content: '';
+    position: sticky;
+    right: 0;
+    top: 0;
+    display: block;
+    width: 40px;
+    height: 100%;
+    margin-top: -100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.85));
+    pointer-events: none;
+    z-index: 10;
+  }
+}
+
+/* #5 - Landscape hint on narrow portrait screens */
+@media (max-width: 500px) and (orientation: portrait) {
+  .scorecard-page::before {
+    content: '↔ Rotate for best view';
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 4px 0 8px;
+    letter-spacing: 0.03em;
+  }
+}
+
+/* #6 - Hide per-inning linescore on very small phones */
+@media (max-width: 400px) {
+  .game-card-linescore {
+    display: none;
+  }
+}
