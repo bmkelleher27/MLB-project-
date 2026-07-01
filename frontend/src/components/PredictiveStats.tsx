@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { TeamPredictive } from '@mlb-scorecards/shared';
 
 function indexClass(value: number): string {
@@ -77,7 +78,8 @@ export function PredictiveStats({ teamName, predictive }: { teamName: string; pr
         <strong>DMG</strong> (batters) values each plate appearance by <em>how</em> the ball was struck — exit
         velocity + launch angle — plus walks and strikeouts, not by where it landed. <strong>DOM</strong> (pitchers)
         blends CSW% (called strikes + whiffs) with the quality of contact allowed. Both are process stats: 100 is
-        league average, and they predict future performance better than the box score line.
+        league average, and they predict future performance better than the box score line.{' '}
+        <Link to="/stats">How the formulas work →</Link>
       </p>
     </div>
   );

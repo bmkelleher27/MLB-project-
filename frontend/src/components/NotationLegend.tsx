@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const POSITIONS: Array<{ num: number; abbr: string; name: string; x: number; y: number }> = [
   { num: 1, abbr: 'P', name: 'Pitcher', x: 110, y: 103 },
   { num: 2, abbr: 'C', name: 'Catcher', x: 110, y: 163 },
@@ -176,7 +178,8 @@ export function NotationLegend() {
         <p className="legend-prose legend-note">
           One game is a small sample — a single barrel can swing DMG a lot — so read these as "who was actually
           dangerous today," not season-long talent. Watch for tells like a pitcher who "won" with a low DOM (got
-          away with one) or a hitter who went 0-for-4 with a high DMG (hit into bad luck).
+          away with one) or a hitter who went 0-for-4 with a high DMG (hit into bad luck).{' '}
+          <Link to="/stats" className="legend-explainer-link">See the full visual explainer →</Link>
         </p>
       </div>
     </div>
