@@ -240,6 +240,7 @@ export function transformLiveFeed(raw: RawLiveFeed): Scorecard {
       home: { r: linescore.teams.home.runs, h: linescore.teams.home.hits, e: linescore.teams.home.errors },
     },
     venue: raw.gameData.venue?.name ?? null,
+    date: raw.gameData.datetime?.officialDate ?? null,
     updatedAt: new Date().toISOString(),
   };
 }

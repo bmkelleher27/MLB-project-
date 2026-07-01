@@ -114,6 +114,7 @@ export interface Scorecard {
     home: TeamTotals;
   };
   venue: string | null;
+  date: string | null;
   updatedAt: string;
 }
 

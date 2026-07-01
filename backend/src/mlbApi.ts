@@ -58,6 +58,7 @@ export interface RawLiveFeed {
   gameData: {
     status: { abstractGameState: string; detailedState: string };
     venue?: { name: string };
+    datetime?: { officialDate?: string; time?: string; ampm?: string };
   };
   liveData: {
     plays: { allPlays: RawPlay[] };

@@ -23,6 +23,13 @@ function TeamLine({ r, h, e }: { r: number; h: number; e: number }) {
   );
 }
 
+function formatGameDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
+  });
+}
+
 export function GameStatusHeader({ scorecard }: { scorecard: Scorecard }) {
   const isLive = scorecard.status.abstractGameState === 'Live';
 
@@ -54,7 +61,11 @@ export function GameStatusHeader({ scorecard }: { scorecard: Scorecard }) {
           </>
         )}
       </div>
-      {scorecard.venue && <div className="game-status-venue">{scorecard.venue}</div>}
+      <div className="game-status-venue">
+        {scorecard.date && <span>{formatGameDate(scorecard.date)}</span>}
+        {scorecard.date && scorecard.venue && <span className="game-status-venue-sep"> · </span>}
+        {scorecard.venue && <span>{scorecard.venue}</span>}
+      </div>
     </div>
   );
 }
