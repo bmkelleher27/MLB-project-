@@ -237,14 +237,38 @@ a {
 
 /* Scorecard page */
 
+.scorecard-nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+}
+
+.scorecard-nav-back {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.scorecard-nav-back:hover {
+  text-decoration: underline;
+}
+
+.scorecard-nav-date {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 .scorecard-page {
   max-width: 100%;
   padding: 16px 20px 48px;
-}
-
-.back-link {
-  display: inline-block;
-  margin-bottom: 12px;
 }
 
 .game-status-header {
@@ -252,7 +276,7 @@ a {
   border: 1px solid var(--border);
   background: var(--panel-bg);
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 16px 20px;
   margin-bottom: 16px;
   display: flex;
   flex-wrap: wrap;
@@ -260,50 +284,124 @@ a {
   gap: 20px;
 }
 
-.game-status-teams {
+.game-status-header-live {
+  border-color: var(--live);
+  border-width: 2px;
+}
+
+.game-status-header-final {
+  background: var(--bg);
+}
+
+.game-status-matchup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-status-team-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 80px;
+}
+
+.game-status-team-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.game-status-team-name {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.game-status-score {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.game-status-at {
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--text-muted);
+  padding-top: 20px;
+}
+
+.game-status-rhe {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.game-status-team {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-}
-
-.team-name {
-  font-weight: 600;
-}
-
-.team-line {
-  display: flex;
-  gap: 4px;
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: 12px;
   font-family: ui-monospace, Consolas, monospace;
+  color: var(--text-muted);
 }
 
-.team-line-stat {
-  display: inline-block;
-  min-width: 26px;
+.game-status-rhe-row {
+  display: flex;
+  gap: 8px;
+}
+
+.game-status-rhe-label {
+  font-weight: 700;
+  min-width: 12px;
 }
 
 .game-status-state {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.game-status-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--live);
+}
+
+.game-status-final-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  background: var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
 }
 
 .game-status-detail {
   font-weight: 600;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .game-status-venue {
-  margin-left: auto;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+.game-status-inning {
+  font-weight: 600;
+}
+
+.game-status-count {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
 }
 
 .mini-bases {
@@ -370,7 +468,7 @@ a {
   background: var(--accent-bg);
   padding: 6px 4px;
   position: sticky;
-  top: 0;
+  top: 41px;
   z-index: 2;
 }
 
@@ -610,19 +708,18 @@ a {
     padding-left: 8px;
     padding-right: 8px;
   }
+  .scorecard-nav-bar {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 }
 
-/* #3 - Larger touch targets for date picker and back link */
+/* #3 - Larger touch targets for date picker */
 @media (max-width: 480px) {
   .date-picker button {
     width: 44px;
     height: 44px;
     font-size: 20px;
-  }
-  .back-link {
-    display: inline-block;
-    padding: 10px 0;
-    font-size: 15px;
   }
 }
 

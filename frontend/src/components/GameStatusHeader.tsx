@@ -13,58 +13,61 @@ function MiniBases({ bases }: { bases: BaseState }) {
   );
 }
 
-function TeamLine({ r, h, e }: { r: number; h: number; e: number }) {
-  return (
-    <span className="team-line">
-      <span className="team-line-stat">R{r}</span>
-      <span className="team-line-stat">H{h}</span>
-      <span className="team-line-stat">E{e}</span>
-    </span>
-  );
-}
-
-function formatGameDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
-    weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
-  });
-}
-
 export function GameStatusHeader({ scorecard }: { scorecard: Scorecard }) {
   const isLive = scorecard.status.abstractGameState === 'Live';
+  const isFinal = scorecard.status.abstractGameState === 'Final';
 
   return (
-    <div className="game-status-header">
-      <div className="game-status-teams">
-        <div className="game-status-team">
-          <span className="team-name">{scorecard.teams.away.team.name}</span>
-          <TeamLine r={scorecard.totals.away.r} h={scorecard.totals.away.h} e={scorecard.totals.away.e} />
+    <div className={`game-status-header${isLive ? ' game-status-header-live' : ''}${isFinal ? ' game-status-header-final' : ''}`}>
+      <div className="game-status-matchup">
+        <div className="game-status-team-block">
+          <span className="game-status-team-label">AWAY</span>
+          <span className="game-status-team-name">{scorecard.teams.away.team.name}</span>
+          <span className="game-status-score">{scorecard.totals.away.r}</span>
         </div>
-        <div className="game-status-team">
-          <span className="team-name">{scorecard.teams.home.team.name}</span>
-          <TeamLine r={scorecard.totals.home.r} h={scorecard.totals.home.h} e={scorecard.totals.home.e} />
+        <div className="game-status-at">@</div>
+        <div className="game-status-team-block">
+          <span className="game-status-team-label">HOME</span>
+          <span className="game-status-team-name">{scorecard.teams.home.team.name}</span>
+          <span className="game-status-score">{scorecard.totals.home.r}</span>
         </div>
       </div>
+
+      <div className="game-status-rhe">
+        <span className="game-status-rhe-row">
+          <span className="game-status-rhe-label">H</span>
+          <span>{scorecard.totals.away.h}</span>
+          <span>{scorecard.totals.home.h}</span>
+        </span>
+        <span className="game-status-rhe-row">
+          <span className="game-status-rhe-label">E</span>
+          <span>{scorecard.totals.away.e}</span>
+          <span>{scorecard.totals.home.e}</span>
+        </span>
+      </div>
+
       <div className="game-status-state">
-        {isLive && <span className="live-dot" />}
-        <span className="game-status-detail">{scorecard.status.detailedState}</span>
         {isLive && (
           <>
+            <div className="game-status-live-badge">
+              <span className="live-dot" />
+              LIVE
+            </div>
             <span className="game-status-inning">
               {scorecard.halfInning === 'top' ? '▲' : '▼'} {scorecard.inning}
             </span>
-            <span className="game-status-count">
-              {scorecard.balls}-{scorecard.strikes}
-            </span>
+            <span className="game-status-count">{scorecard.balls}-{scorecard.strikes}</span>
             <span className="game-status-outs">{scorecard.outs} out{scorecard.outs === 1 ? '' : 's'}</span>
             <MiniBases bases={scorecard.bases} />
           </>
         )}
-      </div>
-      <div className="game-status-venue">
-        {scorecard.date && <span>{formatGameDate(scorecard.date)}</span>}
-        {scorecard.date && scorecard.venue && <span className="game-status-venue-sep"> · </span>}
-        {scorecard.venue && <span>{scorecard.venue}</span>}
+        {isFinal && <span className="game-status-final-badge">FINAL</span>}
+        {!isLive && !isFinal && (
+          <span className="game-status-detail">{scorecard.status.detailedState}</span>
+        )}
+        {scorecard.venue && (
+          <span className="game-status-venue">{scorecard.venue}</span>
+        )}
       </div>
     </div>
   );

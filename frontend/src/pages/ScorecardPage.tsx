@@ -7,6 +7,13 @@ import { GameStatusHeader } from '../components/GameStatusHeader';
 import { PitchingTable } from '../components/PitchingTable';
 import { ScorecardTable } from '../components/ScorecardTable';
 
+function formatGameDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
+  });
+}
+
 export function ScorecardPage() {
   const { gamePk } = useParams<{ gamePk: string }>();
   const [scorecard, setScorecard] = useState<Scorecard | null>(null);
@@ -46,33 +53,38 @@ export function ScorecardPage() {
   }, [gamePk]);
 
   return (
-    <div className="scorecard-page">
-      <Link to="/" className="back-link">
-        ‹ Back to schedule
-      </Link>
-      {error && <p className="status-message status-error">{error}</p>}
-      {!error && !scorecard && <p className="status-message">Loading scorecard...</p>}
-      {scorecard && (
-        <>
-          <GameStatusHeader scorecard={scorecard} />
-          <div className="scorecard-tables">
-            <ScorecardTable
-              team={scorecard.teams.away}
-              linescore={scorecard.linescore}
-              totals={scorecard.totals.away}
-              side="away"
-            />
-            <PitchingTable teamName={scorecard.teams.away.team.name} pitching={scorecard.teams.away.pitching} />
-            <ScorecardTable
-              team={scorecard.teams.home}
-              linescore={scorecard.linescore}
-              totals={scorecard.totals.home}
-              side="home"
-            />
-            <PitchingTable teamName={scorecard.teams.home.team.name} pitching={scorecard.teams.home.pitching} />
-          </div>
-        </>
-      )}
-    </div>
+    <>
+      <div className="scorecard-nav-bar">
+        <Link to="/" className="scorecard-nav-back">‹ Schedule</Link>
+        {scorecard?.date && (
+          <span className="scorecard-nav-date">{formatGameDate(scorecard.date)}</span>
+        )}
+      </div>
+      <div className="scorecard-page">
+        {error && <p className="status-message status-error">{error}</p>}
+        {!error && !scorecard && <p className="status-message">Loading scorecard...</p>}
+        {scorecard && (
+          <>
+            <GameStatusHeader scorecard={scorecard} />
+            <div className="scorecard-tables">
+              <ScorecardTable
+                team={scorecard.teams.away}
+                linescore={scorecard.linescore}
+                totals={scorecard.totals.away}
+                side="away"
+              />
+              <PitchingTable teamName={scorecard.teams.away.team.name} pitching={scorecard.teams.away.pitching} />
+              <ScorecardTable
+                team={scorecard.teams.home}
+                linescore={scorecard.linescore}
+                totals={scorecard.totals.home}
+                side="home"
+              />
+              <PitchingTable teamName={scorecard.teams.home.team.name} pitching={scorecard.teams.home.pitching} />
+            </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }
