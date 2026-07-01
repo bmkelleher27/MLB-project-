@@ -54,12 +54,41 @@ a {
   margin: 8px 0 20px;
 }
 
+.landing-toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.random-game-btn {
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 16px;
+  cursor: pointer;
+  color: var(--accent);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.random-game-btn:hover:not(:disabled) {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+
+.random-game-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .date-picker {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  margin-bottom: 24px;
 }
 
 .date-picker button {

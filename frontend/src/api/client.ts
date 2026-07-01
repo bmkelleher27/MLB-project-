@@ -13,3 +13,9 @@ export async function fetchScorecard(gamePk: number): Promise<Scorecard> {
   if (!res.ok) throw new Error(`scorecard request failed: ${res.status}`);
   return res.json() as Promise<Scorecard>;
 }
+
+export async function fetchRandomGame(): Promise<{ gamePk: number; date: string }> {
+  const res = await fetch(`${API_BASE}/api/random-game`);
+  if (!res.ok) throw new Error(`random-game request failed: ${res.status}`);
+  return res.json() as Promise<{ gamePk: number; date: string }>;
+}
