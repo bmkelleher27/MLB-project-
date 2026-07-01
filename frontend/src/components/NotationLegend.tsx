@@ -126,6 +126,59 @@ export function NotationLegend() {
           </ul>
         </div>
       ))}
+
+      <div className="legend-section legend-section-predictive">
+        <h3 className="legend-heading">Predictive metrics: DMG &amp; DOM</h3>
+        <p className="legend-prose">
+          The box score tells you what <em>happened</em>; these two stats measure the <em>process</em> — what the
+          player actually controlled — which predicts future performance much better than results do. Both are
+          scaled so <strong>100 = league average</strong>; higher is better.
+        </p>
+        <div className="legend-predictive-cols">
+          <div>
+            <h4 className="legend-subheading">
+              <span className="legend-code">DMG</span> Damage Index (batters)
+            </h4>
+            <ul className="legend-bullets">
+              <li>
+                Each batted ball is valued by <strong>how it was struck</strong> — exit velocity and launch angle —
+                not where it landed. A 400-foot out and a 400-foot homer count the same.
+              </li>
+              <li>
+                A <strong>barrel</strong> (98+ mph at an ideal angle, roughly 26–30° and widening as the ball is hit
+                harder) is worth the most; hard line drives next; weak or poorly-angled contact the least.
+              </li>
+              <li>Walks and hit-by-pitches add value; strikeouts count zero.</li>
+              <li>
+                <strong>Hard-hit</strong> = 95+ mph off the bat. Exit velocity data exists from 2015 onward — for
+                older games DMG runs on discipline alone.
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="legend-subheading">
+              <span className="legend-code">DOM</span> Dominance Index (pitchers)
+            </h4>
+            <ul className="legend-bullets">
+              <li>
+                Built on <strong>CSW%</strong> — called strikes plus whiffs per pitch (league average ≈ 29%) — the
+                best simple indicator of pitcher skill, because taking strikes and missing bats are things the
+                defense can't help with.
+              </li>
+              <li>
+                Adjusted by the <strong>quality of contact allowed</strong>: a pitcher drowned by bloop hits still
+                grades well; one saved by great defense doesn't.
+              </li>
+              <li>Ignores runs and hits entirely, so it's immune to box-score luck.</li>
+            </ul>
+          </div>
+        </div>
+        <p className="legend-prose legend-note">
+          One game is a small sample — a single barrel can swing DMG a lot — so read these as "who was actually
+          dangerous today," not season-long talent. Watch for tells like a pitcher who "won" with a low DOM (got
+          away with one) or a hitter who went 0-for-4 with a high DMG (hit into bad luck).
+        </p>
+      </div>
     </div>
   );
 }
