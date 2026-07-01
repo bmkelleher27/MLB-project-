@@ -7,6 +7,7 @@ import { AtBatDetail } from '../components/AtBatDetail';
 import { GameStatusHeader } from '../components/GameStatusHeader';
 import { NotationLegend } from '../components/NotationLegend';
 import { PitchingTable } from '../components/PitchingTable';
+import { PredictiveStats } from '../components/PredictiveStats';
 import { ReplayControls } from '../components/ReplayControls';
 import { ScorecardTable } from '../components/ScorecardTable';
 import { ScoringSummary } from '../components/ScoringSummary';
@@ -148,6 +149,7 @@ export function ScorecardPage() {
                 onAdvancementClick={jumpToCell}
               />
               <PitchingTable teamName={scorecard.teams.away.team.name} pitching={scorecard.teams.away.pitching} />
+              <PredictiveStats teamName={scorecard.teams.away.team.name} predictive={scorecard.predictive.away} />
               <ScorecardTable
                 team={scorecard.teams.home}
                 linescore={scorecard.linescore}
@@ -162,6 +164,7 @@ export function ScorecardPage() {
                 onAdvancementClick={jumpToCell}
               />
               <PitchingTable teamName={scorecard.teams.home.team.name} pitching={scorecard.teams.home.pitching} />
+              <PredictiveStats teamName={scorecard.teams.home.team.name} predictive={scorecard.predictive.home} />
             </div>
           </>
         )}

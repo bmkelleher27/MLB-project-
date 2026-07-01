@@ -143,9 +143,17 @@ export interface RawPlay {
   count: { balls: number; strikes: number; outs: number };
   matchup: {
     batter: { id: number; fullName: string };
+    pitcher: { id: number; fullName: string };
   };
   runners: RawRunner[];
   playEvents?: Array<{
+    isPitch?: boolean;
+    details?: {
+      // Pitch call codes: B/*B ball, C called strike, S swinging strike,
+      // W swinging strike (blocked), T foul tip, F foul, D/E/X in play, H HBP
+      call?: { code?: string };
+      isInPlay?: boolean;
+    };
     hitData?: {
       launchSpeed?: number;
       launchAngle?: number;

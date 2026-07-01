@@ -95,6 +95,41 @@ export interface GameStatus {
   detailedState: string; // Scheduled, In Progress, Final, Postponed, ...
 }
 
+export interface PredictiveBatter {
+  id: number;
+  name: string;
+  pa: number;
+  strikeouts: number;
+  walks: number;
+  battedBalls: number;
+  barrels: number;
+  hardHit: number;
+  /** Mean exit velocity of tracked batted balls; null when Statcast data is unavailable (pre-2015). */
+  avgEV: number | null;
+  /** Damage Index: expected production per PA from contact quality + discipline, 100 = league average. */
+  dmg: number;
+}
+
+export interface PredictivePitcher {
+  id: number;
+  name: string;
+  pitches: number;
+  calledStrikes: number;
+  whiffs: number;
+  /** Called strikes + whiffs per pitch (league average ≈ 0.29). */
+  csw: number;
+  battedBallsAllowed: number;
+  hardHitAllowed: number;
+  avgEVAllowed: number | null;
+  /** Dominance Index: CSW rate + contact suppression, 100 = league average. */
+  dom: number;
+}
+
+export interface TeamPredictive {
+  batters: PredictiveBatter[];
+  pitchers: PredictivePitcher[];
+}
+
 export interface Scorecard {
   gamePk: number;
   status: GameStatus;
@@ -112,6 +147,10 @@ export interface Scorecard {
   totals: {
     away: TeamTotals;
     home: TeamTotals;
+  };
+  predictive: {
+    away: TeamPredictive;
+    home: TeamPredictive;
   };
   venue: string | null;
   date: string | null;

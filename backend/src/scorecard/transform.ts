@@ -10,6 +10,7 @@ import type {
   TeamScorecard,
 } from '@mlb-scorecards/shared';
 import { buildBatterCode, buildRunnerAdvancementCode } from './notation.js';
+import { buildPredictive } from './predictive.js';
 
 function toBaseFromLabel(label: string | null): '2B' | '3B' | 'HOME' | null {
   if (label === '2B') return '2B';
@@ -239,6 +240,7 @@ export function transformLiveFeed(raw: RawLiveFeed): Scorecard {
       away: { r: linescore.teams.away.runs, h: linescore.teams.away.hits, e: linescore.teams.away.errors },
       home: { r: linescore.teams.home.runs, h: linescore.teams.home.hits, e: linescore.teams.home.errors },
     },
+    predictive: buildPredictive(raw),
     venue: raw.gameData.venue?.name ?? null,
     date: raw.gameData.datetime?.officialDate ?? null,
     updatedAt: new Date().toISOString(),
