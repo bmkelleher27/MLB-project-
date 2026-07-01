@@ -34,6 +34,7 @@ export interface Cell {
 export interface LineupSlotPlayer {
   id: number;
   name: string;
+  position: string;
   entrySeq: number;
 }
 

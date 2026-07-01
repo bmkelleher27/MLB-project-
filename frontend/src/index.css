@@ -368,6 +368,23 @@ a {
   font-size: 12px;
 }
 
+.player-position {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.player-ph {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.player-separator {
+  color: var(--border);
+}
+
 .scorecard-cell {
   min-width: 134px;
   height: 134px;

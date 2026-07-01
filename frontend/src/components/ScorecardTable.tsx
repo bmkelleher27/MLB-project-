@@ -41,13 +41,18 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
       <tbody>
         {team.lineup.map((slot) => {
           const cells = team.cellsBySlot[slot.slot] ?? [];
-          const label = slot.players
-            .map((p, i) => (i === 0 ? p.name : `${p.name} (PH)`))
-            .join(' / ');
           return (
             <tr key={slot.slot} className={slot.slot % 2 === 0 ? 'scorecard-row-stripe' : undefined}>
               <td className="scorecard-col-player">
-                <span className="lineup-slot-number">{slot.slot}</span> {label}
+                <span className="lineup-slot-number">{slot.slot}</span>
+                {slot.players.map((p, i) => (
+                  <span key={p.id}>
+                    {i > 0 && <span className="player-separator"> / </span>}
+                    {p.position && <span className="player-position">{p.position}</span>}
+                    {' '}{p.name}
+                    {i > 0 && <span className="player-ph"> (PH)</span>}
+                  </span>
+                ))}
               </td>
               {inningNums.map((n) => {
                 const cellsInInning = cells.filter((c) => c.inning === n);

@@ -32,6 +32,7 @@ interface SlotInfo {
   entrySeq: number;
   id: number;
   name: string;
+  position: string;
 }
 
 function buildSlotMap(team: RawBoxscoreTeam): { byId: Map<number, number>; lineup: LineupSlot[] } {
@@ -43,7 +44,7 @@ function buildSlotMap(team: RawBoxscoreTeam): { byId: Map<number, number>; lineu
     const slot = Math.floor(bo / 100);
     const entrySeq = bo % 100;
     if (!slot) continue;
-    entries.push({ slot, entrySeq, id: p.person.id, name: p.person.fullName });
+    entries.push({ slot, entrySeq, id: p.person.id, name: p.person.fullName, position: p.position?.abbreviation ?? '' });
   }
   const byId = new Map<number, number>();
   const bySlot = new Map<number, SlotInfo[]>();
@@ -58,7 +59,7 @@ function buildSlotMap(team: RawBoxscoreTeam): { byId: Map<number, number>; lineu
       slot,
       players: players
         .sort((a, b) => a.entrySeq - b.entrySeq)
-        .map((p) => ({ id: p.id, name: p.name, entrySeq: p.entrySeq })),
+        .map((p) => ({ id: p.id, name: p.name, position: p.position, entrySeq: p.entrySeq })),
     }));
   return { byId, lineup };
 }

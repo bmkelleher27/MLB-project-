@@ -78,6 +78,7 @@ export interface RawBoxscoreTeam {
     string,
     {
       person: { id: number; fullName: string };
+      position?: { abbreviation?: string };
       battingOrder?: string;
       stats?: {
         pitching?: {
