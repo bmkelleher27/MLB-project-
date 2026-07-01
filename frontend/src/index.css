@@ -324,14 +324,6 @@ a {
   background: var(--row-stripe);
 }
 
-.scorecard-sub-row > td {
-  border-top: 2px solid var(--accent);
-}
-
-.sub-player-name {
-  font-style: italic;
-}
-
 .scorecard-total {
   font-weight: 700;
   background: var(--total-bg);
