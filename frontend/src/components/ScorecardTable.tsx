@@ -1,4 +1,5 @@
-import type { InningLine, TeamScorecard, TeamTotals } from '@mlb-scorecards/shared';
+import { useState } from 'react';
+import type { Cell, InningLine, TeamScorecard, TeamTotals } from '@mlb-scorecards/shared';
 import { AtBatCell } from './AtBatCell';
 import { getTeamColor } from '../teamColors';
 
@@ -7,9 +8,27 @@ interface ScorecardTableProps {
   linescore: InningLine[];
   totals: TeamTotals;
   side: 'away' | 'home';
+  /** Inning to tint in the header while this team is batting live. */
+  currentInning?: number | null;
+  selectedAtBatIndex?: number | null;
+  replayLimit?: number | null;
+  onSelectCell?: (cell: Cell) => void;
+  onAdvancementClick?: (atBatIndex: number) => void;
 }
 
-export function ScorecardTable({ team, linescore, totals, side }: ScorecardTableProps) {
+export function ScorecardTable({
+  team,
+  linescore,
+  totals,
+  side,
+  currentInning = null,
+  selectedAtBatIndex = null,
+  replayLimit = null,
+  onSelectCell,
+  onAdvancementClick,
+}: ScorecardTableProps) {
+  const [hoverInning, setHoverInning] = useState<number | null>(null);
+
   const maxInningFromCells = Math.max(
     0,
     ...Object.values(team.cellsBySlot).flatMap((cells) => cells.map((c) => c.inning))
@@ -20,6 +39,9 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
   const totalLob = linescore.reduce((sum, l) => sum + (side === 'away' ? l.away.lob : l.home.lob), 0);
 
   const teamColor = getTeamColor(team.team.id);
+
+  const inningColClass = (n: number) =>
+    `${n === hoverInning ? ' inning-col-hover' : ''}${n === currentInning ? ' inning-col-current' : ''}`;
 
   return (
     <div className="scorecard-table-wrapper">
@@ -33,7 +55,14 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
             {team.team.name}
           </th>
           {inningNums.map((n) => (
-            <th key={n}>{n}</th>
+            <th
+              key={n}
+              className={inningColClass(n) || undefined}
+              onMouseEnter={() => setHoverInning(n)}
+              onMouseLeave={() => setHoverInning(null)}
+            >
+              {n}
+            </th>
           ))}
           <th>Total</th>
         </tr>
@@ -55,9 +84,16 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
               {inningNums.map((n) => {
                 const cellsInInning = cells.filter((c) => c.inning === n);
                 return (
-                  <td key={n} className="scorecard-cell">
+                  <td key={n} className={`scorecard-cell${inningColClass(n)}`}>
                     {cellsInInning.map((c) => (
-                      <AtBatCell key={c.atBatIndex} cell={c} />
+                      <AtBatCell
+                        key={c.atBatIndex}
+                        cell={c}
+                        selected={c.atBatIndex === selectedAtBatIndex}
+                        onSelect={onSelectCell}
+                        replayLimit={replayLimit}
+                        onAdvancementClick={onAdvancementClick}
+                      />
                     ))}
                   </td>
                 );

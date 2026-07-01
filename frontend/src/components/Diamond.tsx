@@ -61,7 +61,15 @@ function labelPos(node: { x: number; y: number }): { x: number; y: number } {
   return { x: node.x + (dx / len) * LABEL_OFFSET, y: node.y + (dy / len) * LABEL_OFFSET };
 }
 
-export function Diamond({ progress, advancement = [] }: { progress: DiamondProgress; advancement?: Cell['advancement'] }) {
+export function Diamond({
+  progress,
+  advancement = [],
+  onAdvancementClick,
+}: {
+  progress: DiamondProgress;
+  advancement?: Cell['advancement'];
+  onAdvancementClick?: (atBatIndex: number) => void;
+}) {
   const { base, isOut } = progress;
   const outline = `M${pt(HOME)} L${pt(FIRST)} L${pt(SECOND)} L${pt(THIRD)} Z`;
   const scored = base === 4 && !isOut;
@@ -74,7 +82,13 @@ export function Diamond({ progress, advancement = [] }: { progress: DiamondProgr
   const terminal = base > 0 ? NODES[base === 4 ? 0 : base] : null;
   const labels = advancement
     .filter((a) => a.code)
-    .map((a) => ({ ...labelPos(ADVANCEMENT_NODE[a.toBase]), code: a.code, title: a.description, isOut: a.isOut }));
+    .map((a) => ({
+      ...labelPos(ADVANCEMENT_NODE[a.toBase]),
+      code: a.code,
+      title: a.description,
+      isOut: a.isOut,
+      atBatIndex: a.atBatIndex,
+    }));
 
   return (
     <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="diamond">
@@ -88,9 +102,17 @@ export function Diamond({ progress, advancement = [] }: { progress: DiamondProgr
           y={l.y}
           textAnchor="middle"
           dominantBaseline="middle"
-          className={`diamond-advancement-label${l.isOut ? ' diamond-advancement-out' : ''}`}
+          className={`diamond-advancement-label${l.isOut ? ' diamond-advancement-out' : ''}${onAdvancementClick ? ' diamond-advancement-clickable' : ''}`}
+          onClick={
+            onAdvancementClick
+              ? (e) => {
+                  e.stopPropagation();
+                  onAdvancementClick(l.atBatIndex);
+                }
+              : undefined
+          }
         >
-          <title>{l.title}</title>
+          <title>{`${l.title} (click to show the at-bat this happened during)`}</title>
           {l.code}
         </text>
       ))}
