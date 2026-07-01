@@ -31,6 +31,24 @@ export function GameCard({ game }: { game: ScheduleGame }) {
         {showScore && <span className="game-card-team-score">{game.home.score ?? 0}</span>}
       </div>
       {game.venue && <div className="game-card-venue">{game.venue}</div>}
+      {showScore && game.linescore && game.linescore.length > 0 && (
+        <div className="game-card-linescore">
+          <div className="game-card-linescore-row">
+            <span className="game-card-linescore-abbr">{game.away.abbreviation}</span>
+            {game.linescore.map(({ num, away }) => (
+              <span key={num} className="game-card-linescore-cell">{away ?? ''}</span>
+            ))}
+            <span className="game-card-linescore-total">{game.away.score ?? ''}</span>
+          </div>
+          <div className="game-card-linescore-row">
+            <span className="game-card-linescore-abbr">{game.home.abbreviation}</span>
+            {game.linescore.map(({ num, home }) => (
+              <span key={num} className="game-card-linescore-cell">{home ?? ''}</span>
+            ))}
+            <span className="game-card-linescore-total">{game.home.score ?? ''}</span>
+          </div>
+        </div>
+      )}
     </Link>
   );
 }

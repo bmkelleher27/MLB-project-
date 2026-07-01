@@ -123,6 +123,7 @@ export interface ScheduleGame {
   away: { id: number; name: string; abbreviation: string; score: number | null };
   home: { id: number; name: string; abbreviation: string; score: number | null };
   venue: string | null;
+  linescore: Array<{ num: number; away: number | null; home: number | null }> | null;
 }
 
 export interface ScheduleResponse {

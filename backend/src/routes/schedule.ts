@@ -33,6 +33,11 @@ router.get('/', async (req, res) => {
         score: g.teams.home.score ?? null,
       },
       venue: g.venue?.name ?? null,
+      linescore: g.linescore?.innings?.map((inn) => ({
+        num: inn.num,
+        away: inn.away?.runs ?? null,
+        home: inn.home?.runs ?? null,
+      })) ?? null,
     }));
     const response: ScheduleResponse = { date, games };
     res.json(response);

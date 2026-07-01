@@ -37,7 +37,11 @@ export interface RawScheduleGame {
     home: { team: { id: number; name: string; abbreviation?: string }; score?: number };
   };
   venue?: { name: string };
-  linescore?: { currentInning?: number; inningState?: string };
+  linescore?: {
+    currentInning?: number;
+    inningState?: string;
+    innings?: Array<{ num: number; home?: { runs?: number }; away?: { runs?: number } }>;
+  };
 }
 
 export function getSchedule(date: string): Promise<RawSchedule> {

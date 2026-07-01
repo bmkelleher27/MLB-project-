@@ -1,5 +1,6 @@
 import type { InningLine, TeamScorecard, TeamTotals } from '@mlb-scorecards/shared';
 import { AtBatCell } from './AtBatCell';
+import { getTeamColor } from '../teamColors';
 
 interface ScorecardTableProps {
   team: TeamScorecard;
@@ -18,11 +19,19 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
   const lineFor = (n: number) => linescore.find((l) => l.num === n);
   const totalLob = linescore.reduce((sum, l) => sum + (side === 'away' ? l.away.lob : l.home.lob), 0);
 
+  const teamColor = getTeamColor(team.team.id);
+
   return (
+    <div className="scorecard-table-wrapper">
     <table className="scorecard-table">
       <thead>
         <tr>
-          <th className="scorecard-col-player">{team.team.name}</th>
+          <th
+            className="scorecard-col-player"
+            style={{ backgroundColor: teamColor.bg, color: teamColor.text }}
+          >
+            {team.team.name}
+          </th>
           {inningNums.map((n) => (
             <th key={n}>{n}</th>
           ))}
@@ -86,5 +95,6 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
         </tr>
       </tfoot>
     </table>
+    </div>
   );
 }

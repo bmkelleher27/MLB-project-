@@ -39,6 +39,7 @@ export function GameStatusHeader({ scorecard }: { scorecard: Scorecard }) {
         </div>
       </div>
       <div className="game-status-state">
+        {isLive && <span className="live-dot" />}
         <span className="game-status-detail">{scorecard.status.detailedState}</span>
         {isLive && (
           <>
