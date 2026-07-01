@@ -134,6 +134,7 @@ function buildTeamScorecard(
       const basesReached = basesReachedFromMovement(batterRunner.movement);
       const isOut = batterRunner.movement.isOut;
 
+      const hitData = play.playEvents?.find((e) => e.hitData)?.hitData;
       const cell: Cell = {
         atBatIndex: play.about.atBatIndex,
         inning: play.about.inning,
@@ -148,6 +149,8 @@ function buildTeamScorecard(
         rbi: play.result.rbi,
         basesReached,
         advancement: [],
+        exitVelocity: hitData?.launchSpeed,
+        distance: hitData?.totalDistance,
       };
 
       if (slot !== undefined) {

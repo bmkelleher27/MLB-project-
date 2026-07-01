@@ -525,6 +525,18 @@ a {
   white-space: nowrap;
 }
 
+.hr-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-top: 4px;
+  font-size: 9px;
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
 /* ── Mobile optimizations ─────────────────────────────────────────── */
 
 /* #1 - Compact cells: shrink container and SVG diamond proportionally */

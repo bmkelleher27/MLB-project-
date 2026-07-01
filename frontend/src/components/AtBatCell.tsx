@@ -25,6 +25,12 @@ export function AtBatCell({ cell }: { cell: Cell }) {
         <Diamond progress={progress} advancement={cell.advancement} />
         <span className="at-bat-code">{cell.code}</span>
       </div>
+      {cell.basesReached === 'HR' && (cell.distance || cell.exitVelocity) && (
+        <div className="hr-data">
+          {cell.distance && <span>{cell.distance} ft</span>}
+          {cell.exitVelocity && <span>{Math.round(cell.exitVelocity)} mph</span>}
+        </div>
+      )}
     </div>
   );
 }

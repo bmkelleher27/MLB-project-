@@ -29,6 +29,8 @@ export interface Cell {
   rbi: number;
   basesReached: BasesReached;
   advancement: Advancement[];
+  exitVelocity?: number;
+  distance?: number;
 }
 
 export interface LineupSlotPlayer {

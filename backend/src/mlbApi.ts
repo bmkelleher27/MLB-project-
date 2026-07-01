@@ -144,6 +144,14 @@ export interface RawPlay {
     batter: { id: number; fullName: string };
   };
   runners: RawRunner[];
+  playEvents?: Array<{
+    hitData?: {
+      launchSpeed?: number;
+      launchAngle?: number;
+      totalDistance?: number;
+      trajectory?: string;
+    };
+  }>;
 }
 
 export interface RawLinescore {
