@@ -45,8 +45,7 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
             <tr key={slot.slot} className={slot.slot % 2 === 0 ? 'scorecard-row-stripe' : undefined}>
               <td className="scorecard-col-player">
                 {slot.players.map((p, i) => (
-                  <span key={p.id}>
-                    {i > 0 && <span className="player-separator"> / </span>}
+                  <span key={p.id} className={i > 0 ? 'player-sub-line' : undefined}>
                     {p.position && <span className="player-position">{p.position}</span>}
                     {' '}{p.name}
                     {i > 0 && <span className="player-ph"> (PH)</span>}
