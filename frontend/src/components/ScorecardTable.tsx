@@ -30,27 +30,34 @@ export function ScorecardTable({ team, linescore, totals, side }: ScorecardTable
         </tr>
       </thead>
       <tbody>
-        {team.lineup.map((slot) => {
+        {team.lineup.flatMap((slot) => {
           const cells = team.cellsBySlot[slot.slot] ?? [];
-          const currentName = slot.players[slot.players.length - 1]?.name ?? '';
-          return (
-            <tr key={slot.slot} className={slot.slot % 2 === 0 ? 'scorecard-row-stripe' : undefined}>
-              <td className="scorecard-col-player">
-                <span className="lineup-slot-number">{slot.slot}</span> {currentName}
-              </td>
-              {inningNums.map((n) => {
-                const cellsInInning = cells.filter((c) => c.inning === n);
-                return (
-                  <td key={n} className="scorecard-cell">
-                    {cellsInInning.map((c) => (
-                      <AtBatCell key={c.atBatIndex} cell={c} />
-                    ))}
-                  </td>
-                );
-              })}
-              <td />
-            </tr>
-          );
+          const stripeClass = slot.slot % 2 === 0 ? 'scorecard-row-stripe' : undefined;
+          return slot.players.map((player, pi) => {
+            const isFirst = pi === 0;
+            const playerCells = cells.filter((c) => c.batterId === player.id);
+            const rowClass = [stripeClass, isFirst ? undefined : 'scorecard-sub-row']
+              .filter(Boolean).join(' ') || undefined;
+            return (
+              <tr key={`${slot.slot}-${player.entrySeq}`} className={rowClass}>
+                <td className="scorecard-col-player">
+                  <span className="lineup-slot-number">{isFirst ? slot.slot : ''}</span>
+                  {isFirst ? player.name : <span className="sub-player-name">{player.name}</span>}
+                </td>
+                {inningNums.map((n) => {
+                  const cellsInInning = playerCells.filter((c) => c.inning === n);
+                  return (
+                    <td key={n} className="scorecard-cell">
+                      {cellsInInning.map((c) => (
+                        <AtBatCell key={c.atBatIndex} cell={c} />
+                      ))}
+                    </td>
+                  );
+                })}
+                <td />
+              </tr>
+            );
+          });
         })}
         {team.lineup.length === 0 && (
           <tr>
