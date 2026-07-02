@@ -52,7 +52,7 @@ const ADVANCEMENT_NODE: Record<'2B' | '3B' | 'HOME', { x: number; y: number }> =
   HOME,
 };
 
-const LABEL_OFFSET = 9;
+const LABEL_OFFSET = 8;
 
 function labelPos(node: { x: number; y: number }): { x: number; y: number } {
   const dx = node.x - CX;

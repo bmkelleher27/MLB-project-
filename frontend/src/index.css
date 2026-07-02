@@ -648,6 +648,9 @@ a {
   position: absolute;
   top: 0;
   left: 0;
+  /* Advancement labels sit at the viewBox edges; without this the SVG
+     clips them in half. Lets them use the cell's surrounding margin. */
+  overflow: visible;
 }
 
 .diamond-outline {
