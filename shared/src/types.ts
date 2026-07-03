@@ -173,3 +173,31 @@ export interface ScheduleResponse {
   date: string;
   games: ScheduleGame[];
 }
+
+export interface TeamInfo {
+  id: number;
+  name: string;
+  abbreviation: string;
+}
+
+export interface SeasonGame {
+  gamePk: number;
+  gameDate: string;
+  /** R regular season, F wild card, D division series, L LCS, W World Series */
+  gameType: string;
+  status: GameStatus;
+  /** Whether the selected team was the home side. */
+  isHome: boolean;
+  opponent: TeamInfo;
+  teamScore: number | null;
+  opponentScore: number | null;
+  /** null until the game is Final. */
+  won: boolean | null;
+  venue: string | null;
+}
+
+export interface SeasonResponse {
+  teamId: number;
+  season: number;
+  games: SeasonGame[];
+}

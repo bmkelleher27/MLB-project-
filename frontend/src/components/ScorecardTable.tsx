@@ -44,7 +44,7 @@ export function ScorecardTable({
     `${n === hoverInning ? ' inning-col-hover' : ''}${n === currentInning ? ' inning-col-current' : ''}`;
 
   return (
-    <div className="scorecard-table-wrapper">
+    <div className="scorecard-table-wrapper" data-side={side}>
     <table className="scorecard-table">
       <thead>
         <tr>

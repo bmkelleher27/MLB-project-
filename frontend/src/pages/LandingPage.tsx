@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { ScheduleGame } from '@mlb-scorecards/shared';
 import { fetchSchedule, fetchRandomGame } from '../api/client';
 import { DatePicker } from '../components/DatePicker';
@@ -59,13 +59,16 @@ export function LandingPage() {
       </header>
       <div className="landing-toolbar">
         <DatePicker date={date} onChange={setDate} />
-        <button
-          className="random-game-btn"
-          onClick={goToRandomGame}
-          disabled={randomLoading}
-        >
-          {randomLoading ? 'Finding a game…' : '⚄ Random Historical Game'}
-        </button>
+        <div className="landing-actions">
+          <button
+            className="random-game-btn"
+            onClick={goToRandomGame}
+            disabled={randomLoading}
+          >
+            {randomLoading ? 'Finding a game…' : '⚄ Random Historical Game'}
+          </button>
+          <Link to="/season" className="random-game-btn">📅 Season Review</Link>
+        </div>
       </div>
       {loading && games.length === 0 && <p className="status-message">Loading games...</p>}
       {error && <p className="status-message status-error">{error}</p>}

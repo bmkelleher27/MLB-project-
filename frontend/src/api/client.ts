@@ -1,4 +1,4 @@
-import type { Scorecard, ScheduleResponse } from '@mlb-scorecards/shared';
+import type { Scorecard, ScheduleResponse, SeasonResponse, TeamInfo } from '@mlb-scorecards/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
@@ -18,4 +18,17 @@ export async function fetchRandomGame(): Promise<{ gamePk: number; date: string 
   const res = await fetch(`${API_BASE}/api/random-game`);
   if (!res.ok) throw new Error(`random-game request failed: ${res.status}`);
   return res.json() as Promise<{ gamePk: number; date: string }>;
+}
+
+export async function fetchTeams(season: number): Promise<TeamInfo[]> {
+  const res = await fetch(`${API_BASE}/api/teams?season=${season}`);
+  if (!res.ok) throw new Error(`teams request failed: ${res.status}`);
+  const body = (await res.json()) as { teams: TeamInfo[] };
+  return body.teams;
+}
+
+export async function fetchSeason(teamId: number, season: number): Promise<SeasonResponse> {
+  const res = await fetch(`${API_BASE}/api/season?teamId=${teamId}&season=${season}`);
+  if (!res.ok) throw new Error(`season request failed: ${res.status}`);
+  return res.json() as Promise<SeasonResponse>;
 }

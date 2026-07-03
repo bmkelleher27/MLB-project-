@@ -31,10 +31,11 @@ export interface RawSchedule {
 export interface RawScheduleGame {
   gamePk: number;
   gameDate: string;
+  gameType?: string;
   status: { abstractGameState: string; detailedState: string };
   teams: {
-    away: { team: { id: number; name: string; abbreviation?: string }; score?: number };
-    home: { team: { id: number; name: string; abbreviation?: string }; score?: number };
+    away: { team: { id: number; name: string; abbreviation?: string }; score?: number; isWinner?: boolean };
+    home: { team: { id: number; name: string; abbreviation?: string }; score?: number; isWinner?: boolean };
   };
   venue?: { name: string };
   linescore?: {
@@ -49,6 +50,22 @@ export function getSchedule(date: string): Promise<RawSchedule> {
     `/api/v1/schedule?sportId=1&date=${date}&hydrate=linescore,team`,
     15_000
   );
+}
+
+// Regular season + all postseason rounds; spring training excluded.
+export function getTeamSeasonSchedule(teamId: number, season: number): Promise<RawSchedule> {
+  return getJson<RawSchedule>(
+    `/api/v1/schedule?sportId=1&teamId=${teamId}&season=${season}&gameTypes=R,F,D,L,W&hydrate=team`,
+    60_000
+  );
+}
+
+export interface RawTeamsResponse {
+  teams: Array<{ id: number; name: string; abbreviation?: string }>;
+}
+
+export function getTeams(season: number): Promise<RawTeamsResponse> {
+  return getJson<RawTeamsResponse>(`/api/v1/teams?sportId=1&season=${season}`, 3_600_000);
 }
 
 // The live feed shape is large/loosely-typed upstream (MLB's "Gumbo" feed);

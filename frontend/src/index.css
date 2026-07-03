@@ -71,6 +71,13 @@ a {
   margin-bottom: 24px;
 }
 
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
 .random-game-btn {
   border: 1px solid var(--border);
   background: var(--panel-bg);
@@ -1083,7 +1090,17 @@ a {
 
 /* ── Scorebook literacy features ──────────────────────────────────── */
 
-/* Nav bar legend toggle */
+/* Nav bar action buttons */
+
+.scorecard-nav-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.scorecard-nav-actions .nav-legend-btn {
+  margin-left: 0;
+}
 
 .nav-legend-btn {
   margin-left: auto;
@@ -1556,6 +1573,298 @@ a {
 .at-bat-detail-adv-item:hover {
   background: var(--accent-bg);
   border-color: var(--accent);
+}
+
+/* ── Season review page ───────────────────────────────────────────── */
+
+.season-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 20px 48px;
+}
+
+.season-page h1 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+
+.season-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.season-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.season-control select {
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-bg);
+  padding: 8px 10px;
+  min-width: 160px;
+  cursor: pointer;
+}
+
+.season-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.season-summary-team {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.season-summary-record {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.season-summary-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.season-month-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 18px 0 8px;
+}
+
+.season-games {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.season-game-row {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: var(--text);
+  border-bottom: 1px solid var(--row-stripe);
+}
+
+.season-game-row:last-child {
+  border-bottom: none;
+}
+
+.season-game-row:hover {
+  background: var(--accent-bg);
+}
+
+.season-game-date {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.season-game-opp {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.season-game-ha {
+  color: var(--text-muted);
+  font-weight: 400;
+  display: inline-block;
+  min-width: 20px;
+}
+
+.season-game-type {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.season-game-result {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.season-win {
+  color: var(--live);
+}
+
+.season-loss {
+  color: #b91c1c;
+}
+
+.season-game-status {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 480px) {
+  .season-game-row {
+    grid-template-columns: 74px 1fr auto;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+}
+
+/* ── Print / PDF export ───────────────────────────────────────────── */
+
+@media print {
+  @page {
+    size: letter landscape;
+    margin: 9mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .scorecard-nav-bar,
+  .notation-legend,
+  .scoring-summary,
+  .replay-bar,
+  .at-bat-detail,
+  .predictive-footnote a {
+    display: none !important;
+  }
+
+  .scorecard-page {
+    padding: 0;
+  }
+
+  .scorecard-page::before {
+    content: none !important; /* mobile rotate hint */
+  }
+
+  .game-status-header {
+    box-shadow: none;
+    margin-bottom: 10px;
+    padding: 8px 14px;
+  }
+
+  .scorecard-tables {
+    gap: 12px;
+  }
+
+  /* Compact cells so 9+ innings fit a landscape letter page */
+  .scorecard-cell {
+    min-width: 60px;
+    height: 60px;
+  }
+
+  .at-bat-cell {
+    min-height: 56px;
+    padding: 1px;
+  }
+
+  .at-bat-cell-main {
+    width: 46px;
+    height: 46px;
+  }
+
+  .diamond {
+    width: 46px;
+    height: 46px;
+  }
+
+  .at-bat-code {
+    font-size: 8px;
+  }
+
+  .at-bat-count {
+    font-size: 6px;
+  }
+
+  .at-bat-cell-top {
+    font-size: 7px;
+  }
+
+  .hr-data {
+    font-size: 6px;
+    margin-top: 2px;
+  }
+
+  .scorecard-col-player {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    font-size: 10px;
+  }
+
+  .scorecard-table th,
+  .scorecard-table td {
+    font-size: 10px;
+    padding: 1px;
+  }
+
+  .scorecard-table th {
+    position: static; /* no sticky in print */
+  }
+
+  .scorecard-table .scorecard-col-player {
+    position: static;
+  }
+
+  .scorecard-table-wrapper {
+    overflow: visible;
+  }
+
+  .scorecard-table-wrapper::after {
+    content: none !important; /* scroll gradient */
+  }
+
+  /* Keep each table on one page; start the home team on a fresh page */
+  .scorecard-table-wrapper,
+  .pitching-table,
+  .predictive-stats {
+    break-inside: avoid;
+  }
+
+  .scorecard-table-wrapper[data-side='home'] {
+    break-before: page;
+  }
 }
 
 /* ── Mobile optimizations ─────────────────────────────────────────── */

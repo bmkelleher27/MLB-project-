@@ -118,12 +118,19 @@ export function ScorecardPage() {
         {scorecard?.date && (
           <span className="scorecard-nav-date">{formatGameDate(scorecard.date)}</span>
         )}
-        <button
-          className={`nav-legend-btn${legendOpen ? ' nav-legend-btn-active' : ''}`}
-          onClick={() => setLegendOpen((o) => !o)}
-        >
-          ? How to read
-        </button>
+        <div className="scorecard-nav-actions">
+          {scorecard && (
+            <button className="nav-legend-btn" onClick={() => window.print()} title="Print or save this scorecard as a PDF">
+              ⤓ Export PDF
+            </button>
+          )}
+          <button
+            className={`nav-legend-btn${legendOpen ? ' nav-legend-btn-active' : ''}`}
+            onClick={() => setLegendOpen((o) => !o)}
+          >
+            ? How to read
+          </button>
+        </div>
       </div>
       <div className={`scorecard-page${selectedCell ? ' scorecard-page-detail-open' : ''}`}>
         {legendOpen && <NotationLegend />}
