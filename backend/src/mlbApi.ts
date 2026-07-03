@@ -93,6 +93,17 @@ export interface RawGameLog {
   }>;
 }
 
+export function getPersonSeasonStats(
+  personId: number,
+  season: number,
+  group: 'hitting' | 'pitching'
+): Promise<RawGameLog> {
+  return getJson<RawGameLog>(
+    `/api/v1/people/${personId}/stats?stats=season&group=${group}&season=${season}`,
+    60_000
+  );
+}
+
 export function getPersonGameLog(
   personId: number,
   season: number,

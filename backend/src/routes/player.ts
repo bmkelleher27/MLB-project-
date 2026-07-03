@@ -4,8 +4,10 @@ import type {
   PitchingLogEntry,
   PlayerLogResponse,
   PlayerPredictiveResponse,
+  SeasonBattingTotals,
+  SeasonPitchingTotals,
 } from '@mlb-scorecards/shared';
-import { getPerson, getPersonGameLog } from '../mlbApi.js';
+import { getPerson, getPersonGameLog, getPersonSeasonStats } from '../mlbApi.js';
 import { getGamePredictive } from '../scorecard/gamePredictive.js';
 
 const router = Router();
@@ -73,10 +75,12 @@ router.get('/:id', async (req, res) => {
     return;
   }
   try {
-    const [person, hitting, pitching] = await Promise.all([
+    const [person, hitting, pitching, seasonHitting, seasonPitching] = await Promise.all([
       getPerson(id),
       getPersonGameLog(id, season, 'hitting'),
       getPersonGameLog(id, season, 'pitching'),
+      getPersonSeasonStats(id, season, 'hitting'),
+      getPersonSeasonStats(id, season, 'pitching'),
     ]);
     const info = person.people?.[0];
     if (!info) {
@@ -110,12 +114,48 @@ router.get('/:id', async (req, res) => {
       strikeouts: num(s.stat?.strikeOuts),
     }));
 
+    const hitTotals = seasonHitting.stats?.[0]?.splits?.[0]?.stat;
+    const seasonBatting: SeasonBattingTotals | null = hitTotals
+      ? {
+          games: num(hitTotals.gamesPlayed),
+          avg: String(hitTotals.avg ?? ''),
+          obp: String(hitTotals.obp ?? ''),
+          slg: String(hitTotals.slg ?? ''),
+          ops: String(hitTotals.ops ?? ''),
+          homeRuns: num(hitTotals.homeRuns),
+          rbi: num(hitTotals.rbi),
+          hits: num(hitTotals.hits),
+          runs: num(hitTotals.runs),
+          walks: num(hitTotals.baseOnBalls),
+          strikeouts: num(hitTotals.strikeOuts),
+          stolenBases: num(hitTotals.stolenBases),
+        }
+      : null;
+
+    const pitchTotals = seasonPitching.stats?.[0]?.splits?.[0]?.stat;
+    const seasonPitchingTotals: SeasonPitchingTotals | null = pitchTotals
+      ? {
+          games: num(pitchTotals.gamesPlayed),
+          gamesStarted: num(pitchTotals.gamesStarted),
+          wins: num(pitchTotals.wins),
+          losses: num(pitchTotals.losses),
+          saves: num(pitchTotals.saves),
+          era: String(pitchTotals.era ?? ''),
+          whip: String(pitchTotals.whip ?? ''),
+          inningsPitched: String(pitchTotals.inningsPitched ?? '0.0'),
+          strikeouts: num(pitchTotals.strikeOuts),
+          walks: num(pitchTotals.baseOnBalls),
+        }
+      : null;
+
     const body: PlayerLogResponse = {
       id,
       name: info.fullName,
       position: info.primaryPosition?.abbreviation ?? null,
       team: info.currentTeam?.name ?? null,
       season,
+      seasonBatting,
+      seasonPitching: seasonPitchingTotals,
       batting,
       pitching: pitchingLog,
     };

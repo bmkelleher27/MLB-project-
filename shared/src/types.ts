@@ -228,12 +228,42 @@ export interface PitchingLogEntry {
   strikeouts: number;
 }
 
+export interface SeasonBattingTotals {
+  games: number;
+  avg: string;
+  obp: string;
+  slg: string;
+  ops: string;
+  homeRuns: number;
+  rbi: number;
+  hits: number;
+  runs: number;
+  walks: number;
+  strikeouts: number;
+  stolenBases: number;
+}
+
+export interface SeasonPitchingTotals {
+  games: number;
+  gamesStarted: number;
+  wins: number;
+  losses: number;
+  saves: number;
+  era: string;
+  whip: string;
+  inningsPitched: string;
+  strikeouts: number;
+  walks: number;
+}
+
 export interface PlayerLogResponse {
   id: number;
   name: string;
   position: string | null;
   team: string | null;
   season: number;
+  seasonBatting: SeasonBattingTotals | null;
+  seasonPitching: SeasonPitchingTotals | null;
   batting: BattingLogEntry[];
   pitching: PitchingLogEntry[];
 }

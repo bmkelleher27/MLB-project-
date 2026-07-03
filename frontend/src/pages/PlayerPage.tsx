@@ -16,6 +16,58 @@ function indexClass(value: number): string {
   return '';
 }
 
+function StatTile({ label, value, title }: { label: string; value: string | number; title?: string }) {
+  return (
+    <div className="stat-tile" title={title}>
+      <span className="stat-tile-label">{label}</span>
+      <span className="stat-tile-value">{value}</span>
+    </div>
+  );
+}
+
+function SeasonTotals({ log }: { log: PlayerLogResponse }) {
+  const bat = log.seasonBatting;
+  const pit = log.seasonPitching;
+  if (!bat && !pit) return null;
+  return (
+    <div className="player-season-stats">
+      {bat && (
+        <div className="stat-tile-row">
+          <span className="stat-tile-row-label">Batting</span>
+          <StatTile label="G" value={bat.games} title="Games played" />
+          <StatTile label="AVG" value={bat.avg} title="Batting average" />
+          <StatTile label="OBP" value={bat.obp} title="On-base percentage" />
+          <StatTile label="SLG" value={bat.slg} title="Slugging percentage" />
+          <StatTile label="OPS" value={bat.ops} title="On-base plus slugging" />
+          <StatTile label="HR" value={bat.homeRuns} title="Home runs" />
+          <StatTile label="RBI" value={bat.rbi} title="Runs batted in" />
+          <StatTile label="R" value={bat.runs} title="Runs scored" />
+          <StatTile label="BB" value={bat.walks} title="Walks" />
+          <StatTile label="K" value={bat.strikeouts} title="Strikeouts" />
+          <StatTile label="SB" value={bat.stolenBases} title="Stolen bases" />
+        </div>
+      )}
+      {pit && (
+        <div className="stat-tile-row">
+          <span className="stat-tile-row-label">Pitching</span>
+          <StatTile label="W–L" value={`${pit.wins}–${pit.losses}`} title="Wins and losses" />
+          <StatTile label="ERA" value={pit.era} title="Earned run average" />
+          <StatTile label="WHIP" value={pit.whip} title="Walks + hits per inning" />
+          <StatTile label="IP" value={pit.inningsPitched} title="Innings pitched" />
+          <StatTile
+            label="G"
+            value={pit.gamesStarted > 0 ? `${pit.games} (${pit.gamesStarted} GS)` : pit.games}
+            title="Games (games started)"
+          />
+          <StatTile label="K" value={pit.strikeouts} title="Strikeouts" />
+          <StatTile label="BB" value={pit.walks} title="Walks" />
+          {pit.saves > 0 && <StatTile label="SV" value={pit.saves} title="Saves" />}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function IndexCell({
   gamePk,
   pred,
@@ -116,6 +168,8 @@ export function PlayerPage() {
         {!loading && log && log.batting.length === 0 && log.pitching.length === 0 && (
           <p className="status-message">No games for {log.name} in {season}.</p>
         )}
+
+        {!loading && log && <SeasonTotals log={log} />}
 
         {!loading && log && log.batting.length > 0 && (
           <section>
