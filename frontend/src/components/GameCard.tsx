@@ -51,10 +51,10 @@ export function GameCard({ game, favoriteTeamId = null, onToggleFavorite }: Game
 
   const awayHex = teamHex(game.away.id) ?? NEUTRAL_HEX;
   const homeHex = teamHex(game.home.id) ?? NEUTRAL_HEX;
-  // Subtle two-team wash: away color from the top-left, home from the
-  // bottom-right, fading to the panel surface in the middle ("14" = ~8% alpha).
+  // Two-team wash: away color from the top-left, home from the
+  // bottom-right, fading to the panel surface in the middle ("2b" = ~17% alpha).
   const cardStyle = {
-    background: `linear-gradient(135deg, ${awayHex}14 0%, rgba(255,255,255,0) 42%, rgba(255,255,255,0) 58%, ${homeHex}14 100%), var(--panel-bg)`,
+    background: `linear-gradient(135deg, ${awayHex}2b 0%, rgba(255,255,255,0) 45%, rgba(255,255,255,0) 55%, ${homeHex}2b 100%), var(--panel-bg)`,
   };
 
   function star(teamId: number) {

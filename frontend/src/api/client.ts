@@ -1,5 +1,6 @@
 import type {
   PlayerLogResponse,
+  PlayerPredictiveResponse,
   Scorecard,
   ScheduleResponse,
   SeasonPredictiveResponse,
@@ -44,6 +45,12 @@ export async function fetchPlayerLog(id: number, season: number): Promise<Player
   const res = await fetch(`${API_BASE}/api/player/${id}?season=${season}`);
   if (!res.ok) throw new Error(`player request failed: ${res.status}`);
   return res.json() as Promise<PlayerLogResponse>;
+}
+
+export async function fetchPlayerPredictive(id: number, season: number): Promise<PlayerPredictiveResponse> {
+  const res = await fetch(`${API_BASE}/api/player/${id}/predictive?season=${season}`);
+  if (!res.ok) throw new Error(`player predictive request failed: ${res.status}`);
+  return res.json() as Promise<PlayerPredictiveResponse>;
 }
 
 export async function fetchSeasonPredictive(teamId: number, season: number): Promise<SeasonPredictiveResponse> {
