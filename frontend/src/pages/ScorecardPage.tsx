@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import type { Cell, Scorecard } from '@mlb-scorecards/shared';
 import { fetchScorecard } from '../api/client';
 import { getSocket } from '../api/socket';
@@ -11,6 +11,7 @@ import { PredictiveStats } from '../components/PredictiveStats';
 import { ReplayControls } from '../components/ReplayControls';
 import { ScorecardTable } from '../components/ScorecardTable';
 import { ScoringSummary } from '../components/ScoringSummary';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 function formatGameDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
@@ -27,10 +28,10 @@ function* allCells(scorecard: Scorecard): Generator<Cell> {
   }
 }
 
-function flashCell(atBatIndex: number) {
+function flashCell(atBatIndex: number, scroll: boolean) {
   const el = document.querySelector(`[data-at-bat-index="${atBatIndex}"]`);
   if (!(el instanceof HTMLElement)) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+  if (scroll) el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
   el.classList.remove('at-bat-cell-flash');
   // force a reflow so re-adding the class restarts the animation on repeat clicks
   void el.offsetWidth;
@@ -40,11 +41,14 @@ function flashCell(atBatIndex: number) {
 
 export function ScorecardPage() {
   const { gamePk } = useParams<{ gamePk: string }>();
+  const [params, setParams] = useSearchParams();
   const [scorecard, setScorecard] = useState<Scorecard | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [legendOpen, setLegendOpen] = useState(false);
   const [selectedAtBatIndex, setSelectedAtBatIndex] = useState<number | null>(null);
   const [replayStep, setReplayStep] = useState<number | null>(null);
+  const prevMaxAbRef = useRef<number | null>(null);
+  const deepLinkAppliedRef = useRef(false);
 
   useEffect(() => {
     if (!gamePk) return;
@@ -54,6 +58,8 @@ export function ScorecardPage() {
     setError(null);
     setSelectedAtBatIndex(null);
     setReplayStep(null);
+    prevMaxAbRef.current = null;
+    deepLinkAppliedRef.current = false;
 
     fetchScorecard(gamePkNum)
       .then((sc) => {
@@ -88,6 +94,49 @@ export function ScorecardPage() {
     return [...set].sort((a, b) => a - b);
   }, [scorecard]);
 
+  const isLive = scorecard?.status.abstractGameState === 'Live';
+
+  const latestCell = useMemo(() => {
+    if (!scorecard) return null;
+    let latest: Cell | null = null;
+    for (const cell of allCells(scorecard)) {
+      if (!latest || cell.atBatIndex > latest.atBatIndex) latest = cell;
+    }
+    return latest;
+  }, [scorecard]);
+
+  // Live follow: when a new completed at-bat arrives over the socket, flash its
+  // cell in place (no scroll - the ticker is the scroll affordance).
+  useEffect(() => {
+    if (!latestCell) return;
+    const prev = prevMaxAbRef.current;
+    prevMaxAbRef.current = latestCell.atBatIndex;
+    if (isLive && prev !== null && latestCell.atBatIndex > prev) {
+      flashCell(latestCell.atBatIndex, false);
+    }
+  }, [latestCell, isLive]);
+
+  // ?ab= deep link: select and scroll to the linked at-bat once, on first load.
+  useEffect(() => {
+    if (!scorecard || deepLinkAppliedRef.current) return;
+    deepLinkAppliedRef.current = true;
+    const ab = params.get('ab');
+    if (ab === null) return;
+    const abNum = Number(ab);
+    if (!atBatIndices.includes(abNum)) return;
+    setSelectedAtBatIndex(abNum);
+    window.setTimeout(() => flashCell(abNum, true), 120);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scorecard, atBatIndices]);
+
+  function selectCell(atBatIndex: number | null) {
+    setSelectedAtBatIndex(atBatIndex);
+    const p = new URLSearchParams(params);
+    if (atBatIndex === null) p.delete('ab');
+    else p.set('ab', String(atBatIndex));
+    setParams(p, { replace: true });
+  }
+
   const replayLimit =
     replayStep === null || atBatIndices.length === 0
       ? null
@@ -106,10 +155,8 @@ export function ScorecardPage() {
     const pos = atBatIndices.indexOf(atBatIndex);
     if (replayStep !== null && pos > replayStep) setReplayStep(pos);
     // Defer so a replay-step re-render can unhide the cell before we scroll to it.
-    window.setTimeout(() => flashCell(atBatIndex), 60);
+    window.setTimeout(() => flashCell(atBatIndex, true), 60);
   }
-
-  const isLive = scorecard?.status.abstractGameState === 'Live';
 
   return (
     <>
@@ -130,15 +177,35 @@ export function ScorecardPage() {
           >
             ? How to read
           </button>
+          <ThemeToggle />
         </div>
       </div>
       <div className={`scorecard-page${selectedCell ? ' scorecard-page-detail-open' : ''}`}>
         {legendOpen && <NotationLegend />}
         {error && <p className="status-message status-error">{error}</p>}
-        {!error && !scorecard && <p className="status-message">Loading scorecard...</p>}
+        {!error && !scorecard && (
+          <div className="scorecard-skeleton" aria-hidden="true">
+            <div className="skeleton skeleton-header" />
+            <div className="skeleton skeleton-table" />
+            <div className="skeleton skeleton-table" />
+          </div>
+        )}
         {scorecard && (
           <>
             <GameStatusHeader scorecard={scorecard} />
+            {isLive && latestCell && (
+              <button
+                className="live-ticker"
+                onClick={() => jumpToCell(latestCell.atBatIndex)}
+                title="Show this play on the scorecard"
+              >
+                <span className="live-dot" />
+                <span className="live-ticker-label">
+                  Latest · {latestCell.halfInning === 'top' ? 'T' : 'B'}{latestCell.inning}
+                </span>
+                <span className="live-ticker-desc">{latestCell.description}</span>
+              </button>
+            )}
             <ScoringSummary scorecard={scorecard} onJump={jumpToCell} />
             <ReplayControls totalPlays={atBatIndices.length} step={replayStep} onChange={setReplayStep} />
             <div className="scorecard-tables">
@@ -150,12 +217,15 @@ export function ScorecardPage() {
                 currentInning={isLive && scorecard.halfInning === 'top' ? scorecard.inning : null}
                 selectedAtBatIndex={selectedAtBatIndex}
                 replayLimit={replayLimit}
-                onSelectCell={(cell) =>
-                  setSelectedAtBatIndex((cur) => (cur === cell.atBatIndex ? null : cell.atBatIndex))
-                }
+                onSelectCell={(cell) => selectCell(selectedAtBatIndex === cell.atBatIndex ? null : cell.atBatIndex)}
                 onAdvancementClick={jumpToCell}
+                seasonYear={scorecard.date ? Number(scorecard.date.slice(0, 4)) : null}
               />
-              <PitchingTable teamName={scorecard.teams.away.team.name} pitching={scorecard.teams.away.pitching} />
+              <PitchingTable
+                teamName={scorecard.teams.away.team.name}
+                pitching={scorecard.teams.away.pitching}
+                seasonYear={scorecard.date ? Number(scorecard.date.slice(0, 4)) : null}
+              />
               <PredictiveStats teamName={scorecard.teams.away.team.name} predictive={scorecard.predictive.away} />
               <ScorecardTable
                 team={scorecard.teams.home}
@@ -165,12 +235,15 @@ export function ScorecardPage() {
                 currentInning={isLive && scorecard.halfInning === 'bottom' ? scorecard.inning : null}
                 selectedAtBatIndex={selectedAtBatIndex}
                 replayLimit={replayLimit}
-                onSelectCell={(cell) =>
-                  setSelectedAtBatIndex((cur) => (cur === cell.atBatIndex ? null : cell.atBatIndex))
-                }
+                onSelectCell={(cell) => selectCell(selectedAtBatIndex === cell.atBatIndex ? null : cell.atBatIndex)}
                 onAdvancementClick={jumpToCell}
+                seasonYear={scorecard.date ? Number(scorecard.date.slice(0, 4)) : null}
               />
-              <PitchingTable teamName={scorecard.teams.home.team.name} pitching={scorecard.teams.home.pitching} />
+              <PitchingTable
+                teamName={scorecard.teams.home.team.name}
+                pitching={scorecard.teams.home.pitching}
+                seasonYear={scorecard.date ? Number(scorecard.date.slice(0, 4)) : null}
+              />
               <PredictiveStats teamName={scorecard.teams.home.team.name} predictive={scorecard.predictive.home} />
             </div>
           </>
@@ -178,7 +251,7 @@ export function ScorecardPage() {
         {selectedCell && (
           <AtBatDetail
             cell={selectedCell}
-            onClose={() => setSelectedAtBatIndex(null)}
+            onClose={() => selectCell(null)}
             onAdvancementClick={jumpToCell}
           />
         )}

@@ -34,8 +34,8 @@ export interface RawScheduleGame {
   gameType?: string;
   status: { abstractGameState: string; detailedState: string };
   teams: {
-    away: { team: { id: number; name: string; abbreviation?: string }; score?: number; isWinner?: boolean };
-    home: { team: { id: number; name: string; abbreviation?: string }; score?: number; isWinner?: boolean };
+    away: { team: { id: number; name: string; abbreviation?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
+    home: { team: { id: number; name: string; abbreviation?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
   };
   venue?: { name: string };
   linescore?: {
@@ -47,7 +47,7 @@ export interface RawScheduleGame {
 
 export function getSchedule(date: string): Promise<RawSchedule> {
   return getJson<RawSchedule>(
-    `/api/v1/schedule?sportId=1&date=${date}&hydrate=linescore,team`,
+    `/api/v1/schedule?sportId=1&date=${date}&hydrate=linescore,team,probablePitcher`,
     15_000
   );
 }
@@ -68,6 +68,42 @@ export function getTeams(season: number): Promise<RawTeamsResponse> {
   return getJson<RawTeamsResponse>(`/api/v1/teams?sportId=1&season=${season}`, 3_600_000);
 }
 
+export interface RawPerson {
+  people: Array<{
+    id: number;
+    fullName: string;
+    primaryPosition?: { abbreviation?: string };
+    currentTeam?: { name?: string };
+  }>;
+}
+
+export function getPerson(personId: number): Promise<RawPerson> {
+  return getJson<RawPerson>(`/api/v1/people/${personId}`, 3_600_000);
+}
+
+export interface RawGameLog {
+  stats?: Array<{
+    splits?: Array<{
+      date?: string;
+      isHome?: boolean;
+      opponent?: { name?: string };
+      game?: { gamePk?: number };
+      stat?: Record<string, unknown>;
+    }>;
+  }>;
+}
+
+export function getPersonGameLog(
+  personId: number,
+  season: number,
+  group: 'hitting' | 'pitching'
+): Promise<RawGameLog> {
+  return getJson<RawGameLog>(
+    `/api/v1/people/${personId}/stats?stats=gameLog&group=${group}&season=${season}`,
+    60_000
+  );
+}
+
 // The live feed shape is large/loosely-typed upstream (MLB's "Gumbo" feed);
 // we only declare the fields the scorecard transformer actually reads.
 export interface RawLiveFeed {
@@ -76,6 +112,11 @@ export interface RawLiveFeed {
     status: { abstractGameState: string; detailedState: string };
     venue?: { name: string };
     datetime?: { officialDate?: string; time?: string; ampm?: string };
+    // The boxscore's team object has no abbreviation; gameData's does.
+    teams?: {
+      away?: { abbreviation?: string };
+      home?: { abbreviation?: string };
+    };
   };
   liveData: {
     plays: { allPlays: RawPlay[] };

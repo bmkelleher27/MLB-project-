@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ExplainerPage } from './pages/ExplainerPage';
 import { LandingPage } from './pages/LandingPage';
+import { PlayerPage } from './pages/PlayerPage';
 import { ScorecardPage } from './pages/ScorecardPage';
 import { SeasonPage } from './pages/SeasonPage';
 
@@ -12,6 +13,7 @@ function App() {
         <Route path="/game/:gamePk" element={<ScorecardPage />} />
         <Route path="/stats" element={<ExplainerPage />} />
         <Route path="/season" element={<SeasonPage />} />
+        <Route path="/player/:id" element={<PlayerPage />} />
       </Routes>
     </BrowserRouter>
   );

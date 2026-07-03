@@ -33,18 +33,30 @@ export function GameStatusHeader({ scorecard }: { scorecard: Scorecard }) {
         </div>
       </div>
 
-      <div className="game-status-rhe">
-        <span className="game-status-rhe-row">
-          <span className="game-status-rhe-label">H</span>
-          <span>{scorecard.totals.away.h}</span>
-          <span>{scorecard.totals.home.h}</span>
-        </span>
-        <span className="game-status-rhe-row">
-          <span className="game-status-rhe-label">E</span>
-          <span>{scorecard.totals.away.e}</span>
-          <span>{scorecard.totals.home.e}</span>
-        </span>
-      </div>
+      <table className="game-status-rhe-table" aria-label="Runs, hits, and errors by team">
+        <thead>
+          <tr>
+            <th />
+            <th>R</th>
+            <th>H</th>
+            <th>E</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td className="game-status-rhe-abbr">{scorecard.teams.away.team.abbreviation}</td>
+            <td>{scorecard.totals.away.r}</td>
+            <td>{scorecard.totals.away.h}</td>
+            <td>{scorecard.totals.away.e}</td>
+          </tr>
+          <tr>
+            <td className="game-status-rhe-abbr">{scorecard.teams.home.team.abbreviation}</td>
+            <td>{scorecard.totals.home.r}</td>
+            <td>{scorecard.totals.home.h}</td>
+            <td>{scorecard.totals.home.e}</td>
+          </tr>
+        </tbody>
+      </table>
 
       <div className="game-status-state">
         {isLive && (

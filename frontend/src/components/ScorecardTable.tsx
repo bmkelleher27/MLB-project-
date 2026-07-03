@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { Cell, InningLine, TeamScorecard, TeamTotals } from '@mlb-scorecards/shared';
 import { AtBatCell } from './AtBatCell';
 import { getTeamColor } from '../teamColors';
@@ -14,6 +15,8 @@ interface ScorecardTableProps {
   replayLimit?: number | null;
   onSelectCell?: (cell: Cell) => void;
   onAdvancementClick?: (atBatIndex: number) => void;
+  /** Used to link player names to their game log for the right season. */
+  seasonYear?: number | null;
 }
 
 export function ScorecardTable({
@@ -26,6 +29,7 @@ export function ScorecardTable({
   replayLimit = null,
   onSelectCell,
   onAdvancementClick,
+  seasonYear = null,
 }: ScorecardTableProps) {
   const [hoverInning, setHoverInning] = useState<number | null>(null);
 
@@ -76,7 +80,13 @@ export function ScorecardTable({
                 {slot.players.map((p, i) => (
                   <span key={p.id} className={i > 0 ? 'player-sub-line' : undefined}>
                     {p.position && <span className="player-position">{p.position}</span>}
-                    {' '}{p.name}
+                    {' '}
+                    <Link
+                      to={`/player/${p.id}${seasonYear ? `?season=${seasonYear}` : ''}`}
+                      className="player-link"
+                    >
+                      {p.name}
+                    </Link>
                     {i > 0 && <span className="player-ph"> (PH)</span>}
                   </span>
                 ))}

@@ -6,6 +6,8 @@ import gameRouter from './routes/game.js';
 import randomGameRouter from './routes/randomGame.js';
 import scheduleRouter from './routes/schedule.js';
 import { seasonRouter, teamsRouter } from './routes/season.js';
+import playerRouter from './routes/player.js';
+import seasonPredictiveRouter from './routes/seasonPredictive.js';
 import { registerGameRoomHandlers } from './sockets/gameRoom.js';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
@@ -19,7 +21,9 @@ app.use('/api/schedule', scheduleRouter);
 app.use('/api/game', gameRouter);
 app.use('/api/random-game', randomGameRouter);
 app.use('/api/teams', teamsRouter);
+app.use('/api/season/predictive', seasonPredictiveRouter);
 app.use('/api/season', seasonRouter);
+app.use('/api/player', playerRouter);
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' } });

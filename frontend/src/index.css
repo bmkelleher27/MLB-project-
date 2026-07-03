@@ -16,6 +16,10 @@
   --total-bg: #d6e6f7;
   --card-shadow: 0 1px 3px rgba(20, 45, 65, 0.06);
   --card-shadow-hover: 0 8px 20px rgba(20, 45, 65, 0.13);
+  --hover-bg: #edf3fa;
+  --hover-strong: #d5e5f6;
+  --current-inning-bg: #d9f0e2;
+  --danger: #b91c1c;
 
   font: 16px/1.45 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
@@ -44,7 +48,7 @@ a {
 }
 
 .status-error {
-  color: #b91c1c;
+  color: var(--danger);
 }
 
 /* Landing page */
@@ -378,23 +382,30 @@ a {
   padding-top: 20px;
 }
 
-.game-status-rhe {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.game-status-rhe-table {
+  border-collapse: collapse;
   font-size: 12px;
   font-family: ui-monospace, Consolas, monospace;
-  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.game-status-rhe-row {
-  display: flex;
-  gap: 8px;
-}
-
-.game-status-rhe-label {
+.game-status-rhe-table th {
   font-weight: 700;
-  min-width: 12px;
+  color: var(--text-muted);
+  padding: 1px 7px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.game-status-rhe-table td {
+  padding: 2px 7px;
+  text-align: center;
+}
+
+.game-status-rhe-abbr {
+  font-weight: 700;
+  text-align: left !important;
+  color: var(--text-muted);
 }
 
 .game-status-state {
@@ -678,7 +689,7 @@ a {
 }
 
 .diamond-out-marker {
-  fill: #b91c1c;
+  fill: var(--danger);
 }
 
 .diamond-advancement-label {
@@ -689,7 +700,7 @@ a {
 }
 
 .diamond-advancement-out {
-  fill: #b91c1c;
+  fill: var(--danger);
 }
 
 .diamond-advancement-clickable {
@@ -780,7 +791,7 @@ a {
 }
 
 .pred-index-low {
-  color: #b91c1c;
+  color: var(--danger);
   background: var(--out-bg);
 }
 
@@ -1454,19 +1465,19 @@ a {
 
 .scorecard-table tbody tr:hover > .scorecard-col-player,
 .scorecard-table tbody tr:hover > .scorecard-cell {
-  background: #edf3fa;
+  background: var(--hover-bg);
 }
 
 .scorecard-table td.scorecard-cell.inning-col-hover {
-  background: #edf3fa;
+  background: var(--hover-bg);
 }
 
 .scorecard-table th.inning-col-hover {
-  background: #d5e5f6;
+  background: var(--hover-strong);
 }
 
 .scorecard-table th.inning-col-current {
-  background: #d9f0e2;
+  background: var(--current-inning-bg);
   color: var(--live);
   box-shadow: inset 0 -2px 0 var(--live);
 }
@@ -1728,7 +1739,7 @@ a {
 }
 
 .season-loss {
-  color: #b91c1c;
+  color: var(--danger);
 }
 
 .season-game-status {
@@ -1750,6 +1761,31 @@ a {
   @page {
     size: letter landscape;
     margin: 9mm;
+  }
+
+  /* Print always uses the light palette, whatever the screen theme */
+  :root,
+  :root[data-theme='dark'] {
+    --text: #1f2430;
+    --text-muted: #6b7280;
+    --bg: #ffffff;
+    --panel-bg: #ffffff;
+    --border: #d9dade;
+    --accent: #0a4f8a;
+    --accent-bg: #e7f0fa;
+    --live: #1c8a4c;
+    --out-bg: #f2e3e3;
+    --scored-bg: #e1f3e6;
+    --rbi-bg: #fdeeca;
+    --row-stripe: #f3f4f6;
+    --total-bg: #d6e6f7;
+    --danger: #b91c1c;
+  }
+
+  .live-ticker,
+  .fav-star,
+  .theme-toggle {
+    display: none !important;
   }
 
   * {
@@ -1867,6 +1903,318 @@ a {
   }
 }
 
+
+/* ── Player links ─────────────────────────────────────────────────── */
+
+.player-link {
+  color: inherit;
+  border-bottom: 1px dotted transparent;
+}
+
+.player-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Live follow ticker ───────────────────────────────────────────── */
+
+.live-ticker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 960px;
+  width: 100%;
+  border: 1px solid var(--live);
+  background: var(--panel-bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.live-ticker:hover {
+  background: var(--scored-bg);
+}
+
+.live-ticker-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--live);
+  white-space: nowrap;
+}
+
+.live-ticker-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ── Skeleton loading states ──────────────────────────────────────── */
+
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(100deg, var(--row-stripe) 40%, var(--panel-bg) 50%, var(--row-stripe) 60%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -80% 0;
+  }
+}
+
+.skeleton-game-card {
+  height: 112px;
+}
+
+.skeleton-header {
+  height: 92px;
+  max-width: 760px;
+  margin-bottom: 16px;
+}
+
+.skeleton-table {
+  height: 300px;
+  max-width: 1100px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+/* ── Landing: header bar, sections, probables, favorite ──────────── */
+
+.landing-header-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-header-bar .theme-toggle {
+  position: absolute;
+  right: 0;
+  margin-left: 0;
+}
+
+.landing-section {
+  margin-bottom: 24px;
+}
+
+.landing-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.team-logo {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.game-card-probable {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
+
+.fav-star {
+  border: none;
+  background: none;
+  padding: 0 2px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.game-card:hover .fav-star {
+  opacity: 0.65;
+}
+
+.fav-star:hover {
+  opacity: 1 !important;
+}
+
+.fav-star-on {
+  color: #d9a514;
+  opacity: 1 !important;
+}
+
+/* ── Season result strip ──────────────────────────────────────────── */
+
+.season-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+
+.season-tick {
+  width: 8px;
+  height: 17px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.season-tick:hover {
+  transform: scaleY(1.25);
+}
+
+.season-tick-w {
+  background: var(--live);
+}
+
+.season-tick-l {
+  background: var(--danger);
+  opacity: 0.75;
+}
+
+.season-leaders {
+  margin-top: 26px;
+}
+
+/* ── Player game-log page ─────────────────────────────────────────── */
+
+.player-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 20px 48px;
+}
+
+.player-page h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.player-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.player-header-pos {
+  margin-left: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 5px;
+  padding: 2px 8px;
+  vertical-align: middle;
+}
+
+.player-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 18px 0 8px;
+}
+
+.player-log-wrapper {
+  overflow-x: auto;
+}
+
+.player-log-table {
+  width: 100%;
+}
+
+.player-log-row {
+  cursor: pointer;
+}
+
+.player-log-row:hover td {
+  background: var(--accent-bg);
+}
+
+.player-page-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 14px;
+}
+
+/* ── Dark mode ────────────────────────────────────────────────────── */
+
+:root[data-theme='dark'] {
+  --text: #e7eaf0;
+  --text-muted: #9aa3b0;
+  --bg: #12161c;
+  --panel-bg: #1b222b;
+  --border: #333c48;
+  --accent: #7ab2e8;
+  --accent-bg: #1d2d42;
+  --live: #3dbd77;
+  --out-bg: #3b2629;
+  --scored-bg: #1d3527;
+  --rbi-bg: #3e3418;
+  --row-stripe: #212933;
+  --total-bg: #23374e;
+  --hover-bg: #242e3b;
+  --hover-strong: #2b3c52;
+  --current-inning-bg: #1e3b2b;
+  --danger: #ef6a6a;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme='dark'] body {
+  background: linear-gradient(180deg, #141922 0%, #0e1218 100%) fixed;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --text: #e7eaf0;
+    --text-muted: #9aa3b0;
+    --bg: #12161c;
+    --panel-bg: #1b222b;
+    --border: #333c48;
+    --accent: #7ab2e8;
+    --accent-bg: #1d2d42;
+    --live: #3dbd77;
+    --out-bg: #3b2629;
+    --scored-bg: #1d3527;
+    --rbi-bg: #3e3418;
+    --row-stripe: #212933;
+    --total-bg: #23374e;
+    --hover-bg: #242e3b;
+    --hover-strong: #2b3c52;
+    --current-inning-bg: #1e3b2b;
+    --danger: #ef6a6a;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  :root:not([data-theme='light']) body {
+    background: linear-gradient(180deg, #141922 0%, #0e1218 100%) fixed;
+  }
+}
+
 /* ── Mobile optimizations ─────────────────────────────────────────── */
 
 /* #1 - Compact cells: shrink container and SVG diamond proportionally */
@@ -1942,7 +2290,7 @@ a {
     width: 40px;
     height: 100%;
     margin-top: -100%;
-    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.85));
+    background: linear-gradient(to right, transparent, var(--bg));
     pointer-events: none;
     z-index: 10;
   }

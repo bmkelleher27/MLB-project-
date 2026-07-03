@@ -51,7 +51,7 @@ const CALLED_STRIKE_CODES = new Set(['C']);
 // S swinging strike, W swinging strike blocked, T foul tip, M missed bunt
 const WHIFF_CODES = new Set(['S', 'W', 'T', 'M']);
 
-interface BatterAcc {
+export interface BatterAcc {
   id: number;
   name: string;
   pa: number;
@@ -65,7 +65,7 @@ interface BatterAcc {
   valueSum: number;
 }
 
-interface PitcherAcc {
+export interface PitcherAcc {
   id: number;
   name: string;
   pitches: number;
@@ -155,7 +155,7 @@ function accumulatePlay(play: RawPlay, batters: Map<number, BatterAcc>, pitchers
   }
 }
 
-function finalizeBatter(acc: BatterAcc): PredictiveBatter {
+export function finalizeBatter(acc: BatterAcc): PredictiveBatter {
   const xPerPa = acc.pa > 0 ? acc.valueSum / acc.pa : 0;
   return {
     id: acc.id,
@@ -171,7 +171,7 @@ function finalizeBatter(acc: BatterAcc): PredictiveBatter {
   };
 }
 
-function finalizePitcher(acc: PitcherAcc): PredictivePitcher {
+export function finalizePitcher(acc: PitcherAcc): PredictivePitcher {
   const csw = acc.pitches > 0 ? (acc.calledStrikes + acc.whiffs) / acc.pitches : 0;
   const xCon = acc.battedBallsAllowed > 0 ? acc.conValueSum / acc.battedBallsAllowed : LEAGUE_XCON;
   // Clamped at 0: tiny samples (a reliever's 8-pitch outing) can go negative.
@@ -190,21 +190,39 @@ function finalizePitcher(acc: PitcherAcc): PredictivePitcher {
   };
 }
 
-export function buildPredictive(raw: RawLiveFeed): { away: TeamPredictive; home: TeamPredictive } {
-  // Away bats in the top half; the pitcher on any play belongs to the fielding team.
-  const awayBatters = new Map<number, BatterAcc>();
-  const homeBatters = new Map<number, BatterAcc>();
-  const awayPitchers = new Map<number, PitcherAcc>();
-  const homePitchers = new Map<number, PitcherAcc>();
+export interface SideMaps {
+  awayBatters: Map<number, BatterAcc>;
+  homeBatters: Map<number, BatterAcc>;
+  awayPitchers: Map<number, PitcherAcc>;
+  homePitchers: Map<number, PitcherAcc>;
+}
 
+export function newSideMaps(): SideMaps {
+  return {
+    awayBatters: new Map(),
+    homeBatters: new Map(),
+    awayPitchers: new Map(),
+    homePitchers: new Map(),
+  };
+}
+
+/** Accumulate one game's plays into the given maps (reusable across games). */
+export function accumulateFeed(raw: RawLiveFeed, maps: SideMaps): void {
+  // Away bats in the top half; the pitcher on any play belongs to the fielding team.
   for (const play of raw.liveData.plays.allPlays) {
     if (!play.matchup?.pitcher?.id) continue;
     if (play.about.halfInning === 'top') {
-      accumulatePlay(play, awayBatters, homePitchers);
+      accumulatePlay(play, maps.awayBatters, maps.homePitchers);
     } else {
-      accumulatePlay(play, homeBatters, awayPitchers);
+      accumulatePlay(play, maps.homeBatters, maps.awayPitchers);
     }
   }
+}
+
+export function buildPredictive(raw: RawLiveFeed): { away: TeamPredictive; home: TeamPredictive } {
+  const maps = newSideMaps();
+  accumulateFeed(raw, maps);
+  const { awayBatters, homeBatters, awayPitchers, homePitchers } = maps;
 
   const finalize = (batters: Map<number, BatterAcc>, pitchers: Map<number, PitcherAcc>): TeamPredictive => ({
     batters: [...batters.values()]

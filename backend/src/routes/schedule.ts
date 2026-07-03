@@ -25,12 +25,14 @@ router.get('/', async (req, res) => {
         name: g.teams.away.team.name,
         abbreviation: g.teams.away.team.abbreviation ?? g.teams.away.team.name,
         score: g.teams.away.score ?? null,
+        probablePitcher: g.teams.away.probablePitcher?.fullName ?? null,
       },
       home: {
         id: g.teams.home.team.id,
         name: g.teams.home.team.name,
         abbreviation: g.teams.home.team.abbreviation ?? g.teams.home.team.name,
         score: g.teams.home.score ?? null,
+        probablePitcher: g.teams.home.probablePitcher?.fullName ?? null,
       },
       venue: g.venue?.name ?? null,
       linescore: g.linescore?.innings?.map((inn) => ({

@@ -1,11 +1,14 @@
+import { Link } from 'react-router-dom';
 import type { PitchingLine } from '@mlb-scorecards/shared';
 
 interface PitchingTableProps {
   teamName: string;
   pitching: PitchingLine[];
+  seasonYear?: number | null;
 }
 
-export function PitchingTable({ teamName, pitching }: PitchingTableProps) {
+export function PitchingTable({ teamName, pitching, seasonYear = null }: PitchingTableProps) {
+  const playerUrl = (id: number) => `/player/${id}${seasonYear ? `?season=${seasonYear}` : ''}`;
   return (
     <table className="scorecard-table pitching-table">
       <thead>
@@ -25,7 +28,7 @@ export function PitchingTable({ teamName, pitching }: PitchingTableProps) {
         {pitching.map((p) => (
           <tr key={p.id}>
             <td className="scorecard-col-player">
-              {p.name}
+              <Link to={playerUrl(p.id)} className="player-link">{p.name}</Link>
               {p.decision && <span className="pitching-decision">{p.decision}</span>}
             </td>
             <td>{p.inningsPitched}</td>

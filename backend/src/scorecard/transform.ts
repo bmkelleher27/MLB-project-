@@ -95,7 +95,8 @@ function buildPitchingLines(team: RawBoxscoreTeam): PitchingLine[] {
 function buildTeamScorecard(
   team: RawBoxscoreTeam,
   plays: RawPlay[],
-  halfInningFilter: HalfInning
+  halfInningFilter: HalfInning,
+  abbreviation?: string
 ): TeamScorecard {
   const { byId, lineup } = buildSlotMap(team);
   const cellsBySlot: Record<number, Cell[]> = {};
@@ -196,7 +197,7 @@ function buildTeamScorecard(
     team: {
       id: team.team.id,
       name: team.team.name,
-      abbreviation: team.team.abbreviation ?? team.team.name,
+      abbreviation: abbreviation ?? team.team.abbreviation ?? team.team.name,
     },
     lineup,
     cellsBySlot,
@@ -206,8 +207,18 @@ function buildTeamScorecard(
 
 export function transformLiveFeed(raw: RawLiveFeed): Scorecard {
   const plays = raw.liveData.plays.allPlays;
-  const away = buildTeamScorecard(raw.liveData.boxscore.teams.away, plays, 'top');
-  const home = buildTeamScorecard(raw.liveData.boxscore.teams.home, plays, 'bottom');
+  const away = buildTeamScorecard(
+    raw.liveData.boxscore.teams.away,
+    plays,
+    'top',
+    raw.gameData.teams?.away?.abbreviation
+  );
+  const home = buildTeamScorecard(
+    raw.liveData.boxscore.teams.home,
+    plays,
+    'bottom',
+    raw.gameData.teams?.home?.abbreviation
+  );
 
   const linescore = raw.liveData.linescore;
   const innings: InningLine[] = linescore.innings.map((inn) => ({

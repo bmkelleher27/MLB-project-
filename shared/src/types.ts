@@ -163,8 +163,8 @@ export interface ScheduleGame {
   status: GameStatus;
   inning: number | null;
   inningState: string | null;
-  away: { id: number; name: string; abbreviation: string; score: number | null };
-  home: { id: number; name: string; abbreviation: string; score: number | null };
+  away: { id: number; name: string; abbreviation: string; score: number | null; probablePitcher: string | null };
+  home: { id: number; name: string; abbreviation: string; score: number | null; probablePitcher: string | null };
   venue: string | null;
   linescore: Array<{ num: number; away: number | null; home: number | null }> | null;
 }
@@ -200,4 +200,48 @@ export interface SeasonResponse {
   teamId: number;
   season: number;
   games: SeasonGame[];
+}
+
+export interface BattingLogEntry {
+  date: string;
+  gamePk: number | null;
+  opponent: string;
+  isHome: boolean;
+  atBats: number;
+  hits: number;
+  homeRuns: number;
+  rbi: number;
+  walks: number;
+  strikeouts: number;
+  avg: string;
+}
+
+export interface PitchingLogEntry {
+  date: string;
+  gamePk: number | null;
+  opponent: string;
+  isHome: boolean;
+  inningsPitched: string;
+  hits: number;
+  earnedRuns: number;
+  walks: number;
+  strikeouts: number;
+}
+
+export interface PlayerLogResponse {
+  id: number;
+  name: string;
+  position: string | null;
+  team: string | null;
+  season: number;
+  batting: BattingLogEntry[];
+  pitching: PitchingLogEntry[];
+}
+
+export interface SeasonPredictiveResponse {
+  teamId: number;
+  season: number;
+  gamesProcessed: number;
+  batters: PredictiveBatter[];
+  pitchers: PredictivePitcher[];
 }

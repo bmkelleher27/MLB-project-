@@ -1,4 +1,11 @@
-import type { Scorecard, ScheduleResponse, SeasonResponse, TeamInfo } from '@mlb-scorecards/shared';
+import type {
+  PlayerLogResponse,
+  Scorecard,
+  ScheduleResponse,
+  SeasonPredictiveResponse,
+  SeasonResponse,
+  TeamInfo,
+} from '@mlb-scorecards/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
 
@@ -31,4 +38,16 @@ export async function fetchSeason(teamId: number, season: number): Promise<Seaso
   const res = await fetch(`${API_BASE}/api/season?teamId=${teamId}&season=${season}`);
   if (!res.ok) throw new Error(`season request failed: ${res.status}`);
   return res.json() as Promise<SeasonResponse>;
+}
+
+export async function fetchPlayerLog(id: number, season: number): Promise<PlayerLogResponse> {
+  const res = await fetch(`${API_BASE}/api/player/${id}?season=${season}`);
+  if (!res.ok) throw new Error(`player request failed: ${res.status}`);
+  return res.json() as Promise<PlayerLogResponse>;
+}
+
+export async function fetchSeasonPredictive(teamId: number, season: number): Promise<SeasonPredictiveResponse> {
+  const res = await fetch(`${API_BASE}/api/season/predictive?teamId=${teamId}&season=${season}`);
+  if (!res.ok) throw new Error(`season predictive request failed: ${res.status}`);
+  return res.json() as Promise<SeasonPredictiveResponse>;
 }
