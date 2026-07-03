@@ -2153,11 +2153,6 @@ a {
   background: var(--accent-bg);
 }
 
-.player-log-pending {
-  color: var(--text-muted);
-  animation: live-pulse 1.6s ease-in-out infinite;
-}
-
 .player-season-stats {
   display: flex;
   flex-direction: column;

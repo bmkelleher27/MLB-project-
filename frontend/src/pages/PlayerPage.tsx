@@ -1,19 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import type { PlayerLogResponse, PlayerPredictiveResponse } from '@mlb-scorecards/shared';
-import { fetchPlayerLog, fetchPlayerPredictive } from '../api/client';
+import type { PlayerLogResponse } from '@mlb-scorecards/shared';
+import { fetchPlayerLog } from '../api/client';
 
 const FIRST_SEASON = 2010;
 
 function formatDate(iso: string): string {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-function indexClass(value: number): string {
-  if (value >= 130) return ' pred-index-high';
-  if (value <= 70) return ' pred-index-low';
-  return '';
 }
 
 function StatTile({ label, value, title }: { label: string; value: string | number; title?: string }) {
@@ -68,21 +62,6 @@ function SeasonTotals({ log }: { log: PlayerLogResponse }) {
   );
 }
 
-function IndexCell({
-  gamePk,
-  pred,
-  kind,
-}: {
-  gamePk: number | null;
-  pred: PlayerPredictiveResponse | null;
-  kind: 'dmg' | 'dom';
-}) {
-  if (!pred) return <td className="predictive-index player-log-pending">…</td>;
-  const value = gamePk != null ? pred.games[gamePk]?.[kind] ?? null : null;
-  if (value === null) return <td className="predictive-index">—</td>;
-  return <td className={`predictive-index${indexClass(value)}`}>{value}</td>;
-}
-
 export function PlayerPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -95,7 +74,6 @@ export function PlayerPage() {
   );
 
   const [log, setLog] = useState<PlayerLogResponse | null>(null);
-  const [pred, setPred] = useState<PlayerPredictiveResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -104,7 +82,6 @@ export function PlayerPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setPred(null);
     fetchPlayerLog(Number(id), season)
       .then((r) => {
         if (!cancelled) setLog(r);
@@ -114,16 +91,6 @@ export function PlayerPage() {
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
-      });
-    // Progressive enhancement: the log renders immediately; the per-game
-    // DMG/DOM column fills in once every feed of the season is crunched
-    // (fast when the game-level cache is warm, up to ~30s cold).
-    fetchPlayerPredictive(Number(id), season)
-      .then((r) => {
-        if (!cancelled) setPred(r);
-      })
-      .catch(() => {
-        // column stays as em-dashes - the log itself is unaffected
       });
     return () => {
       cancelled = true;
@@ -187,7 +154,6 @@ export function PlayerPage() {
                     <th>BB</th>
                     <th>K</th>
                     <th title="Season batting average through this game">AVG</th>
-                    <th title="Damage Index for this game: contact quality + discipline, 100 = league average">DMG</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -207,7 +173,6 @@ export function PlayerPage() {
                       <td>{g.walks || ''}</td>
                       <td>{g.strikeouts || ''}</td>
                       <td>{g.avg}</td>
-                      <IndexCell gamePk={g.gamePk} pred={pred} kind="dmg" />
                     </tr>
                   ))}
                 </tbody>
@@ -230,7 +195,6 @@ export function PlayerPage() {
                     <th>ER</th>
                     <th>BB</th>
                     <th>K</th>
-                    <th title="Dominance Index for this game: strike-getting + contact suppression, 100 = league average">DOM</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -248,7 +212,6 @@ export function PlayerPage() {
                       <td>{g.earnedRuns}</td>
                       <td>{g.walks}</td>
                       <td>{g.strikeouts}</td>
-                      <IndexCell gamePk={g.gamePk} pred={pred} kind="dom" />
                     </tr>
                   ))}
                 </tbody>

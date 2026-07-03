@@ -276,9 +276,3 @@ export interface SeasonPredictiveResponse {
   pitchers: PredictivePitcher[];
 }
 
-export interface PlayerPredictiveResponse {
-  id: number;
-  season: number;
-  /** Keyed by gamePk; null when the game's feed couldn't be processed. */
-  games: Record<number, { dmg: number | null; dom: number | null }>;
-}
