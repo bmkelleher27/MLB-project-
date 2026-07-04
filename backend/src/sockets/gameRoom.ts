@@ -28,8 +28,9 @@ async function pollAndEmit(io: Server, gamePk: number): Promise<void> {
       state.lastPayload = payload;
       io.to(roomName(gamePk)).emit('scorecard', scorecard);
     }
-    // Game ended (or was never live) - no more events will arrive, stop polling.
-    if (scorecard.status.abstractGameState !== 'Live' && state.timer) {
+    // Only a Final game is guaranteed to produce no further events; keep polling
+    // through Preview (so a pre-first-pitch subscriber sees it go Live) and Live.
+    if (scorecard.status.abstractGameState === 'Final' && state.timer) {
       clearInterval(state.timer);
       state.timer = null;
     }
@@ -83,7 +84,9 @@ export function registerGameRoomHandlers(io: Server): void {
         const scorecard = transformLiveFeed(raw);
         state.lastPayload = JSON.stringify(scorecard);
         socket.emit('scorecard', scorecard);
-        if (scorecard.status.abstractGameState === 'Live') {
+        // Poll for anything not yet Final: a Preview game may transition to Live
+        // while this client is watching, and it must receive those updates.
+        if (scorecard.status.abstractGameState !== 'Final') {
           ensurePolling(io, gamePk);
         }
       } catch (err) {

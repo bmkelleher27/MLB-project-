@@ -17,7 +17,12 @@ async function getJson<T>(path: string, ttlMs: number): Promise<T> {
     throw new Error(`MLB API request failed: ${path} -> ${res.status}`);
   }
   const value = (await res.json()) as T;
-  cache.set(path, { value, expiresAt: Date.now() + ttlMs });
+  // ttlMs <= 0 means "never cache" (e.g. the live feed, which must be fresh on
+  // every poll). Storing it anyway would leak a large, immediately-stale entry
+  // per gamePk that is never read again and never evicted.
+  if (ttlMs > 0) {
+    cache.set(path, { value, expiresAt: Date.now() + ttlMs });
+  }
   return value;
 }
 
