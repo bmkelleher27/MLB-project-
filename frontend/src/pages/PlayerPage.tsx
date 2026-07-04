@@ -1,14 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { PlayerLogResponse } from '@mlb-scorecards/shared';
 import { fetchPlayerLog } from '../api/client';
-
-const FIRST_SEASON = 2010;
-
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+import { formatShortDate, seasonList } from '../lib/date';
 
 function StatTile({ label, value, title }: { label: string; value: string | number; title?: string }) {
   return (
@@ -66,12 +60,8 @@ export function PlayerPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const currentYear = new Date().getFullYear();
-  const season = parseInt(params.get('season') ?? String(currentYear), 10);
-  const seasons = useMemo(
-    () => Array.from({ length: currentYear - FIRST_SEASON + 1 }, (_, i) => currentYear - i),
-    [currentYear]
-  );
+  const season = parseInt(params.get('season') ?? String(new Date().getFullYear()), 10);
+  const seasons = seasonList();
 
   const [log, setLog] = useState<PlayerLogResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -164,7 +154,7 @@ export function PlayerPage() {
                       onClick={() => goToGame(g.gamePk)}
                       title={g.gamePk ? 'Open this game’s scorecard' : undefined}
                     >
-                      <td>{formatDate(g.date)}</td>
+                      <td>{formatShortDate(g.date)}</td>
                       <td className="predictive-col-name">{g.isHome ? 'vs' : '@'} {g.opponent}</td>
                       <td>{g.atBats}</td>
                       <td>{g.hits}</td>
@@ -205,7 +195,7 @@ export function PlayerPage() {
                       onClick={() => goToGame(g.gamePk)}
                       title={g.gamePk ? 'Open this game’s scorecard' : undefined}
                     >
-                      <td>{formatDate(g.date)}</td>
+                      <td>{formatShortDate(g.date)}</td>
                       <td className="predictive-col-name">{g.isHome ? 'vs' : '@'} {g.opponent}</td>
                       <td>{g.inningsPitched}</td>
                       <td>{g.hits}</td>

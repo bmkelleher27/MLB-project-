@@ -35,8 +35,14 @@ seasonRouter.get('/', async (req, res) => {
   }
   try {
     const raw = await getTeamSeasonSchedule(teamId, season);
-    const games: SeasonGame[] = (raw.dates ?? [])
-      .flatMap((d) => d.games)
+    // MLB lists a suspended/resumed game under both its original and makeup
+    // date, so a gamePk can appear twice. Keep one entry per gamePk (the later
+    // one carries the completed status) to avoid double-counting the record and
+    // emitting duplicate React keys downstream.
+    const rawGames = (raw.dates ?? []).flatMap((d) => d.games);
+    const uniqueByPk = new Map<number, (typeof rawGames)[number]>();
+    for (const g of rawGames) uniqueByPk.set(g.gamePk, g);
+    const games: SeasonGame[] = [...uniqueByPk.values()]
       .map((g) => {
         const isHome = g.teams.home.team.id === teamId;
         const us = isHome ? g.teams.home : g.teams.away;

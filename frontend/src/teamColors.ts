@@ -34,3 +34,9 @@ const TEAM_COLORS: Record<number, { bg: string; text: string }> = {
 export function getTeamColor(teamId: number): { bg: string; text: string } {
   return TEAM_COLORS[teamId] ?? { bg: 'var(--accent-bg)', text: 'var(--text)' };
 }
+
+/** The team's raw hex background, or null when it falls back to a CSS token. */
+export function getTeamHex(teamId: number): string | null {
+  const bg = TEAM_COLORS[teamId]?.bg;
+  return bg && bg.startsWith('#') ? bg : null;
+}

@@ -30,3 +30,42 @@ export function formatDisplayDate(iso: string): string {
     year: 'numeric',
   });
 }
+
+export const FIRST_SEASON = 2010;
+
+/** Selectable seasons, newest first (current year down to FIRST_SEASON). */
+export function seasonList(): number[] {
+  const currentYear = new Date().getFullYear();
+  return Array.from({ length: currentYear - FIRST_SEASON + 1 }, (_, i) => currentYear - i);
+}
+
+// A bare `new Date("YYYY-MM-DD")` parses as UTC midnight and shifts a day in
+// negative-UTC zones; split and build a local date to keep the intended day.
+function localDate(isoDate: string): Date {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/** "Sat, June 15, 2024" from a date-only "YYYY-MM-DD". */
+export function formatFullDate(isoDate: string): string {
+  return localDate(isoDate).toLocaleDateString('en-US', {
+    weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
+  });
+}
+
+/** "Jun 15" from a date-only "YYYY-MM-DD". */
+export function formatShortDate(isoDate: string): string {
+  return localDate(isoDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/** "Sat, Jun 15" from a full ISO datetime. */
+export function formatWeekdayDate(isoDateTime: string): string {
+  return new Date(isoDateTime).toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
+  });
+}
+
+/** "June 2024" month-grouping key from a full ISO datetime. */
+export function formatMonthYear(isoDateTime: string): string {
+  return new Date(isoDateTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}

@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import type { Cell, Scorecard } from '@mlb-scorecards/shared';
 import { fetchScorecard } from '../api/client';
 import { getSocket } from '../api/socket';
+import { formatFullDate } from '../lib/date';
 import { AtBatDetail } from '../components/AtBatDetail';
 import { GameStatusHeader } from '../components/GameStatusHeader';
 import { NotationLegend } from '../components/NotationLegend';
@@ -12,13 +13,6 @@ import { ReplayControls } from '../components/ReplayControls';
 import { ScorecardTable } from '../components/ScorecardTable';
 import { ScoringSummary } from '../components/ScoringSummary';
 import { ThemeToggle } from '../components/ThemeToggle';
-
-function formatGameDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
-    weekday: 'short', month: 'long', day: 'numeric', year: 'numeric',
-  });
-}
 
 function* allCells(scorecard: Scorecard): Generator<Cell> {
   for (const side of ['away', 'home'] as const) {
@@ -163,7 +157,7 @@ export function ScorecardPage() {
       <div className="scorecard-nav-bar">
         <Link to="/" className="scorecard-nav-back">‹ Schedule</Link>
         {scorecard?.date && (
-          <span className="scorecard-nav-date">{formatGameDate(scorecard.date)}</span>
+          <span className="scorecard-nav-date">{formatFullDate(scorecard.date)}</span>
         )}
         <div className="scorecard-nav-actions">
           {scorecard && (

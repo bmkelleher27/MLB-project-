@@ -2,10 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { SeasonGame, SeasonPredictiveResponse, TeamInfo } from '@mlb-scorecards/shared';
 import { fetchSeason, fetchSeasonPredictive, fetchTeams } from '../api/client';
+import { formatMonthYear, formatWeekdayDate, seasonList } from '../lib/date';
 import { getFavoriteTeam } from '../lib/favorite';
-import { getTeamColor } from '../teamColors';
-
-const FIRST_SEASON = 2010;
+import { getTeamHex } from '../teamColors';
 
 const GAME_TYPE_LABELS: Record<string, string> = {
   F: 'Wild Card',
@@ -14,20 +13,9 @@ const GAME_TYPE_LABELS: Record<string, string> = {
   W: 'World Series',
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function monthKey(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-}
-
 export function SeasonPage() {
   const currentYear = new Date().getFullYear();
-  const seasons = useMemo(
-    () => Array.from({ length: currentYear - FIRST_SEASON + 1 }, (_, i) => currentYear - i),
-    [currentYear]
-  );
+  const seasons = seasonList();
 
   const [params, setParams] = useSearchParams();
   const season = parseInt(params.get('season') ?? String(currentYear), 10);
@@ -122,8 +110,7 @@ export function SeasonPage() {
   }
 
   const team = teams.find((t) => t.id === teamId) ?? null;
-  const teamHexRaw = teamId != null ? getTeamColor(teamId).bg : null;
-  const teamHex = teamHexRaw?.startsWith('#') ? teamHexRaw : null;
+  const teamHex = teamId != null ? getTeamHex(teamId) : null;
 
   const record = useMemo(() => {
     if (!games) return null;
@@ -140,7 +127,7 @@ export function SeasonPage() {
     if (!games) return [];
     const map = new Map<string, SeasonGame[]>();
     for (const g of games) {
-      const key = monthKey(g.gameDate);
+      const key = formatMonthYear(g.gameDate);
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(g);
     }
@@ -199,7 +186,7 @@ export function SeasonPage() {
                   key={g.gamePk}
                   to={`/game/${g.gamePk}`}
                   className={`season-tick${g.won === true ? ' season-tick-w' : g.won === false ? ' season-tick-l' : ''}`}
-                  title={`${formatDate(g.gameDate)} ${g.isHome ? 'vs' : '@'} ${g.opponent.abbreviation}${
+                  title={`${formatWeekdayDate(g.gameDate)} ${g.isHome ? 'vs' : '@'} ${g.opponent.abbreviation}${
                     g.won != null ? ` — ${g.won ? 'W' : 'L'} ${g.teamScore}-${g.opponentScore}` : ''
                   }`}
                 />
@@ -214,7 +201,7 @@ export function SeasonPage() {
                     const postseason = GAME_TYPE_LABELS[g.gameType];
                     return (
                       <Link key={g.gamePk} to={`/game/${g.gamePk}`} className="season-game-row">
-                        <span className="season-game-date">{formatDate(g.gameDate)}</span>
+                        <span className="season-game-date">{formatWeekdayDate(g.gameDate)}</span>
                         <span className="season-game-opp">
                           <span className="season-game-ha">{g.isHome ? 'vs' : '@'}</span> {g.opponent.name}
                         </span>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScheduleGame } from '@mlb-scorecards/shared';
 import { formatGameTime } from '../lib/date';
-import { getTeamColor } from '../teamColors';
+import { getTeamHex } from '../teamColors';
 
 function statusLabel(game: ScheduleGame): string {
   if (game.status.abstractGameState === 'Live') {
@@ -12,18 +12,12 @@ function statusLabel(game: ScheduleGame): string {
   return game.status.detailedState;
 }
 
-/** Team color as raw hex, or null when the map falls back to a CSS token. */
-function teamHex(teamId: number): string | null {
-  const bg = getTeamColor(teamId).bg;
-  return bg.startsWith('#') ? bg : null;
-}
-
 const NEUTRAL_HEX = '#64748b';
 
 function TeamMark({ teamId }: { teamId: number }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
-    return <span className="team-chip" style={{ background: teamHex(teamId) ?? NEUTRAL_HEX }} />;
+    return <span className="team-chip" style={{ background: getTeamHex(teamId) ?? NEUTRAL_HEX }} />;
   }
   return (
     <img
@@ -49,8 +43,8 @@ export function GameCard({ game, favoriteTeamId = null, onToggleFavorite }: Game
   const isFinal = game.status.abstractGameState === 'Final';
   const showScore = isLive || isFinal;
 
-  const awayHex = teamHex(game.away.id) ?? NEUTRAL_HEX;
-  const homeHex = teamHex(game.home.id) ?? NEUTRAL_HEX;
+  const awayHex = getTeamHex(game.away.id) ?? NEUTRAL_HEX;
+  const homeHex = getTeamHex(game.home.id) ?? NEUTRAL_HEX;
   // Two-team wash: away color from the top-left, home from the
   // bottom-right, fading to the panel surface in the middle ("2b" = ~17% alpha).
   const cardStyle = {
