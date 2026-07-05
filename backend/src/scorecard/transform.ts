@@ -11,6 +11,34 @@ import type {
 } from '@mlb-scorecards/shared';
 import { buildBatterCode, buildRunnerAdvancementCode } from './notation.js';
 import { buildPredictive } from './predictive.js';
+import { computeStuff } from './stuff.js';
+
+/** Average estimated Stuff+ per pitcher id, over their tracked pitches this game. */
+function buildPitcherStuff(plays: RawPlay[]): Map<number, number> {
+  const acc = new Map<number, { sum: number; count: number }>();
+  for (const play of plays) {
+    const pitcherId = play.matchup?.pitcher?.id;
+    if (pitcherId == null) continue;
+    for (const e of play.playEvents ?? []) {
+      if (!e.isPitch) continue;
+      const stuff = computeStuff(
+        e.details?.type?.code ?? null,
+        e.pitchData?.startSpeed ?? null,
+        e.pitchData?.breaks?.breakVerticalInduced ?? null,
+        e.pitchData?.breaks?.breakHorizontal ?? null,
+        e.pitchData?.extension ?? null
+      );
+      if (stuff == null) continue;
+      const a = acc.get(pitcherId) ?? { sum: 0, count: 0 };
+      a.sum += stuff;
+      a.count += 1;
+      acc.set(pitcherId, a);
+    }
+  }
+  const avg = new Map<number, number>();
+  for (const [id, a] of acc) avg.set(id, Math.round(a.sum / a.count));
+  return avg;
+}
 
 function toBaseFromLabel(label: string | null): '2B' | '3B' | 'HOME' | null {
   if (label === '2B') return '2B';
@@ -65,7 +93,7 @@ function buildSlotMap(team: RawBoxscoreTeam): { byId: Map<number, number>; lineu
   return { byId, lineup };
 }
 
-function buildPitchingLines(team: RawBoxscoreTeam): PitchingLine[] {
+function buildPitchingLines(team: RawBoxscoreTeam, stuffByPitcher: Map<number, number>): PitchingLine[] {
   return team.pitchers.map((id) => {
     const player = team.players[`ID${id}`];
     const stats = player?.stats?.pitching;
@@ -88,6 +116,7 @@ function buildPitchingLines(team: RawBoxscoreTeam): PitchingLine[] {
       homeRuns: stats?.homeRuns ?? 0,
       pitches: stats?.numberOfPitches ?? 0,
       decision,
+      stuff: stuffByPitcher.get(id) ?? null,
     };
   });
 }
@@ -96,6 +125,7 @@ function buildTeamScorecard(
   team: RawBoxscoreTeam,
   plays: RawPlay[],
   halfInningFilter: HalfInning,
+  stuffByPitcher: Map<number, number>,
   abbreviation?: string
 ): TeamScorecard {
   const { byId, lineup } = buildSlotMap(team);
@@ -201,22 +231,25 @@ function buildTeamScorecard(
     },
     lineup,
     cellsBySlot,
-    pitching: buildPitchingLines(team),
+    pitching: buildPitchingLines(team, stuffByPitcher),
   };
 }
 
 export function transformLiveFeed(raw: RawLiveFeed): Scorecard {
   const plays = raw.liveData.plays.allPlays;
+  const stuffByPitcher = buildPitcherStuff(plays);
   const away = buildTeamScorecard(
     raw.liveData.boxscore.teams.away,
     plays,
     'top',
+    stuffByPitcher,
     raw.gameData.teams?.away?.abbreviation
   );
   const home = buildTeamScorecard(
     raw.liveData.boxscore.teams.home,
     plays,
     'bottom',
+    stuffByPitcher,
     raw.gameData.teams?.home?.abbreviation
   );
 

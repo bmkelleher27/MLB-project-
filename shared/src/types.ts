@@ -57,6 +57,8 @@ export interface PitchingLine {
   homeRuns: number;
   pitches: number;
   decision: 'W' | 'L' | 'S' | null;
+  /** Average estimated Stuff+ over the pitcher's tracked pitches (100 = league average); null when ungradeable. */
+  stuff: number | null;
 }
 
 export interface TeamScorecard {

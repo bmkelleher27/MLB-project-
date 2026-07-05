@@ -7,6 +7,13 @@ interface PitchingTableProps {
   seasonYear?: number | null;
 }
 
+/** Color the Stuff cell: plus stuff green, below-average red. */
+function stuffClass(value: number): string {
+  if (value >= 115) return ' stuff-high';
+  if (value <= 85) return ' stuff-low';
+  return '';
+}
+
 export function PitchingTable({ teamName, pitching, seasonYear = null }: PitchingTableProps) {
   const playerUrl = (id: number) => `/player/${id}${seasonYear ? `?season=${seasonYear}` : ''}`;
   return (
@@ -22,6 +29,9 @@ export function PitchingTable({ teamName, pitching, seasonYear = null }: Pitchin
           <th>K</th>
           <th>HR</th>
           <th>PIT</th>
+          <th title="Average estimated Stuff+ over this pitcher's tracked pitches (100 = league average, higher = nastier)">
+            Stuff
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -39,11 +49,12 @@ export function PitchingTable({ teamName, pitching, seasonYear = null }: Pitchin
             <td>{p.strikeouts}</td>
             <td>{p.homeRuns}</td>
             <td>{p.pitches}</td>
+            <td className={`stuff-cell${p.stuff != null ? stuffClass(p.stuff) : ''}`}>{p.stuff ?? '—'}</td>
           </tr>
         ))}
         {pitching.length === 0 && (
           <tr>
-            <td className="scorecard-col-player" colSpan={9}>
+            <td className="scorecard-col-player" colSpan={10}>
               Pitching stats not yet available
             </td>
           </tr>

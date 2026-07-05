@@ -2308,16 +2308,17 @@ a {
   color: var(--text-muted);
 }
 
-.atbat-stuff {
+.stuff-cell {
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.atbat-stuff-high {
+.stuff-high {
   color: var(--live);
   background: var(--scored-bg);
 }
 
-.atbat-stuff-low {
+.stuff-low {
   color: var(--danger);
   background: var(--out-bg);
 }
