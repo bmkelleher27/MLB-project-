@@ -276,3 +276,37 @@ export interface SeasonPredictiveResponse {
   pitchers: PredictivePitcher[];
 }
 
+export interface PitchDetail {
+  /** 1-based pitch number within the plate appearance. */
+  number: number;
+  type: string | null; // pitch-type code, e.g. "FF"
+  typeDesc: string | null; // "Four-Seam Fastball"
+  velocity: number | null; // release speed, mph
+  spinRate: number | null; // rpm
+  ivb: number | null; // induced vertical break, inches
+  ihb: number | null; // horizontal break, inches
+  outcome: string; // "Foul", "Called Strike", "Ball", "In play, out(s)", ...
+  isBall: boolean;
+  isStrike: boolean;
+  inPlay: boolean;
+  /** Ball-strike count after this pitch. */
+  balls: number;
+  strikes: number;
+}
+
+export interface AtBatDetailResponse {
+  gamePk: number;
+  atBatIndex: number;
+  inning: number;
+  halfInning: HalfInning;
+  batter: string;
+  pitcher: string;
+  code: string; // scorekeeping shorthand, e.g. "K", "6-3", "HR"
+  result: string; // MLB plain-language play description
+  rbi: number;
+  exitVelocity: number | null;
+  launchAngle: number | null;
+  distance: number | null;
+  pitches: PitchDetail[];
+}
+

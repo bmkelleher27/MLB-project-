@@ -1,4 +1,5 @@
 import type {
+  AtBatDetailResponse,
   PlayerLogResponse,
   Scorecard,
   ScheduleResponse,
@@ -19,6 +20,12 @@ export async function fetchScorecard(gamePk: number): Promise<Scorecard> {
   const res = await fetch(`${API_BASE}/api/game/${gamePk}/scorecard`);
   if (!res.ok) throw new Error(`scorecard request failed: ${res.status}`);
   return res.json() as Promise<Scorecard>;
+}
+
+export async function fetchAtBat(gamePk: number, atBatIndex: number): Promise<AtBatDetailResponse> {
+  const res = await fetch(`${API_BASE}/api/game/${gamePk}/atbat/${atBatIndex}`);
+  if (!res.ok) throw new Error(`at-bat request failed: ${res.status}`);
+  return res.json() as Promise<AtBatDetailResponse>;
 }
 
 export async function fetchRandomGame(): Promise<{ gamePk: number; date: string }> {

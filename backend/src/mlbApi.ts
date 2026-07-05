@@ -220,21 +220,37 @@ export interface RawPlay {
     pitcher: { id: number; fullName: string };
   };
   runners: RawRunner[];
-  playEvents?: Array<{
-    isPitch?: boolean;
-    details?: {
-      // Pitch call codes: B/*B ball, C called strike, S swinging strike,
-      // W swinging strike (blocked), T foul tip, F foul, D/E/X in play, H HBP
-      call?: { code?: string };
-      isInPlay?: boolean;
+  playEvents?: RawPlayEvent[];
+}
+
+export interface RawPlayEvent {
+  isPitch?: boolean;
+  pitchNumber?: number;
+  count?: { balls?: number; strikes?: number };
+  details?: {
+    // Pitch call codes: B/*B ball, C called strike, S swinging strike,
+    // W swinging strike (blocked), T foul tip, F foul, D/E/X in play, H HBP
+    call?: { code?: string };
+    description?: string;
+    type?: { code?: string; description?: string };
+    isBall?: boolean;
+    isStrike?: boolean;
+    isInPlay?: boolean;
+  };
+  pitchData?: {
+    startSpeed?: number;
+    breaks?: {
+      spinRate?: number;
+      breakVerticalInduced?: number;
+      breakHorizontal?: number;
     };
-    hitData?: {
-      launchSpeed?: number;
-      launchAngle?: number;
-      totalDistance?: number;
-      trajectory?: string;
-    };
-  }>;
+  };
+  hitData?: {
+    launchSpeed?: number;
+    launchAngle?: number;
+    totalDistance?: number;
+    trajectory?: string;
+  };
 }
 
 export interface RawLinescore {
