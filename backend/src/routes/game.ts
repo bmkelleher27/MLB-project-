@@ -27,12 +27,13 @@ function buildPitches(play: RawPlay): PitchDetail[] {
   for (const e of play.playEvents ?? []) {
     if (!e.isPitch) continue;
     seq += 1;
-    const breaks = e.pitchData?.breaks;
+    const pd = e.pitchData;
+    const breaks = pd?.breaks;
     pitches.push({
       number: e.pitchNumber ?? seq,
       type: e.details?.type?.code ?? null,
       typeDesc: e.details?.type?.description ?? null,
-      velocity: e.pitchData?.startSpeed ?? null,
+      velocity: pd?.startSpeed ?? null,
       spinRate: breaks?.spinRate ?? null,
       ivb: breaks?.breakVerticalInduced ?? null,
       ihb: breaks?.breakHorizontal ?? null,
@@ -42,6 +43,10 @@ function buildPitches(play: RawPlay): PitchDetail[] {
       inPlay: Boolean(e.details?.isInPlay),
       balls: e.count?.balls ?? 0,
       strikes: e.count?.strikes ?? 0,
+      px: pd?.coordinates?.pX ?? null,
+      pz: pd?.coordinates?.pZ ?? null,
+      szTop: pd?.strikeZoneTop ?? null,
+      szBottom: pd?.strikeZoneBottom ?? null,
     });
   }
   return pitches;

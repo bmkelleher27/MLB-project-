@@ -2107,9 +2107,115 @@ a {
 /* ── At-bat pitch-by-pitch page ───────────────────────────────────── */
 
 .atbat-page {
-  max-width: 760px;
+  max-width: 940px;
   margin: 0 auto;
   padding: 20px 20px 48px;
+}
+
+.atbat-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.atbat-body .atbat-table-wrapper {
+  flex: 1;
+  min-width: 320px;
+}
+
+/* Strike-zone graphic */
+
+.strike-zone {
+  margin: 0;
+  flex-shrink: 0;
+  width: 200px;
+}
+
+.strike-zone svg {
+  width: 200px;
+  height: 220px;
+  display: block;
+}
+
+.sz-zone {
+  fill: var(--accent-bg);
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+
+.sz-grid {
+  stroke: var(--border);
+  stroke-width: 0.75;
+}
+
+.sz-plate {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+}
+
+.pitch-dot circle {
+  stroke: var(--panel-bg);
+  stroke-width: 1.5;
+}
+
+.pitch-dot text {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #fff;
+  pointer-events: none;
+}
+
+.pitch-dot-strike circle,
+.sz-swatch.pitch-dot-strike {
+  fill: var(--danger);
+}
+
+.pitch-dot-ball circle,
+.sz-swatch.pitch-dot-ball {
+  fill: var(--live);
+}
+
+.pitch-dot-inplay circle,
+.sz-swatch.pitch-dot-inplay {
+  fill: var(--accent);
+}
+
+.pitch-dot-other circle,
+.sz-swatch.pitch-dot-other {
+  fill: var(--text-muted);
+}
+
+.strike-zone-caption {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.strike-zone-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.strike-zone-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sz-swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
 }
 
 .atbat-header {

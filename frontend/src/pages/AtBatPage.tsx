@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { AtBatDetailResponse, PitchDetail } from '@mlb-scorecards/shared';
 import { fetchAtBat } from '../api/client';
+import { StrikeZone } from '../components/StrikeZone';
 
 function num(value: number | null, digits = 0, suffix = ''): string {
   if (value == null) return '—';
@@ -82,7 +83,9 @@ export function AtBatPage() {
             {data.pitches.length === 0 ? (
               <p className="status-message">No pitch tracking for this play.</p>
             ) : (
-              <div className="atbat-table-wrapper">
+              <div className="atbat-body">
+                <StrikeZone pitches={data.pitches} />
+                <div className="atbat-table-wrapper">
                 <table className="atbat-table">
                   <thead>
                     <tr>
@@ -111,6 +114,7 @@ export function AtBatPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
 

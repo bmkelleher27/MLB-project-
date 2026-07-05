@@ -292,6 +292,11 @@ export interface PitchDetail {
   /** Ball-strike count after this pitch. */
   balls: number;
   strikes: number;
+  // Location as the ball crosses the front of the plate, catcher's view (feet).
+  px: number | null; // horizontal, 0 = center of plate, positive = catcher's right
+  pz: number | null; // vertical, feet above the ground
+  szTop: number | null; // batter's strike-zone top, feet
+  szBottom: number | null; // batter's strike-zone bottom, feet
 }
 
 export interface AtBatDetailResponse {

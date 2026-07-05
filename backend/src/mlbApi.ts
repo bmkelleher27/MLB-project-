@@ -239,6 +239,9 @@ export interface RawPlayEvent {
   };
   pitchData?: {
     startSpeed?: number;
+    strikeZoneTop?: number;
+    strikeZoneBottom?: number;
+    coordinates?: { pX?: number; pZ?: number };
     breaks?: {
       spinRate?: number;
       breakVerticalInduced?: number;
