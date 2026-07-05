@@ -315,3 +315,9 @@ export interface AtBatDetailResponse {
   pitches: PitchDetail[];
 }
 
+export interface GameAtBatsResponse {
+  gamePk: number;
+  /** Every plate appearance with pitch tracking, in game order. */
+  atBats: AtBatDetailResponse[];
+}
+

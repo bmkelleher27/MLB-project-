@@ -2168,23 +2168,19 @@ a {
   pointer-events: none;
 }
 
-.pitch-dot-strike circle,
-.sz-swatch.pitch-dot-strike {
+.pitch-dot-strike circle {
   fill: var(--danger);
 }
 
-.pitch-dot-ball circle,
-.sz-swatch.pitch-dot-ball {
+.pitch-dot-ball circle {
   fill: var(--live);
 }
 
-.pitch-dot-inplay circle,
-.sz-swatch.pitch-dot-inplay {
+.pitch-dot-inplay circle {
   fill: var(--accent);
 }
 
-.pitch-dot-other circle,
-.sz-swatch.pitch-dot-other {
+.pitch-dot-other circle {
   fill: var(--text-muted);
 }
 
@@ -2195,66 +2191,59 @@ a {
   margin-top: 4px;
 }
 
-.strike-zone-legend {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin-top: 6px;
-  font-size: 11px;
+.atbat-inning-group {
+  margin-bottom: 22px;
+}
+
+.atbat-inning-title {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--text-muted);
+  margin: 0 0 10px;
+  padding: 6px 0;
 }
 
-.strike-zone-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.sz-swatch {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.atbat-header {
+.atbat-card {
   background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 14px 18px;
-  margin-bottom: 16px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
   box-shadow: var(--card-shadow);
+  scroll-margin-top: 44px;
 }
 
-.atbat-header-line {
+.atbat-card-focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-bg), var(--card-shadow);
+}
+
+.atbat-card-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
-  margin-bottom: 4px;
-}
-
-.atbat-inning {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
+  margin-bottom: 3px;
 }
 
 .atbat-code {
   font-family: ui-monospace, Consolas, monospace;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--accent);
   background: var(--accent-bg);
   border-radius: 4px;
   padding: 1px 8px;
+  flex-shrink: 0;
 }
 
-.atbat-matchup {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  margin: 2px 0 6px;
+.atbat-card-matchup {
+  font-size: 15px;
 }
 
 .atbat-vs {
@@ -2262,9 +2251,16 @@ a {
   color: var(--text-muted);
 }
 
-.atbat-result {
-  margin: 0 0 8px;
-  font-size: 14px;
+.atbat-card-result {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.atbat-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 4px 0 0;
 }
 
 .atbat-facts {
@@ -2329,8 +2325,27 @@ a {
   margin: 12px 0 0;
   font-size: 12px;
   color: var(--text-muted);
-  max-width: 640px;
+  max-width: 720px;
   line-height: 1.5;
+}
+
+.atbat-page-note {
+  margin: 0 0 18px;
+}
+
+.atbat-legend-strike {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.atbat-legend-ball {
+  color: var(--live);
+  font-weight: 700;
+}
+
+.atbat-legend-inplay {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 /* ── Dark mode ────────────────────────────────────────────────────── */

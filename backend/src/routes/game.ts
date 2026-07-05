@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import type { AtBatDetailResponse, PitchDetail } from '@mlb-scorecards/shared';
+import type { AtBatDetailResponse, GameAtBatsResponse, PitchDetail } from '@mlb-scorecards/shared';
 import { getLiveFeed, type RawPlay } from '../mlbApi.js';
 import { buildBatterCode } from '../scorecard/notation.js';
 import { transformLiveFeed } from '../scorecard/transform.js';
@@ -52,42 +52,45 @@ function buildPitches(play: RawPlay): PitchDetail[] {
   return pitches;
 }
 
-router.get('/:gamePk/atbat/:atBatIndex', async (req, res) => {
+function buildAtBat(play: RawPlay, gamePk: number): AtBatDetailResponse {
+  const batterId = play.matchup.batter.id;
+  const batterRunner = play.runners.find((r) => r.details.runner.id === batterId);
+  const { code } = buildBatterCode(play, batterRunner);
+  const hitData = play.playEvents?.find((e) => e.hitData)?.hitData;
+
+  return {
+    gamePk,
+    atBatIndex: play.about.atBatIndex,
+    inning: play.about.inning,
+    halfInning: play.about.halfInning,
+    batter: play.matchup.batter.fullName,
+    pitcher: play.matchup.pitcher.fullName,
+    code,
+    result: play.result.description,
+    rbi: play.result.rbi,
+    exitVelocity: hitData?.launchSpeed ?? null,
+    launchAngle: hitData?.launchAngle ?? null,
+    distance: hitData?.totalDistance ?? null,
+    pitches: buildPitches(play),
+  };
+}
+
+router.get('/:gamePk/atbats', async (req, res) => {
   const gamePk = Number(req.params.gamePk);
-  const atBatIndex = Number(req.params.atBatIndex);
-  if (!Number.isInteger(gamePk) || !Number.isInteger(atBatIndex)) {
-    res.status(400).json({ error: 'invalid gamePk or atBatIndex' });
+  if (!Number.isInteger(gamePk)) {
+    res.status(400).json({ error: 'invalid gamePk' });
     return;
   }
 
   try {
     const raw = await getLiveFeed(gamePk);
-    const play = raw.liveData.plays.allPlays.find((p) => p.about.atBatIndex === atBatIndex);
-    if (!play) {
-      res.status(404).json({ error: 'at-bat not found' });
-      return;
-    }
-
-    const batterId = play.matchup.batter.id;
-    const batterRunner = play.runners.find((r) => r.details.runner.id === batterId);
-    const { code } = buildBatterCode(play, batterRunner);
-    const hitData = play.playEvents?.find((e) => e.hitData)?.hitData;
-
-    const body: AtBatDetailResponse = {
-      gamePk,
-      atBatIndex,
-      inning: play.about.inning,
-      halfInning: play.about.halfInning,
-      batter: play.matchup.batter.fullName,
-      pitcher: play.matchup.pitcher.fullName,
-      code,
-      result: play.result.description,
-      rbi: play.result.rbi,
-      exitVelocity: hitData?.launchSpeed ?? null,
-      launchAngle: hitData?.launchAngle ?? null,
-      distance: hitData?.totalDistance ?? null,
-      pitches: buildPitches(play),
-    };
+    // Every play that had at least one pitch is a plate appearance worth showing;
+    // pure baserunning plays (pickoffs, steals between batters) carry no pitches.
+    const atBats = raw.liveData.plays.allPlays
+      .filter((p) => p.playEvents?.some((e) => e.isPitch))
+      .sort((a, b) => a.about.atBatIndex - b.about.atBatIndex)
+      .map((p) => buildAtBat(p, gamePk));
+    const body: GameAtBatsResponse = { gamePk, atBats };
     res.json(body);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });

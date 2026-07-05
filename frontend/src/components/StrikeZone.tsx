@@ -85,11 +85,6 @@ export function StrikeZone({ pitches }: { pitches: PitchDetail[] }) {
         })}
       </svg>
       <figcaption className="strike-zone-caption">Catcher's view</figcaption>
-      <div className="strike-zone-legend">
-        <span><span className="sz-swatch pitch-dot-strike" /> strike</span>
-        <span><span className="sz-swatch pitch-dot-ball" /> ball</span>
-        <span><span className="sz-swatch pitch-dot-inplay" /> in play</span>
-      </div>
     </figure>
   );
 }
