@@ -91,8 +91,10 @@ export function AtBatPage() {
             <span className="atbat-legend-strike">strike</span>,{' '}
             <span className="atbat-legend-ball">ball</span>,{' '}
             <span className="atbat-legend-inplay">in play</span>. IVB = induced vertical break, IHB = horizontal
-            break (inches).
-            {!hasMovement && ' Break tracking (IVB/IHB) is only available for games from 2015 onward.'}
+            break (inches). <strong>Stuff</strong> is an estimated pitch-quality index (100 = league average,
+            higher = nastier) computed here from velocity, movement, and extension — an approximation of Stuff+,
+            not the trademarked model.
+            {!hasMovement && ' Break and Stuff are only available for games from 2015 onward.'}
           </p>
         )}
 

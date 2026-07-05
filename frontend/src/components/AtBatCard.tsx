@@ -14,6 +14,13 @@ function outcomeClass(p: PitchDetail): string {
   return '';
 }
 
+/** Color the Stuff cell: plus stuff green, below-average red. */
+function stuffClass(value: number): string {
+  if (value >= 115) return ' atbat-stuff-high';
+  if (value <= 85) return ' atbat-stuff-low';
+  return '';
+}
+
 export function AtBatCard({ ab, focused }: { ab: AtBatDetailResponse; focused: boolean }) {
   return (
     <div id={`ab-${ab.atBatIndex}`} className={`atbat-card${focused ? ' atbat-card-focus' : ''}`}>
@@ -47,6 +54,7 @@ export function AtBatCard({ ab, focused }: { ab: AtBatDetailResponse; focused: b
                   <th title="Spin rate (rpm)">RPM</th>
                   <th title="Induced vertical break (inches)">IVB</th>
                   <th title="Horizontal break (inches)">IHB</th>
+                  <th title="Estimated Stuff+ — pitch quality from velo, movement, and extension (100 = league average, higher = nastier)">Stuff</th>
                   <th title="Count after this pitch">Count</th>
                   <th className="atbat-col-outcome">Outcome</th>
                 </tr>
@@ -60,6 +68,9 @@ export function AtBatCard({ ab, focused }: { ab: AtBatDetailResponse; focused: b
                     <td>{p.spinRate != null ? Math.round(p.spinRate) : '—'}</td>
                     <td>{num(p.ivb, 1, '"')}</td>
                     <td>{num(p.ihb, 1, '"')}</td>
+                    <td className={`atbat-stuff${p.stuff != null ? stuffClass(p.stuff) : ''}`}>
+                      {p.stuff ?? '—'}
+                    </td>
                     <td className="atbat-count">{p.balls}-{p.strikes}</td>
                     <td className="atbat-col-outcome">{p.outcome}</td>
                   </tr>

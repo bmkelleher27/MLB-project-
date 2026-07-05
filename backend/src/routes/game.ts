@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { AtBatDetailResponse, GameAtBatsResponse, PitchDetail } from '@mlb-scorecards/shared';
 import { getLiveFeed, type RawPlay } from '../mlbApi.js';
 import { buildBatterCode } from '../scorecard/notation.js';
+import { computeStuff } from '../scorecard/stuff.js';
 import { transformLiveFeed } from '../scorecard/transform.js';
 
 const router = Router();
@@ -29,14 +30,18 @@ function buildPitches(play: RawPlay): PitchDetail[] {
     seq += 1;
     const pd = e.pitchData;
     const breaks = pd?.breaks;
+    const type = e.details?.type?.code ?? null;
+    const velocity = pd?.startSpeed ?? null;
+    const ivb = breaks?.breakVerticalInduced ?? null;
+    const ihb = breaks?.breakHorizontal ?? null;
     pitches.push({
       number: e.pitchNumber ?? seq,
-      type: e.details?.type?.code ?? null,
+      type,
       typeDesc: e.details?.type?.description ?? null,
-      velocity: pd?.startSpeed ?? null,
+      velocity,
       spinRate: breaks?.spinRate ?? null,
-      ivb: breaks?.breakVerticalInduced ?? null,
-      ihb: breaks?.breakHorizontal ?? null,
+      ivb,
+      ihb,
       outcome: e.details?.description ?? e.details?.call?.code ?? '',
       isBall: Boolean(e.details?.isBall),
       isStrike: Boolean(e.details?.isStrike),
@@ -47,6 +52,7 @@ function buildPitches(play: RawPlay): PitchDetail[] {
       pz: pd?.coordinates?.pZ ?? null,
       szTop: pd?.strikeZoneTop ?? null,
       szBottom: pd?.strikeZoneBottom ?? null,
+      stuff: computeStuff(type, velocity, ivb, ihb, pd?.extension ?? null),
     });
   }
   return pitches;

@@ -297,6 +297,8 @@ export interface PitchDetail {
   pz: number | null; // vertical, feet above the ground
   szTop: number | null; // batter's strike-zone top, feet
   szBottom: number | null; // batter's strike-zone bottom, feet
+  /** Estimated Stuff+ (100 = league average); null when not gradeable. */
+  stuff: number | null;
 }
 
 export interface AtBatDetailResponse {

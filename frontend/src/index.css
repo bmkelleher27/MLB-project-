@@ -2308,6 +2308,20 @@ a {
   color: var(--text-muted);
 }
 
+.atbat-stuff {
+  font-weight: 700;
+}
+
+.atbat-stuff-high {
+  color: var(--live);
+  background: var(--scored-bg);
+}
+
+.atbat-stuff-low {
+  color: var(--danger);
+  background: var(--out-bg);
+}
+
 /* A thin left border tints each row by pitch result. */
 .atbat-row-strike td:first-child {
   box-shadow: inset 3px 0 0 var(--danger);

@@ -239,6 +239,7 @@ export interface RawPlayEvent {
   };
   pitchData?: {
     startSpeed?: number;
+    extension?: number;
     strikeZoneTop?: number;
     strikeZoneBottom?: number;
     coordinates?: { pX?: number; pZ?: number };
