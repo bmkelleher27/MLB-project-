@@ -7,8 +7,7 @@ import type {
   SeasonResponse,
   TeamInfo,
 } from '@mlb-scorecards/shared';
-
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+import { API_BASE } from '../lib/apiBase';
 
 export async function fetchSchedule(date: string): Promise<ScheduleResponse> {
   const res = await fetch(`${API_BASE}/api/schedule?date=${date}`);

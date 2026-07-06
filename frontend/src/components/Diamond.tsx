@@ -91,7 +91,8 @@ export function Diamond({
     }));
 
   return (
-    <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="diamond">
+    // Decorative: the cell's shorthand code + aria-label already convey the play.
+    <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="diamond" aria-hidden="true">
       <path d={outline} className="diamond-outline" fill="none" />
       {path && <path d={path} className={`diamond-path${scored ? ' diamond-scored' : ''}`} fill="none" />}
       {isOut && terminal && <circle cx={terminal.x} cy={terminal.y} r={3} className="diamond-out-marker" />}

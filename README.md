@@ -18,6 +18,16 @@ npm run dev:backend    # http://localhost:4000
 npm run dev:frontend   # http://localhost:5173
 ```
 
+Copy `frontend/.env.example` to `frontend/.env` if you need to point the SPA
+at a non-default backend URL during development.
+
+## Tests
+
+```
+npm test               # Vitest — backend core logic (notation, transform,
+                       # predictive, stuff, cache) against saved feed fixtures
+```
+
 ## Deploying
 
 The backend holds live state in memory (a polling loop per in-progress game)
@@ -33,6 +43,11 @@ creates the `mlb-scorecards-backend` web service automatically. Render
 injects `PORT` itself; no other environment variables are required.
 
 Once deployed, note the service URL (e.g. `https://mlb-scorecards-backend.onrender.com`).
+
+**Health check:** the backend exposes `GET /healthz`, which returns `200` with
+`{ "status": "ok", "uptimeSeconds", "timestamp" }`. Point an uptime monitor
+(Render health checks, UptimeRobot, etc.) at it; on Render's free tier a
+periodic ping also keeps the instance from idling between games.
 
 ### Frontend -> Vercel
 

@@ -27,12 +27,27 @@ export function AtBatCell({ cell, selected, onSelect, replayLimit = null, onAdva
     selected ? ' at-bat-cell-selected' : ''
   }${onSelect ? ' at-bat-cell-clickable' : ''}`;
 
+  const interactive = Boolean(onSelect);
+
   return (
     <div
       className={`at-bat-cell${stateClass}${modeClass}`}
       title={cell.description}
       data-at-bat-index={cell.atBatIndex}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? `${cell.batterName}: ${cell.description}` : undefined}
       onClick={onSelect ? () => onSelect(cell) : undefined}
+      onKeyDown={
+        onSelect
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(cell);
+              }
+            }
+          : undefined
+      }
     >
       <span className="at-bat-count">
         {cell.count.balls}-{cell.count.strikes}

@@ -41,6 +41,27 @@ a {
   text-decoration: none;
 }
 
+/* Visible keyboard focus for every interactive element (links, buttons, the
+   role="button" scorecard cells, selects, range inputs). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Respect users who prefer reduced motion: drop the live pulse, skeleton
+   shimmer, hover transforms, and smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .status-message {
   padding: 24px;
   text-align: center;
@@ -2009,13 +2030,15 @@ a {
   transform: scaleY(1.25);
 }
 
+/* Wins are filled, losses are hollow (outlined) — a shape cue so the strip
+   isn't distinguishable by color alone. */
 .season-tick-w {
   background: var(--live);
 }
 
 .season-tick-l {
-  background: var(--danger);
-  opacity: 0.75;
+  background: transparent;
+  border: 1.5px solid var(--danger);
 }
 
 .season-leaders {
@@ -2193,6 +2216,16 @@ a {
 .pitch-dot circle {
   stroke: var(--panel-bg);
   stroke-width: 1.5;
+}
+
+/* Non-color ring cue so outcomes are distinguishable without relying on hue:
+   strikes solid, balls dashed, in-play a thick ring. */
+.pitch-dot-ball circle {
+  stroke-dasharray: 3 2;
+}
+
+.pitch-dot-inplay circle {
+  stroke-width: 2.75;
 }
 
 .pitch-dot text {

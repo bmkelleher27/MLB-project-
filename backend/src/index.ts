@@ -15,7 +15,17 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
 const app = express();
 app.use(cors());
 
-app.get('/healthz', (_req, res) => res.sendStatus(200));
+const startedAt = Date.now();
+
+// Liveness/readiness probe for uptime monitoring (Render, UptimeRobot, etc.).
+// Returns 200 with a small JSON body a monitor can assert on.
+app.get('/healthz', (_req, res) => {
+  res.json({
+    status: 'ok',
+    uptimeSeconds: Math.round((Date.now() - startedAt) / 1000),
+    timestamp: new Date().toISOString(),
+  });
+});
 
 app.use('/api/schedule', scheduleRouter);
 app.use('/api/game', gameRouter);

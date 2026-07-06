@@ -180,17 +180,22 @@ export function SeasonPage() {
               )}
               <span className="season-summary-count">{games.length} games</span>
             </div>
-            <div className="season-strip" aria-label="Season results, one tick per game">
-              {games.map((g) => (
-                <Link
-                  key={g.gamePk}
-                  to={`/game/${g.gamePk}`}
-                  className={`season-tick${g.won === true ? ' season-tick-w' : g.won === false ? ' season-tick-l' : ''}`}
-                  title={`${formatWeekdayDate(g.gameDate)} ${g.isHome ? 'vs' : '@'} ${g.opponent.abbreviation}${
-                    g.won != null ? ` — ${g.won ? 'W' : 'L'} ${g.teamScore}-${g.opponentScore}` : ''
-                  }`}
-                />
-              ))}
+            <div className="season-strip" role="list" aria-label="Season results, one tick per game">
+              {games.map((g) => {
+                const label = `${formatWeekdayDate(g.gameDate)} ${g.isHome ? 'vs' : '@'} ${g.opponent.abbreviation}${
+                  g.won != null ? ` — ${g.won ? 'Win' : 'Loss'} ${g.teamScore}-${g.opponentScore}` : ''
+                }`;
+                return (
+                  <Link
+                    key={g.gamePk}
+                    to={`/game/${g.gamePk}`}
+                    role="listitem"
+                    className={`season-tick${g.won === true ? ' season-tick-w' : g.won === false ? ' season-tick-l' : ''}`}
+                    title={label}
+                    aria-label={label}
+                  />
+                );
+              })}
             </div>
             {byMonth.map(([month, monthGames]) => (
               <section key={month} className="season-month">
