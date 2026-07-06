@@ -1,28 +1,31 @@
+import { TtlCache } from './cache.js';
+
 const BASE_URL = 'https://statsapi.mlb.com';
 
-interface CacheEntry<T> {
-  expiresAt: number;
-  value: T;
-}
+// Bounded so a long-running server can't accumulate stale entries without limit.
+// Live feeds are never cached (ttl 0), so entries here are the smaller
+// schedule/season/teams/player payloads.
+const CACHE_MAX_ENTRIES = 500;
+const CACHE_SWEEP_MS = 10 * 60_000;
 
-const cache = new Map<string, CacheEntry<unknown>>();
+const cache = new TtlCache<unknown>(CACHE_MAX_ENTRIES);
+
+// Proactively drop expired entries so memory doesn't hold them until the next
+// read; unref'd so it never keeps the process alive.
+const sweepTimer = setInterval(() => cache.sweep(), CACHE_SWEEP_MS);
+sweepTimer.unref?.();
 
 async function getJson<T>(path: string, ttlMs: number): Promise<T> {
   const cached = cache.get(path);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.value as T;
+  if (cached !== undefined) {
+    return cached as T;
   }
   const res = await fetch(`${BASE_URL}${path}`);
   if (!res.ok) {
     throw new Error(`MLB API request failed: ${path} -> ${res.status}`);
   }
   const value = (await res.json()) as T;
-  // ttlMs <= 0 means "never cache" (e.g. the live feed, which must be fresh on
-  // every poll). Storing it anyway would leak a large, immediately-stale entry
-  // per gamePk that is never read again and never evicted.
-  if (ttlMs > 0) {
-    cache.set(path, { value, expiresAt: Date.now() + ttlMs });
-  }
+  cache.set(path, value, ttlMs);
   return value;
 }
 
