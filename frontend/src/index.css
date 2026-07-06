@@ -2258,6 +2258,118 @@ a {
   margin-top: 4px;
 }
 
+/* Pitch-movement (break) plots ─────────────────────────────────────── */
+
+.break-plots-section {
+  margin: 4px 0 26px;
+}
+
+.break-plots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.break-plot {
+  margin: 0;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px 14px;
+  box-shadow: var(--card-shadow);
+}
+
+.break-plot-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.break-plot-count {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.break-plot svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.break-plot-box {
+  fill: var(--accent-bg);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.break-grid {
+  stroke: var(--border);
+  stroke-width: 0.5;
+}
+
+.break-axis {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+
+.break-tick {
+  font-size: 8px;
+  fill: var(--text-muted);
+}
+
+.break-edge {
+  font-size: 8px;
+  font-weight: 600;
+  fill: var(--text-muted);
+}
+
+.break-dot {
+  stroke: var(--panel-bg);
+  stroke-width: 1;
+  opacity: 0.9;
+}
+
+.break-axis-labels {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.break-legend {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.break-legend li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.break-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.break-legend-label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.break-legend-meta {
+  color: var(--text-muted);
+}
+
 .atbat-inning-group {
   margin-bottom: 22px;
 }

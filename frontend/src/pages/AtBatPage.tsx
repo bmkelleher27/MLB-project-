@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import type { AtBatDetailResponse } from '@mlb-scorecards/shared';
 import { fetchGameAtBats } from '../api/client';
 import { AtBatCard } from '../components/AtBatCard';
+import { PitchMovementPlots } from '../components/PitchMovementPlots';
 
 interface InningGroup {
   key: string;
@@ -97,6 +98,8 @@ export function AtBatPage() {
             {!hasMovement && ' Break and Stuff are only available for games from 2015 onward.'}
           </p>
         )}
+
+        {!loading && atBats && hasMovement && <PitchMovementPlots atBats={atBats} />}
 
         {groups.map((g) => (
           <section key={g.key} className="atbat-inning-group">
