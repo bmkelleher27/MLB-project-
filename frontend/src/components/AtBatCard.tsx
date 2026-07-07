@@ -63,7 +63,7 @@ export function AtBatCard({ ab, focused }: { ab: AtBatDetailResponse; focused: b
                 {ab.pitches.map((p) => (
                   <tr key={p.number} className={`atbat-row${outcomeClass(p)}`}>
                     <td>{p.number}</td>
-                    <td title={p.typeDesc ?? undefined}>{p.type ?? '—'}</td>
+                    <td className="atbat-col-pitch" title={p.type ?? undefined}>{p.typeDesc ?? p.type ?? '—'}</td>
                     <td>{num(p.velocity, 1)}</td>
                     <td>{p.spinRate != null ? Math.round(p.spinRate) : '—'}</td>
                     <td>{num(p.ivb, 1, '"')}</td>

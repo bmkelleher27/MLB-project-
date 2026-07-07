@@ -2478,6 +2478,11 @@ a {
   cursor: help;
 }
 
+.atbat-col-pitch {
+  text-align: left !important;
+  font-weight: 600;
+}
+
 .atbat-col-outcome {
   text-align: left !important;
   white-space: normal;
