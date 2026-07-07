@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import type { AtBatDetailResponse } from '@mlb-scorecards/shared';
+import type { AtBatDetailResponse, GameAtBatsResponse } from '@mlb-scorecards/shared';
 import { fetchGameAtBats } from '../api/client';
+import { getSocket } from '../api/socket';
 import { AtBatCard } from '../components/AtBatCard';
 import { PitchMovementPlots } from '../components/PitchMovementPlots';
 
@@ -15,17 +16,38 @@ export function AtBatPage() {
   const { gamePk, atBatIndex } = useParams<{ gamePk: string; atBatIndex: string }>();
   const focus = atBatIndex != null ? Number(atBatIndex) : null;
   const [atBats, setAtBats] = useState<AtBatDetailResponse[] | null>(null);
+  const [status, setStatus] = useState<GameAtBatsResponse['status'] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const scrolledToFocusRef = useRef(false);
 
   useEffect(() => {
     if (!gamePk) return;
+    const gamePkNum = Number(gamePk);
     let cancelled = false;
+    let subscribed = false;
+    const socket = getSocket();
+
+    const handleAtBats = (payload: GameAtBatsResponse) => {
+      if (payload.gamePk !== gamePkNum) return;
+      setAtBats(payload.atBats);
+      setStatus(payload.status);
+    };
+
     setLoading(true);
     setError(null);
-    fetchGameAtBats(Number(gamePk))
+    fetchGameAtBats(gamePkNum)
       .then((d) => {
-        if (!cancelled) setAtBats(d.atBats);
+        if (cancelled) return;
+        setAtBats(d.atBats);
+        setStatus(d.status);
+        // Anything not yet Final can still change (Preview games go Live);
+        // follow the game over the socket so new pitches appear as they happen.
+        if (d.status.abstractGameState !== 'Final') {
+          subscribed = true;
+          socket.on('atbats', handleAtBats);
+          socket.emit('subscribe:atbats', gamePkNum);
+        }
       })
       .catch((err) => {
         if (!cancelled) setError((err as Error).message);
@@ -33,14 +55,21 @@ export function AtBatPage() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
+      if (subscribed) {
+        socket.emit('unsubscribe');
+        socket.off('atbats', handleAtBats);
+      }
     };
   }, [gamePk]);
 
-  // Scroll to the clicked at-bat once the cards have rendered.
+  // Scroll to the clicked at-bat once the cards have rendered — only on the
+  // first load, so live refreshes don't yank the reader back up the page.
   useEffect(() => {
-    if (!atBats || focus == null) return;
+    if (!atBats || focus == null || scrolledToFocusRef.current) return;
+    scrolledToFocusRef.current = true;
     const t = window.setTimeout(() => {
       document.getElementById(`ab-${focus}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
@@ -67,6 +96,7 @@ export function AtBatPage() {
   }, [atBats]);
 
   const hasMovement = atBats?.some((ab) => ab.pitches.some((p) => p.ivb != null)) ?? false;
+  const isLive = status?.abstractGameState === 'Live';
 
   return (
     <>
@@ -78,12 +108,22 @@ export function AtBatPage() {
           ‹ Back to scorecard
         </Link>
         <span className="scorecard-nav-date">Pitch-by-pitch · full game</span>
+        {isLive && (
+          <span className="atbat-live-badge">
+            <span className="live-dot" aria-hidden="true" />
+            Live — updates automatically
+          </span>
+        )}
       </div>
       <div className="atbat-page">
         {error && <p className="status-message status-error">{error}</p>}
         {loading && <p className="status-message">Loading pitches…</p>}
         {!loading && atBats && atBats.length === 0 && (
-          <p className="status-message">No pitch data for this game.</p>
+          <p className="status-message">
+            {status && status.abstractGameState !== 'Final'
+              ? 'No pitches yet — this page will fill in as the game starts.'
+              : 'No pitch data for this game.'}
+          </p>
         )}
 
         {!loading && atBats && atBats.length > 0 && (

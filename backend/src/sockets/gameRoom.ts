@@ -1,5 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import { getLiveFeed } from '../mlbApi.js';
+import { buildGameAtBats } from '../scorecard/atbats.js';
 import { transformLiveFeed } from '../scorecard/transform.js';
 
 const POLL_INTERVAL_MS = 5_000;
@@ -8,12 +9,17 @@ interface RoomState {
   subscriberCount: number;
   timer: NodeJS.Timeout | null;
   lastPayload: string | null;
+  lastAtBatsPayload: string | null;
 }
 
 const rooms = new Map<number, RoomState>();
 
 function roomName(gamePk: number): string {
   return `game:${gamePk}`;
+}
+
+function atBatsRoomName(gamePk: number): string {
+  return `game:${gamePk}:atbats`;
 }
 
 async function pollAndEmit(io: Server, gamePk: number): Promise<void> {
@@ -28,6 +34,19 @@ async function pollAndEmit(io: Server, gamePk: number): Promise<void> {
       state.lastPayload = payload;
       io.to(roomName(gamePk)).emit('scorecard', scorecard);
     }
+
+    // The pitch-by-pitch view shares this poll: build its payload from the same
+    // raw feed (no extra MLB API call), but only when someone is watching it —
+    // it is much heavier than the scorecard.
+    if ((io.sockets.adapter.rooms.get(atBatsRoomName(gamePk))?.size ?? 0) > 0) {
+      const atBats = buildGameAtBats(raw, gamePk);
+      const atBatsPayload = JSON.stringify(atBats);
+      if (atBatsPayload !== state.lastAtBatsPayload) {
+        state.lastAtBatsPayload = atBatsPayload;
+        io.to(atBatsRoomName(gamePk)).emit('atbats', atBats);
+      }
+    }
+
     // Only a Final game is guaranteed to produce no further events; keep polling
     // through Preview (so a pre-first-pitch subscriber sees it go Live) and Live.
     if (scorecard.status.abstractGameState === 'Final' && state.timer) {
@@ -47,8 +66,18 @@ function ensurePolling(io: Server, gamePk: number): void {
   }, POLL_INTERVAL_MS);
 }
 
+function acquireRoom(gamePk: number): RoomState {
+  let state = rooms.get(gamePk);
+  if (!state) {
+    state = { subscriberCount: 0, timer: null, lastPayload: null, lastAtBatsPayload: null };
+    rooms.set(gamePk, state);
+  }
+  state.subscriberCount++;
+  return state;
+}
+
 export function registerGameRoomHandlers(io: Server): void {
-  function unsubscribe(gamePk: number): void {
+  function release(gamePk: number): void {
     const state = rooms.get(gamePk);
     if (!state) return;
     state.subscriberCount = Math.max(0, state.subscriberCount - 1);
@@ -60,24 +89,32 @@ export function registerGameRoomHandlers(io: Server): void {
 
   io.on('connection', (socket: Socket) => {
     let subscribedGamePk: number | null = null;
+    let subscribedAtBatsPk: number | null = null;
+
+    function dropScorecardSub(): void {
+      if (subscribedGamePk !== null) {
+        socket.leave(roomName(subscribedGamePk));
+        release(subscribedGamePk);
+        subscribedGamePk = null;
+      }
+    }
+
+    function dropAtBatsSub(): void {
+      if (subscribedAtBatsPk !== null) {
+        socket.leave(atBatsRoomName(subscribedAtBatsPk));
+        release(subscribedAtBatsPk);
+        subscribedAtBatsPk = null;
+      }
+    }
 
     socket.on('subscribe', async (gamePkRaw: unknown) => {
       const gamePk = Number(gamePkRaw);
       if (!Number.isInteger(gamePk)) return;
 
-      if (subscribedGamePk !== null) {
-        socket.leave(roomName(subscribedGamePk));
-        unsubscribe(subscribedGamePk);
-      }
+      dropScorecardSub();
       subscribedGamePk = gamePk;
       socket.join(roomName(gamePk));
-
-      let state = rooms.get(gamePk);
-      if (!state) {
-        state = { subscriberCount: 0, timer: null, lastPayload: null };
-        rooms.set(gamePk, state);
-      }
-      state.subscriberCount++;
+      const state = acquireRoom(gamePk);
 
       try {
         const raw = await getLiveFeed(gamePk);
@@ -94,19 +131,28 @@ export function registerGameRoomHandlers(io: Server): void {
       }
     });
 
+    // The pitch-by-pitch page loads its initial data over REST; this subscription
+    // only streams subsequent changes, so no snapshot is emitted here.
+    socket.on('subscribe:atbats', (gamePkRaw: unknown) => {
+      const gamePk = Number(gamePkRaw);
+      if (!Number.isInteger(gamePk)) return;
+
+      dropAtBatsSub();
+      subscribedAtBatsPk = gamePk;
+      socket.join(atBatsRoomName(gamePk));
+      acquireRoom(gamePk);
+      // The first poll stops itself if the game turns out to be Final.
+      ensurePolling(io, gamePk);
+    });
+
     socket.on('unsubscribe', () => {
-      if (subscribedGamePk !== null) {
-        socket.leave(roomName(subscribedGamePk));
-        unsubscribe(subscribedGamePk);
-        subscribedGamePk = null;
-      }
+      dropScorecardSub();
+      dropAtBatsSub();
     });
 
     socket.on('disconnect', () => {
-      if (subscribedGamePk !== null) {
-        unsubscribe(subscribedGamePk);
-        subscribedGamePk = null;
-      }
+      dropScorecardSub();
+      dropAtBatsSub();
     });
   });
 }

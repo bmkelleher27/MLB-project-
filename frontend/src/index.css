@@ -2370,6 +2370,17 @@ a {
   color: var(--text-muted);
 }
 
+.atbat-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--live);
+  white-space: nowrap;
+}
+
 .atbat-inning-group {
   margin-bottom: 22px;
 }

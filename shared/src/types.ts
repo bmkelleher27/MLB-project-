@@ -321,6 +321,7 @@ export interface AtBatDetailResponse {
 
 export interface GameAtBatsResponse {
   gamePk: number;
+  status: { abstractGameState: string; detailedState: string };
   /** Every plate appearance with pitch tracking, in game order. */
   atBats: AtBatDetailResponse[];
 }
