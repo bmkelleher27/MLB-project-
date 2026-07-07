@@ -61,6 +61,40 @@ describe('transformLiveFeed — modern game (2024, Statcast)', () => {
   });
 });
 
+describe('transformLiveFeed — batter takes extra bases on errors within his own play', () => {
+  // Real play (Royals @ Mets, 2026-07-07, bottom 1): Carson Benge singles, then
+  // three throwing errors send him and both runners ahead of him all the way home.
+  // The batter appears TWICE in the play's runners[]: None->1B (the single) and
+  // 1B->score (the error) — the second entry must land on his cell as an advancement.
+  const sc = transformLiveFeed(loadFeed('game-2026-benge-errors.json'));
+  const cells = allCells(sc);
+
+  it('scores the batter, not strands him at first', () => {
+    const benge = cells.find((c) => c.batterName === 'Carson Benge');
+    expect(benge).toBeDefined();
+    expect(benge!.basesReached).toBe('1B'); // the PA outcome itself is a single
+    expect(benge!.isOut).toBe(false);
+    const home = benge!.advancement.find((a) => a.toBase === 'HOME');
+    expect(home).toBeDefined();
+    expect(home!.isOut).toBe(false);
+    expect(home!.code).toBe('E5'); // 3B throwing error sent him home
+  });
+
+  it('labels the other runners’ error advancements with the charged fielder', () => {
+    const bichette = cells.find((c) => c.batterName === 'Bo Bichette');
+    const ewing = cells.find((c) => c.batterName === 'A.J. Ewing');
+    expect(bichette!.advancement.map((a) => [a.toBase, a.code])).toEqual([
+      ['2B', 'E'],
+      ['HOME', 'E3'],
+    ]);
+    expect(ewing!.advancement.map((a) => [a.toBase, a.code])).toEqual([
+      ['2B', ''], // ordinary advance on Bichette's single (previous play, unlabeled)
+      ['3B', 'E'],
+      ['HOME', 'E1'],
+    ]);
+  });
+});
+
 describe('transformLiveFeed — pre-Statcast game (2010)', () => {
   const sc = transformLiveFeed(loadFeed('game-2010-final.json'));
 

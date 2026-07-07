@@ -158,7 +158,11 @@ function buildTeamScorecard(
     // MLB tags some standalone mid-at-bat baserunning events (e.g. a caught stealing that
     // happens before the batter's own plate appearance concludes) as result.type 'atBat' too,
     // but they carry no runner entry for the batter - there's no actual PA outcome to record.
-    const batterRunner = play.runners.find((r) => r.details.runner.id === batterId);
+    // The PA outcome is the entry where the batter leaves home (start == null); the same
+    // play can hold further entries for the batter (e.g. single, then home on a throwing
+    // error), which are handled below as ordinary advancements on the new cell.
+    const batterEntries = play.runners.filter((r) => r.details.runner.id === batterId);
+    const batterRunner = batterEntries.find((r) => r.movement.start == null) ?? batterEntries[0];
 
     if (batterRunner) {
       const slot = byId.get(batterId);
@@ -195,12 +199,13 @@ function buildTeamScorecard(
       }
     }
 
-    // Every other runner in this play (pre-existing baserunners advancing, put out, or
-    // scoring - including mid-at-bat events like steals/wild pitches/passed balls/balks).
+    // Every other runner entry in this play (pre-existing baserunners advancing, put out,
+    // or scoring - including mid-at-bat events like steals/wild pitches/passed balls/balks,
+    // and the batter's own post-PA movements, e.g. taking extra bases on an error).
     // Looked up by the runner's own id, so multiple sequential entries for the same
     // physical runner within one play all resolve to the same originating cell.
     for (const runner of play.runners) {
-      if (runner.details.runner.id === batterId) continue;
+      if (runner === batterRunner) continue;
       const owningCell = onBase.get(runner.details.runner.id);
       if (!owningCell) continue;
 
