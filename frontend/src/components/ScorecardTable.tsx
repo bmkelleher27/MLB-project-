@@ -39,6 +39,15 @@ export function ScorecardTable({
   );
   const inningCount = Math.max(linescore.length, maxInningFromCells, 9);
   const inningNums = Array.from({ length: inningCount }, (_, i) => i + 1);
+  // When the team bats around, a slot can come up more than once in an inning.
+  // Scorebook convention: the inning spills into extra column(s) — one column
+  // per "pass", with the inning number heading the whole group.
+  const passesFor = (n: number) =>
+    Math.max(
+      1,
+      ...Object.values(team.cellsBySlot).map((cells) => cells.filter((c) => c.inning === n).length)
+    );
+  const inningGroups = inningNums.map((n) => ({ num: n, passes: passesFor(n) }));
   const lineFor = (n: number) => linescore.find((l) => l.num === n);
   const totalLob = linescore.reduce((sum, l) => sum + (side === 'away' ? l.away.lob : l.home.lob), 0);
 
@@ -58,14 +67,16 @@ export function ScorecardTable({
           >
             {team.team.name}
           </th>
-          {inningNums.map((n) => (
+          {inningGroups.map((g) => (
             <th
-              key={n}
-              className={inningColClass(n) || undefined}
-              onMouseEnter={() => setHoverInning(n)}
+              key={g.num}
+              colSpan={g.passes}
+              className={inningColClass(g.num) || undefined}
+              onMouseEnter={() => setHoverInning(g.num)}
               onMouseLeave={() => setHoverInning(null)}
+              title={g.passes > 1 ? `Batted around — inning ${g.num} uses ${g.passes} columns` : undefined}
             >
-              {n}
+              {g.num}
             </th>
           ))}
           <th>Total</th>
@@ -91,22 +102,28 @@ export function ScorecardTable({
                   </span>
                 ))}
               </td>
-              {inningNums.map((n) => {
-                const cellsInInning = cells.filter((c) => c.inning === n);
-                return (
-                  <td key={n} className={`scorecard-cell${inningColClass(n)}`}>
-                    {cellsInInning.map((c) => (
-                      <AtBatCell
-                        key={c.atBatIndex}
-                        cell={c}
-                        selected={c.atBatIndex === selectedAtBatIndex}
-                        onSelect={onSelectCell}
-                        replayLimit={replayLimit}
-                        onAdvancementClick={onAdvancementClick}
-                      />
-                    ))}
-                  </td>
-                );
+              {inningGroups.flatMap((g) => {
+                const cellsInInning = cells.filter((c) => c.inning === g.num);
+                return Array.from({ length: g.passes }, (_, pass) => {
+                  const c = cellsInInning[pass];
+                  return (
+                    <td
+                      key={`${g.num}.${pass}`}
+                      className={`scorecard-cell${inningColClass(g.num)}${pass > 0 ? ' scorecard-subcol' : ''}`}
+                    >
+                      {c && (
+                        <AtBatCell
+                          key={c.atBatIndex}
+                          cell={c}
+                          selected={c.atBatIndex === selectedAtBatIndex}
+                          onSelect={onSelectCell}
+                          replayLimit={replayLimit}
+                          onAdvancementClick={onAdvancementClick}
+                        />
+                      )}
+                    </td>
+                  );
+                });
               })}
               <td />
             </tr>
@@ -114,7 +131,7 @@ export function ScorecardTable({
         })}
         {team.lineup.length === 0 && (
           <tr>
-            <td className="scorecard-col-player" colSpan={inningNums.length + 2}>
+            <td className="scorecard-col-player" colSpan={inningGroups.reduce((s, g) => s + g.passes, 0) + 2}>
               Lineup not yet available
             </td>
           </tr>
@@ -123,22 +140,28 @@ export function ScorecardTable({
       <tfoot>
         <tr>
           <td className="scorecard-col-player">Runs</td>
-          {inningNums.map((n) => (
-            <td key={n}>{lineFor(n) ? (side === 'away' ? lineFor(n)!.away.runs : lineFor(n)!.home.runs) : ''}</td>
+          {inningGroups.map((g) => (
+            <td key={g.num} colSpan={g.passes}>
+              {lineFor(g.num) ? (side === 'away' ? lineFor(g.num)!.away.runs : lineFor(g.num)!.home.runs) : ''}
+            </td>
           ))}
           <td className="scorecard-total">{totals.r}</td>
         </tr>
         <tr>
           <td className="scorecard-col-player">Hits</td>
-          {inningNums.map((n) => (
-            <td key={n}>{lineFor(n) ? (side === 'away' ? lineFor(n)!.away.hits : lineFor(n)!.home.hits) : ''}</td>
+          {inningGroups.map((g) => (
+            <td key={g.num} colSpan={g.passes}>
+              {lineFor(g.num) ? (side === 'away' ? lineFor(g.num)!.away.hits : lineFor(g.num)!.home.hits) : ''}
+            </td>
           ))}
           <td className="scorecard-total">{totals.h}</td>
         </tr>
         <tr>
           <td className="scorecard-col-player">LOB</td>
-          {inningNums.map((n) => (
-            <td key={n}>{lineFor(n) ? (side === 'away' ? lineFor(n)!.away.lob : lineFor(n)!.home.lob) : ''}</td>
+          {inningGroups.map((g) => (
+            <td key={g.num} colSpan={g.passes}>
+              {lineFor(g.num) ? (side === 'away' ? lineFor(g.num)!.away.lob : lineFor(g.num)!.home.lob) : ''}
+            </td>
           ))}
           <td className="scorecard-total">{totalLob}</td>
         </tr>

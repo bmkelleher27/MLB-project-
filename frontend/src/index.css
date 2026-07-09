@@ -631,6 +631,12 @@ a {
   vertical-align: top;
 }
 
+/* Continuation column of a batted-around inning: dashed divider so the two
+   passes read as one inning group under the shared header. */
+.scorecard-subcol {
+  border-left-style: dashed;
+}
+
 .scorecard-row-stripe > .scorecard-col-player,
 .scorecard-row-stripe > .scorecard-cell {
   background: var(--row-stripe);
