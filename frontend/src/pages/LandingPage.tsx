@@ -4,6 +4,7 @@ import type { ScheduleGame } from '@mlb-scorecards/shared';
 import { fetchSchedule, fetchRandomGame } from '../api/client';
 import { DatePicker } from '../components/DatePicker';
 import { GameCard } from '../components/GameCard';
+import { LogoMark } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { getFavoriteTeam, setFavoriteTeam } from '../lib/favorite';
 import { todayIso } from '../lib/date';
@@ -84,7 +85,10 @@ export function LandingPage() {
     <div className="landing-page">
       <header className="landing-header">
         <div className="landing-header-bar">
-          <h1>MLB Live Scorecards</h1>
+          <h1 className="landing-title">
+            <LogoMark size={34} />
+            MLB Live Scorecards
+          </h1>
           <ThemeToggle />
         </div>
       </header>
