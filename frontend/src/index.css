@@ -117,11 +117,31 @@ a {
 }
 
 .landing-header h1 {
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.02em;
   text-align: center;
   margin: 14px 0 22px;
+}
+
+/* Keep the title clear of the absolutely-positioned theme toggle and scale it
+   down so it never clips on narrow screens. */
+@media (max-width: 600px) {
+  .landing-header-bar {
+    padding: 0 46px;
+  }
+
+  .landing-header h1 {
+    font-size: 19px;
+    gap: 8px;
+    margin: 10px 0 16px;
+  }
+
+  .landing-title .logo-mark {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
 }
 
 .landing-toolbar {
