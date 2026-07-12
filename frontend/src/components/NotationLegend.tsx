@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { STUFF_BANDS } from '../lib/stuffGrade';
 
 const POSITIONS: Array<{ num: number; abbr: string; name: string; x: number; y: number }> = [
   { num: 1, abbr: 'P', name: 'Pitcher', x: 110, y: 103 },
@@ -128,6 +129,22 @@ export function NotationLegend() {
           </ul>
         </div>
       ))}
+
+      <div className="legend-section">
+        <h3 className="legend-heading">Pitch grades: the Stuff scale</h3>
+        <p className="legend-prose">
+          Wherever a pitch (or a pitcher's game) shows a <strong>Stuff</strong> number, it's an estimated pitch-quality
+          index built from velocity, movement, and extension, scaled so <strong>100 = league average</strong>:
+        </p>
+        <ul className="legend-code-list">
+          {STUFF_BANDS.map((b) => (
+            <li key={b.label}>
+              <span className="legend-code">{b.range}</span> {b.label}
+              {b.symbol && <> — shown as <strong>{b.symbol}</strong> next to the number</>}
+            </li>
+          ))}
+        </ul>
+      </div>
 
       <div className="legend-section legend-section-predictive">
         <h3 className="legend-heading">Predictive metrics: DMG &amp; DOM</h3>

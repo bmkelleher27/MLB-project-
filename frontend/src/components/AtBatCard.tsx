@@ -1,4 +1,5 @@
 import type { AtBatDetailResponse, PitchDetail } from '@mlb-scorecards/shared';
+import { STUFF_BANDS_TEXT, stuffGrade } from '../lib/stuffGrade';
 import { StrikeZone } from './StrikeZone';
 
 function num(value: number | null, digits = 0, suffix = ''): string {
@@ -14,11 +15,14 @@ function outcomeClass(p: PitchDetail): string {
   return '';
 }
 
-/** Color the Stuff cell: plus stuff green, below-average red. */
-function stuffClass(value: number): string {
-  if (value >= 115) return ' stuff-high';
-  if (value <= 85) return ' stuff-low';
-  return '';
+function StuffValue({ value }: { value: number }) {
+  const grade = stuffGrade(value);
+  return (
+    <span title={`${grade.label} stuff`}>
+      {value}
+      {grade.symbol && <sup className="stuff-grade-symbol">{grade.symbol}</sup>}
+    </span>
+  );
 }
 
 export function AtBatCard({ ab, focused }: { ab: AtBatDetailResponse; focused: boolean }) {
@@ -54,7 +58,7 @@ export function AtBatCard({ ab, focused }: { ab: AtBatDetailResponse; focused: b
                   <th title="Spin rate (rpm)">RPM</th>
                   <th title="Induced vertical break (inches)">IVB</th>
                   <th title="Horizontal break (inches)">IHB</th>
-                  <th title="Estimated Stuff+ — pitch quality from velo, movement, and extension (100 = league average, higher = nastier)">Stuff</th>
+                  <th title={`Estimated Stuff+ — pitch quality from velo, movement, and extension. ${STUFF_BANDS_TEXT}`}>Stuff</th>
                   <th title="Count after this pitch">Count</th>
                   <th className="atbat-col-outcome">Outcome</th>
                 </tr>
@@ -68,8 +72,8 @@ export function AtBatCard({ ab, focused }: { ab: AtBatDetailResponse; focused: b
                     <td>{p.spinRate != null ? Math.round(p.spinRate) : '—'}</td>
                     <td>{num(p.ivb, 1, '"')}</td>
                     <td>{num(p.ihb, 1, '"')}</td>
-                    <td className={`stuff-cell${p.stuff != null ? stuffClass(p.stuff) : ''}`}>
-                      {p.stuff ?? '—'}
+                    <td className={`stuff-cell${p.stuff != null ? stuffGrade(p.stuff).className : ''}`}>
+                      {p.stuff != null ? <StuffValue value={p.stuff} /> : '—'}
                     </td>
                     <td className="atbat-count">{p.balls}-{p.strikes}</td>
                     <td className="atbat-col-outcome">{p.outcome}</td>

@@ -132,9 +132,10 @@ export function AtBatPage() {
             <span className="atbat-legend-strike">strike</span>,{' '}
             <span className="atbat-legend-ball">ball</span>,{' '}
             <span className="atbat-legend-inplay">in play</span>. IVB = induced vertical break, IHB = horizontal
-            break (inches). <strong>Stuff</strong> is an estimated pitch-quality index (100 = league average,
-            higher = nastier) computed here from velocity, movement, and extension — an approximation of Stuff+,
-            not the trademarked model.
+            break (inches). <strong>Stuff</strong> is an estimated pitch-quality index computed here from velocity,
+            movement, and extension — an approximation of Stuff+, not the trademarked model. 100 = league average:{' '}
+            <strong>130+</strong> is plus-plus (<strong>++</strong>), <strong>115–129</strong> plus (<strong>+</strong>),{' '}
+            <strong>85–114</strong> average, and <strong>below 85</strong> below average (<strong>−</strong>).
             {!hasMovement && ' Break and Stuff are only available for games from 2015 onward.'}
           </p>
         )}

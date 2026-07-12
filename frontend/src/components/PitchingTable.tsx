@@ -1,17 +1,11 @@
 import { Link } from 'react-router-dom';
 import type { PitchingLine } from '@mlb-scorecards/shared';
+import { STUFF_BANDS_TEXT, stuffGrade } from '../lib/stuffGrade';
 
 interface PitchingTableProps {
   teamName: string;
   pitching: PitchingLine[];
   seasonYear?: number | null;
-}
-
-/** Color the Stuff cell: plus stuff green, below-average red. */
-function stuffClass(value: number): string {
-  if (value >= 115) return ' stuff-high';
-  if (value <= 85) return ' stuff-low';
-  return '';
 }
 
 export function PitchingTable({ teamName, pitching, seasonYear = null }: PitchingTableProps) {
@@ -29,7 +23,7 @@ export function PitchingTable({ teamName, pitching, seasonYear = null }: Pitchin
           <th>K</th>
           <th>HR</th>
           <th>PIT</th>
-          <th title="Average estimated Stuff+ over this pitcher's tracked pitches (100 = league average, higher = nastier)">
+          <th title={`Average estimated Stuff+ over this pitcher's tracked pitches. ${STUFF_BANDS_TEXT}`}>
             Stuff
           </th>
         </tr>
@@ -49,7 +43,19 @@ export function PitchingTable({ teamName, pitching, seasonYear = null }: Pitchin
             <td>{p.strikeouts}</td>
             <td>{p.homeRuns}</td>
             <td>{p.pitches}</td>
-            <td className={`stuff-cell${p.stuff != null ? stuffClass(p.stuff) : ''}`}>{p.stuff ?? '—'}</td>
+            <td
+              className={`stuff-cell${p.stuff != null ? stuffGrade(p.stuff).className : ''}`}
+              title={p.stuff != null ? `${stuffGrade(p.stuff).label} stuff` : undefined}
+            >
+              {p.stuff != null ? (
+                <>
+                  {p.stuff}
+                  {stuffGrade(p.stuff).symbol && <sup className="stuff-grade-symbol">{stuffGrade(p.stuff).symbol}</sup>}
+                </>
+              ) : (
+                '—'
+              )}
+            </td>
           </tr>
         ))}
         {pitching.length === 0 && (
