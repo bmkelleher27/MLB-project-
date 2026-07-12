@@ -326,3 +326,43 @@ export interface GameAtBatsResponse {
   atBats: AtBatDetailResponse[];
 }
 
+// ── Pre-game preview ────────────────────────────────────────────────────
+
+export interface PitcherStartLine {
+  gamePk: number | null;
+  date: string; // YYYY-MM-DD
+  opponentAbbr: string;
+  isHome: boolean;
+  ip: string; // e.g. "6.2"
+  hits: number;
+  runs: number;
+  earnedRuns: number;
+  walks: number;
+  strikeouts: number;
+  homeRuns: number;
+  pitches: number | null;
+}
+
+export interface ProbablePitcherPreview {
+  id: number;
+  name: string;
+  /** 'L' | 'R' when known. */
+  hand: string | null;
+  /** Most recent first, up to 5 (topped up from the prior season early in the year). */
+  starts: PitcherStartLine[];
+  /** Aggregates over `starts`; null when there are none. */
+  span: { ip: string; era: number; whip: number; kPer9: number } | null;
+}
+
+export interface GamePreviewSide {
+  team: { id: number; name: string; abbreviation: string };
+  probable: ProbablePitcherPreview | null;
+}
+
+export interface GamePreviewResponse {
+  gamePk: number;
+  status: { abstractGameState: string; detailedState: string };
+  away: GamePreviewSide;
+  home: GamePreviewSide;
+}
+

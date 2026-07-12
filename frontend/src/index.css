@@ -2405,6 +2405,114 @@ a {
   color: var(--text-muted);
 }
 
+/* Pre-game view: probable starters, last 5 starts ─────────────────── */
+
+.pregame-view {
+  margin: 4px 0 20px;
+}
+
+.pregame-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.pregame-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.pregame-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: var(--card-shadow);
+}
+
+.pregame-panel-team {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.pregame-pitcher {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.pregame-pitcher-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.pregame-hand {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.pregame-span {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.pregame-span strong {
+  color: var(--text);
+}
+
+.pregame-tbd {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+.pregame-table-wrapper {
+  overflow-x: auto;
+}
+
+.pregame-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pregame-table th,
+.pregame-table td {
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pregame-table th {
+  background: var(--accent-bg);
+  font-size: 11px;
+}
+
+.pregame-opp {
+  text-align: left !important;
+}
+
+.pregame-row-link {
+  cursor: pointer;
+}
+
+.pregame-row-link:hover {
+  background: var(--hover-bg);
+}
+
 .atbat-live-badge {
   display: inline-flex;
   align-items: center;

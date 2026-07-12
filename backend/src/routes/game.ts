@@ -4,6 +4,7 @@ import { TtlCache } from '../cache.js';
 import { getLiveFeed } from '../mlbApi.js';
 import { buildGameAtBats } from '../scorecard/atbats.js';
 import { transformLiveFeed } from '../scorecard/transform.js';
+import { buildGamePreview } from './preview.js';
 
 const router = Router();
 
@@ -61,6 +62,20 @@ router.get('/:gamePk/atbats', async (req, res) => {
       atBatsCache.set(String(gamePk), body, FINAL_TTL_MS);
     }
     res.json(body);
+  } catch (err) {
+    res.status(502).json({ error: (err as Error).message });
+  }
+});
+
+router.get('/:gamePk/preview', async (req, res) => {
+  const gamePk = Number(req.params.gamePk);
+  if (!Number.isInteger(gamePk)) {
+    res.status(400).json({ error: 'invalid gamePk' });
+    return;
+  }
+
+  try {
+    res.json(await buildGamePreview(gamePk));
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
   }

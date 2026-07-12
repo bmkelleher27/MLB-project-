@@ -94,7 +94,7 @@ export interface RawGameLog {
     splits?: Array<{
       date?: string;
       isHome?: boolean;
-      opponent?: { name?: string };
+      opponent?: { id?: number; name?: string };
       game?: { gamePk?: number };
       stat?: Record<string, unknown>;
     }>;
@@ -136,6 +136,12 @@ export interface RawLiveFeed {
       away?: { abbreviation?: string };
       home?: { abbreviation?: string };
     };
+    probablePitchers?: {
+      away?: { id: number; fullName: string };
+      home?: { id: number; fullName: string };
+    };
+    // Bio directory for everyone attached to the game; used for pitch hand.
+    players?: Record<string, { pitchHand?: { code?: string } }>;
   };
   liveData: {
     plays: { allPlays: RawPlay[] };

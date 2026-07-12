@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import type { Cell, Scorecard } from '@mlb-scorecards/shared';
-import { fetchScorecard } from '../api/client';
+import type { Cell, GamePreviewResponse, Scorecard } from '@mlb-scorecards/shared';
+import { fetchGamePreview, fetchScorecard } from '../api/client';
 import { getSocket } from '../api/socket';
 import { formatFullDate } from '../lib/date';
 import { GameStatusHeader } from '../components/GameStatusHeader';
 import { NotationLegend } from '../components/NotationLegend';
 import { PitchingTable } from '../components/PitchingTable';
 import { PredictiveStats } from '../components/PredictiveStats';
+import { PregameView } from '../components/PregameView';
 import { ReplayControls } from '../components/ReplayControls';
 import { ScorecardTable } from '../components/ScorecardTable';
 import { ScoringSummary } from '../components/ScoringSummary';
@@ -37,6 +38,7 @@ export function ScorecardPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [scorecard, setScorecard] = useState<Scorecard | null>(null);
+  const [preview, setPreview] = useState<GamePreviewResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [legendOpen, setLegendOpen] = useState(false);
   const [replayStep, setReplayStep] = useState<number | null>(null);
@@ -87,6 +89,25 @@ export function ScorecardPage() {
   }, [scorecard]);
 
   const isLive = scorecard?.status.abstractGameState === 'Live';
+  const isPreview = scorecard?.status.abstractGameState === 'Preview';
+
+  // Pre-game: pull the probable starters' recent-form panel. Purely an
+  // enhancement, so a failure here never blocks the page.
+  useEffect(() => {
+    if (!isPreview || !gamePk) {
+      setPreview(null);
+      return;
+    }
+    let cancelled = false;
+    fetchGamePreview(Number(gamePk))
+      .then((p) => {
+        if (!cancelled) setPreview(p);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isPreview, gamePk]);
 
   const latestCell = useMemo(() => {
     if (!scorecard) return null;
@@ -186,8 +207,12 @@ export function ScorecardPage() {
                 <span className="live-ticker-desc">{latestCell.description}</span>
               </button>
             )}
-            <ScoringSummary scorecard={scorecard} onJump={jumpToCell} />
-            <ReplayControls totalPlays={atBatIndices.length} step={replayStep} onChange={setReplayStep} />
+            {isPreview && preview && <PregameView preview={preview} />}
+            {!isPreview && <ScoringSummary scorecard={scorecard} onJump={jumpToCell} />}
+            {!isPreview && (
+              <ReplayControls totalPlays={atBatIndices.length} step={replayStep} onChange={setReplayStep} />
+            )}
+            {!isPreview && (
             <div className="scorecard-tables">
               <ScorecardTable
                 team={scorecard.teams.away}
@@ -224,6 +249,7 @@ export function ScorecardPage() {
               />
               <PredictiveStats teamName={scorecard.teams.home.team.name} predictive={scorecard.predictive.home} />
             </div>
+            )}
           </>
         )}
       </div>
