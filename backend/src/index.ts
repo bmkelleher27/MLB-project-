@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import { Server } from 'socket.io';
@@ -14,6 +15,9 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
 
 const app = express();
 app.use(cors());
+// JSON payloads here compress 6-12x (a full-game at-bats body is ~200 KB raw,
+// ~30 KB gzipped); Express does not compress on its own.
+app.use(compression());
 
 const startedAt = Date.now();
 
