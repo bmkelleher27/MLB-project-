@@ -9,51 +9,41 @@ import type {
 } from '@mlb-scorecards/shared';
 import { API_BASE } from '../lib/apiBase';
 
-export async function fetchSchedule(date: string): Promise<ScheduleResponse> {
-  const res = await fetch(`${API_BASE}/api/schedule?date=${date}`);
-  if (!res.ok) throw new Error(`schedule request failed: ${res.status}`);
-  return res.json() as Promise<ScheduleResponse>;
+async function getJson<T>(path: string, label: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`);
+  if (!res.ok) throw new Error(`${label} request failed: ${res.status}`);
+  return res.json() as Promise<T>;
 }
 
-export async function fetchScorecard(gamePk: number): Promise<Scorecard> {
-  const res = await fetch(`${API_BASE}/api/game/${gamePk}/scorecard`);
-  if (!res.ok) throw new Error(`scorecard request failed: ${res.status}`);
-  return res.json() as Promise<Scorecard>;
+export function fetchSchedule(date: string): Promise<ScheduleResponse> {
+  return getJson(`/api/schedule?date=${date}`, 'schedule');
 }
 
-export async function fetchGameAtBats(gamePk: number): Promise<GameAtBatsResponse> {
-  const res = await fetch(`${API_BASE}/api/game/${gamePk}/atbats`);
-  if (!res.ok) throw new Error(`at-bats request failed: ${res.status}`);
-  return res.json() as Promise<GameAtBatsResponse>;
+export function fetchScorecard(gamePk: number): Promise<Scorecard> {
+  return getJson(`/api/game/${gamePk}/scorecard`, 'scorecard');
 }
 
-export async function fetchRandomGame(): Promise<{ gamePk: number; date: string }> {
-  const res = await fetch(`${API_BASE}/api/random-game`);
-  if (!res.ok) throw new Error(`random-game request failed: ${res.status}`);
-  return res.json() as Promise<{ gamePk: number; date: string }>;
+export function fetchGameAtBats(gamePk: number): Promise<GameAtBatsResponse> {
+  return getJson(`/api/game/${gamePk}/atbats`, 'at-bats');
+}
+
+export function fetchRandomGame(): Promise<{ gamePk: number; date: string }> {
+  return getJson('/api/random-game', 'random-game');
 }
 
 export async function fetchTeams(season: number): Promise<TeamInfo[]> {
-  const res = await fetch(`${API_BASE}/api/teams?season=${season}`);
-  if (!res.ok) throw new Error(`teams request failed: ${res.status}`);
-  const body = (await res.json()) as { teams: TeamInfo[] };
+  const body = await getJson<{ teams: TeamInfo[] }>(`/api/teams?season=${season}`, 'teams');
   return body.teams;
 }
 
-export async function fetchSeason(teamId: number, season: number): Promise<SeasonResponse> {
-  const res = await fetch(`${API_BASE}/api/season?teamId=${teamId}&season=${season}`);
-  if (!res.ok) throw new Error(`season request failed: ${res.status}`);
-  return res.json() as Promise<SeasonResponse>;
+export function fetchSeason(teamId: number, season: number): Promise<SeasonResponse> {
+  return getJson(`/api/season?teamId=${teamId}&season=${season}`, 'season');
 }
 
-export async function fetchPlayerLog(id: number, season: number): Promise<PlayerLogResponse> {
-  const res = await fetch(`${API_BASE}/api/player/${id}?season=${season}`);
-  if (!res.ok) throw new Error(`player request failed: ${res.status}`);
-  return res.json() as Promise<PlayerLogResponse>;
+export function fetchPlayerLog(id: number, season: number): Promise<PlayerLogResponse> {
+  return getJson(`/api/player/${id}?season=${season}`, 'player');
 }
 
-export async function fetchSeasonPredictive(teamId: number, season: number): Promise<SeasonPredictiveResponse> {
-  const res = await fetch(`${API_BASE}/api/season/predictive?teamId=${teamId}&season=${season}`);
-  if (!res.ok) throw new Error(`season predictive request failed: ${res.status}`);
-  return res.json() as Promise<SeasonPredictiveResponse>;
+export function fetchSeasonPredictive(teamId: number, season: number): Promise<SeasonPredictiveResponse> {
+  return getJson(`/api/season/predictive?teamId=${teamId}&season=${season}`, 'season predictive');
 }

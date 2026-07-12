@@ -622,11 +622,6 @@ a {
   max-width: 120px;
 }
 
-.lineup-slot-number {
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
 .player-position {
   font-size: 10px;
   font-weight: 600;

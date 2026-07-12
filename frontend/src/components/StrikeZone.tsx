@@ -1,4 +1,5 @@
 import type { PitchDetail } from '@mlb-scorecards/shared';
+import { avg, clamp } from '../lib/math';
 
 // Display window in feet, catcher's view. Wide enough to show chases well
 // off the plate while keeping the zone a comfortable size.
@@ -16,12 +17,11 @@ const zScale = H / (Z_MAX - Z_MIN);
 const sx = (ft: number) => (ft - X_MIN) * xScale;
 const sy = (ft: number) => H - (ft - Z_MIN) * zScale;
 
-function clamp(v: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, v));
-}
+/** A pitch with plate-location tracking — the only kind the zone can place. */
+type Located = PitchDetail & { px: number; pz: number };
 
-function avg(values: number[]): number {
-  return values.reduce((s, v) => s + v, 0) / values.length;
+function isLocated(p: PitchDetail): p is Located {
+  return p.px != null && p.pz != null;
 }
 
 function dotClass(p: PitchDetail): string {
@@ -32,7 +32,7 @@ function dotClass(p: PitchDetail): string {
 }
 
 export function StrikeZone({ pitches }: { pitches: PitchDetail[] }) {
-  const located = pitches.filter((p) => p.px != null && p.pz != null);
+  const located = pitches.filter(isLocated);
   if (located.length === 0) return null;
 
   const tops = pitches.map((p) => p.szTop).filter((v): v is number => v != null);
@@ -73,8 +73,8 @@ export function StrikeZone({ pitches }: { pitches: PitchDetail[] }) {
         <polygon points={plate} className="sz-plate" />
 
         {located.map((p) => {
-          const px = clamp(p.px as number, X_MIN + 0.12, X_MAX - 0.12);
-          const pz = clamp(p.pz as number, Z_MIN + 0.12, Z_MAX - 0.12);
+          const px = clamp(p.px, X_MIN + 0.12, X_MAX - 0.12);
+          const pz = clamp(p.pz, Z_MIN + 0.12, Z_MAX - 0.12);
           return (
             <g key={p.number} className={`pitch-dot ${dotClass(p)}`}>
               <title>{`Pitch ${p.number}: ${p.type ?? ''} ${p.velocity != null ? `${p.velocity.toFixed(1)} mph ` : ''}— ${p.outcome}`}</title>

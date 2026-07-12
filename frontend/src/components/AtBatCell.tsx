@@ -1,5 +1,6 @@
 import type { Cell } from '@mlb-scorecards/shared';
-import { Diamond, progressFromCell } from './Diamond';
+import { progressFromCell } from '../lib/diamond';
+import { Diamond } from './Diamond';
 
 const OUT_CIRCLES: Record<number, string> = { 1: '①', 2: '②', 3: '③' };
 

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { AtBatDetailResponse, PitchDetail } from '@mlb-scorecards/shared';
+import { avg } from '../lib/math';
 
 // Stable color + friendly label per pitch-type code. Colors are chosen to stay
 // legible against both the light and dark panel backgrounds.
@@ -35,10 +36,6 @@ type Moved = PitchDetail & { ivb: number; ihb: number };
 
 function hasBreak(p: PitchDetail): p is Moved {
   return p.ivb != null && p.ihb != null;
-}
-
-function avg(values: number[]): number {
-  return values.reduce((s, v) => s + v, 0) / values.length;
 }
 
 interface PitcherGroup {
