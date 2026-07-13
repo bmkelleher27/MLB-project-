@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { AtBatDetailResponse, PitchDetail } from '@mlb-scorecards/shared';
 import { avg } from '../lib/math';
 import { pitchMeta } from '../lib/pitchTypes';
+import { stuffGrade } from '../lib/stuffGrade';
 
 const MIN_PITCHES = 20;
 
@@ -38,6 +39,7 @@ interface TypeRow {
   n: number;
   usage: number; // 0-1
   velo: number | null;
+  stuff: number | null; // average estimated Stuff+ for this type
   whiffPct: number | null; // whiffs / swings
   cswPct: number; // (called strikes + whiffs) / pitches
 }
@@ -93,11 +95,13 @@ function buildUsage(atBats: AtBatDetailResponse[]): UsageData[] {
           const whiffs = ps.filter(isWhiff).length;
           const called = ps.filter((p) => p.outcome === 'Called Strike').length;
           const velos = ps.map((p) => p.velocity).filter((v): v is number => v != null);
+          const stuffs = ps.map((p) => p.stuff).filter((v): v is number => v != null);
           return {
             type,
             n: ps.length,
             usage: ps.length / pitches.length,
             velo: velos.length ? avg(velos) : null,
+            stuff: stuffs.length ? Math.round(avg(stuffs)) : null,
             whiffPct: swings > 0 ? whiffs / swings : null,
             cswPct: (called + whiffs) / ps.length,
           };
@@ -143,6 +147,7 @@ function UsagePanel({ data }: { data: UsageData }) {
             <th>#</th>
             <th title="Share of all pitches">Use</th>
             <th title="Average velocity">Velo</th>
+            <th title="Average estimated Stuff+ for this pitch type (100 = league average)">Stuff</th>
             <th title="Whiffs per swing">Whiff%</th>
             <th title="Called strikes + whiffs, per pitch">CSW%</th>
           </tr>
@@ -157,6 +162,18 @@ function UsagePanel({ data }: { data: UsageData }) {
               <td>{t.n}</td>
               <td>{pct(t.usage)}</td>
               <td>{t.velo != null ? t.velo.toFixed(1) : '—'}</td>
+              <td className={`stuff-cell${t.stuff != null ? stuffGrade(t.stuff).className : ''}`}>
+                {t.stuff != null ? (
+                  <span title={`${stuffGrade(t.stuff).label} stuff`}>
+                    {t.stuff}
+                    {stuffGrade(t.stuff).symbol && (
+                      <sup className="stuff-grade-symbol">{stuffGrade(t.stuff).symbol}</sup>
+                    )}
+                  </span>
+                ) : (
+                  '—'
+                )}
+              </td>
               <td>{t.whiffPct != null ? pct(t.whiffPct) : '—'}</td>
               <td>{pct(t.cswPct)}</td>
             </tr>

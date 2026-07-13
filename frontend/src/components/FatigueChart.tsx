@@ -6,6 +6,10 @@ import { pitchMeta } from '../lib/pitchTypes';
 const MIN_PITCHES = 30; // starters / bulk arms only — a 12-pitch reliever has no fatigue story
 const FASTBALL_FAMILY = new Set(['FF', 'FA', 'SI', 'FT', 'FC']);
 
+function ordinal(n: number): string {
+  return n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`;
+}
+
 interface SeqPitch {
   n: number; // cumulative pitch number for this pitcher
   velocity: number;
@@ -19,7 +23,11 @@ interface PitcherSeq {
   name: string;
   pitches: SeqPitch[];
   ttoStarts: Array<{ n: number; tto: number }>; // pitch number where the 2nd/3rd time through began
-  stuffByTto: Array<{ tto: number; stuff: number | null; velo: number | null }>;
+  ttos: number[]; // times through the order this pitcher actually reached
+  /** Fastball-family velocity per time through the order (mixing off-speed would lie). */
+  fbVeloByTto: Array<number | null>;
+  /** Average Stuff per pitch type per time through the order, most-used types first. */
+  stuffByType: Array<{ type: string | null; n: number; byTto: Array<number | null> }>;
 }
 
 function buildSequences(atBats: AtBatDetailResponse[]): PitcherSeq[] {
@@ -55,17 +63,35 @@ function buildSequences(atBats: AtBatDetailResponse[]): PitcherSeq[] {
         const first = a.pitches.find((p) => p.batterNumber > (tto - 1) * 9);
         if (first) ttoStarts.push({ n: first.n, tto });
       }
-      const stuffByTto = [1, 2, 3].map((tto) => {
-        const ps = a.pitches.filter((p) => Math.ceil(p.batterNumber / 9) === tto);
-        const stuffs = ps.map((p) => p.stuff).filter((v): v is number => v != null);
-        const velos = ps.map((p) => p.velocity);
-        return {
-          tto,
-          stuff: stuffs.length ? Math.round(avg(stuffs)) : null,
-          velo: velos.length ? avg(velos) : null,
-        };
+      const maxTto = Math.min(4, Math.ceil(Math.max(...a.pitches.map((p) => p.batterNumber)) / 9));
+      const ttos = Array.from({ length: maxTto }, (_, i) => i + 1);
+      const inTto = (p: SeqPitch, tto: number) => Math.ceil(p.batterNumber / 9) === tto;
+
+      const fbVeloByTto = ttos.map((tto) => {
+        const velos = a.pitches
+          .filter((p) => inTto(p, tto) && p.type && FASTBALL_FAMILY.has(p.type))
+          .map((p) => p.velocity);
+        return velos.length ? avg(velos) : null;
       });
-      return { name, pitches: a.pitches, ttoStarts, stuffByTto };
+
+      const byType = new Map<string | null, SeqPitch[]>();
+      for (const p of a.pitches) {
+        if (!byType.has(p.type)) byType.set(p.type, []);
+        byType.get(p.type)!.push(p);
+      }
+      const stuffByType = [...byType.entries()]
+        .map(([type, ps]) => ({
+          type,
+          n: ps.length,
+          byTto: ttos.map((tto) => {
+            const stuffs = ps.filter((p) => inTto(p, tto)).map((p) => p.stuff).filter((v): v is number => v != null);
+            return stuffs.length ? Math.round(avg(stuffs)) : null;
+          }),
+        }))
+        .filter((row) => row.n >= 3 && row.byTto.some((v) => v != null))
+        .sort((x, y) => y.n - x.n);
+
+      return { name, pitches: a.pitches, ttoStarts, ttos, fbVeloByTto, stuffByType };
     })
     .filter((s) => s.pitches.length >= MIN_PITCHES);
 }
@@ -147,15 +173,41 @@ function FatiguePlot({ seq }: { seq: PitcherSeq }) {
         <text x={W - PAD_R} y={H - 6} textAnchor="end" className="break-edge">pitch {total}</text>
       </svg>
       <div className="fatigue-tto-summary">
-        {seq.stuffByTto
-          .filter((t) => t.velo != null)
-          .map((t) => (
-            <span key={t.tto} className="fatigue-tto-chip">
-              {t.tto === 1 ? '1st' : t.tto === 2 ? '2nd' : '3rd'} time thru: {t.velo!.toFixed(1)} mph
-              {t.stuff != null && <> · Stuff {t.stuff}</>}
+        {seq.ttos.map((tto, i) =>
+          seq.fbVeloByTto[i] != null ? (
+            <span key={tto} className="fatigue-tto-chip">
+              {ordinal(tto)} time thru: {seq.fbVeloByTto[i]!.toFixed(1)} mph FB
             </span>
-          ))}
+          ) : null
+        )}
       </div>
+      {seq.stuffByType.length > 0 && (
+        <table className="pregame-table fatigue-stuff-table">
+          <thead>
+            <tr>
+              <th className="pregame-opp" title="Average estimated Stuff+ per pitch type, split by trip through the batting order">
+                Stuff by pitch
+              </th>
+              {seq.ttos.map((tto) => (
+                <th key={tto}>{ordinal(tto)}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {seq.stuffByType.map((row) => (
+              <tr key={row.type ?? 'other'}>
+                <td className="pregame-opp">
+                  <span className="break-swatch" style={{ background: pitchMeta(row.type).color }} aria-hidden="true" />{' '}
+                  {pitchMeta(row.type).label}
+                </td>
+                {row.byTto.map((v, i) => (
+                  <td key={i}>{v ?? '—'}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </figure>
   );
 }
@@ -170,7 +222,8 @@ export function FatigueCharts({ atBats }: { atBats: AtBatDetailResponse[] }) {
       <p className="atbat-note">
         Every pitch's velocity in the order thrown (colored by pitch type, same palette as the movement plots).
         The dark line is a rolling average of fastball-family velocity — the cleanest fatigue signal — and the
-        dashed markers show where each trip through the batting order began.
+        dashed markers show where each trip through the batting order began. The chips give fastball velocity per
+        trip; the table tracks each pitch type's Stuff across trips.
       </p>
       <div className="fatigue-grid">
         {seqs.map((s) => (

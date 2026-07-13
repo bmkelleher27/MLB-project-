@@ -2652,6 +2652,11 @@ a {
   padding: 2px 8px;
 }
 
+.fatigue-stuff-table {
+  width: 100%;
+  margin-top: 10px;
+}
+
 /* Pitch usage ────────────────────────────────────────────────────── */
 
 .usage-grid {
