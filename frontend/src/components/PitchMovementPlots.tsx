@@ -1,35 +1,7 @@
 import { useMemo } from 'react';
 import type { AtBatDetailResponse, PitchDetail } from '@mlb-scorecards/shared';
 import { avg } from '../lib/math';
-
-// Stable color + friendly label per pitch-type code. Colors are chosen to stay
-// legible against both the light and dark panel backgrounds.
-const PITCH_META: Record<string, { label: string; color: string }> = {
-  FF: { label: '4-Seam', color: '#d7263d' },
-  FA: { label: 'Fastball', color: '#d7263d' },
-  SI: { label: 'Sinker', color: '#f46036' },
-  FT: { label: '2-Seam', color: '#f46036' },
-  FC: { label: 'Cutter', color: '#9b59b6' },
-  SL: { label: 'Slider', color: '#2e86de' },
-  ST: { label: 'Sweeper', color: '#17a2b8' },
-  SV: { label: 'Slurve', color: '#138d75' },
-  CU: { label: 'Curve', color: '#27ae60' },
-  KC: { label: 'Knuckle-Curve', color: '#2ecc71' },
-  CS: { label: 'Slow Curve', color: '#58d68d' },
-  CH: { label: 'Changeup', color: '#e1a100' },
-  FS: { label: 'Splitter', color: '#e67e22' },
-  FO: { label: 'Forkball', color: '#d35400' },
-  KN: { label: 'Knuckleball', color: '#7f8c8d' },
-  EP: { label: 'Eephus', color: '#95a5a6' },
-  SC: { label: 'Screwball', color: '#c0392b' },
-};
-
-const FALLBACK_COLOR = '#8895a7';
-
-function meta(code: string | null): { label: string; color: string } {
-  if (code && PITCH_META[code]) return PITCH_META[code];
-  return { label: code ?? 'Other', color: FALLBACK_COLOR };
-}
+import { pitchMeta } from '../lib/pitchTypes';
 
 /** A pitch with both break components present — the only kind this plot can place. */
 type Moved = PitchDetail & { ivb: number; ihb: number };
@@ -95,7 +67,7 @@ function BreakPlot({ group, extent }: { group: PitcherGroup; extent: number }) {
     }
     return [...byType.entries()]
       .map(([code, ps]) => {
-        const m = meta(code === '—' ? null : code);
+        const m = pitchMeta(code === '—' ? null : code);
         const velos = ps.map((p) => p.velocity).filter((v): v is number => v != null);
         return { code, label: m.label, color: m.color, n: ps.length, velo: velos.length ? avg(velos) : null };
       })
@@ -128,7 +100,7 @@ function BreakPlot({ group, extent }: { group: PitcherGroup; extent: number }) {
         <text x={PAD + INNER} y={PAD - 8} className="break-edge" textAnchor="end">► 3B</text>
 
         {group.pitches.map((p, i) => {
-          const m = meta(p.type);
+          const m = pitchMeta(p.type);
           const x = sx(Math.max(-extent, Math.min(extent, p.ihb)));
           const y = sy(Math.max(-extent, Math.min(extent, p.ivb)));
           return (

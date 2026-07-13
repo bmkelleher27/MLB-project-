@@ -316,12 +316,20 @@ export interface AtBatDetailResponse {
   exitVelocity: number | null;
   launchAngle: number | null;
   distance: number | null;
+  /** Gameday spray coordinates (0-250 grid, home plate near x=125, y=200). */
+  hitX: number | null;
+  hitY: number | null;
+  trajectory: string | null; // ground_ball | line_drive | fly_ball | popup
   pitches: PitchDetail[];
 }
 
 export interface GameAtBatsResponse {
   gamePk: number;
   status: { abstractGameState: string; detailedState: string };
+  teams: {
+    away: { name: string; abbreviation: string };
+    home: { name: string; abbreviation: string };
+  };
   /** Every plate appearance with pitch tracking, in game order. */
   atBats: AtBatDetailResponse[];
 }
@@ -343,6 +351,19 @@ export interface PitcherStartLine {
   pitches: number | null;
 }
 
+export interface BatterVsPitcherLine {
+  batterId: number;
+  name: string;
+  ab: number;
+  hits: number;
+  doubles: number;
+  homeRuns: number;
+  walks: number;
+  strikeouts: number;
+  avg: string; // e.g. ".333"
+  ops: string;
+}
+
 export interface ProbablePitcherPreview {
   id: number;
   name: string;
@@ -352,6 +373,8 @@ export interface ProbablePitcherPreview {
   starts: PitcherStartLine[];
   /** Aggregates over `starts`; null when there are none. */
   span: { ip: string; era: number; whip: number; kPer9: number } | null;
+  /** Career history of the opposing team's hitters against this pitcher, most AB first. */
+  vsLineup: BatterVsPitcherLine[];
 }
 
 export interface GamePreviewSide {

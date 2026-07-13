@@ -4,7 +4,10 @@ import type { AtBatDetailResponse, GameAtBatsResponse } from '@mlb-scorecards/sh
 import { fetchGameAtBats } from '../api/client';
 import { getSocket } from '../api/socket';
 import { AtBatCard } from '../components/AtBatCard';
+import { FatigueCharts } from '../components/FatigueChart';
 import { PitchMovementPlots } from '../components/PitchMovementPlots';
+import { PitchUsage } from '../components/PitchUsage';
+import { SprayCharts } from '../components/SprayChart';
 
 interface InningGroup {
   key: string;
@@ -15,8 +18,9 @@ interface InningGroup {
 export function AtBatPage() {
   const { gamePk, atBatIndex } = useParams<{ gamePk: string; atBatIndex: string }>();
   const focus = atBatIndex != null ? Number(atBatIndex) : null;
-  const [atBats, setAtBats] = useState<AtBatDetailResponse[] | null>(null);
-  const [status, setStatus] = useState<GameAtBatsResponse['status'] | null>(null);
+  const [data, setData] = useState<GameAtBatsResponse | null>(null);
+  const atBats = data?.atBats ?? null;
+  const status = data?.status ?? null;
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const scrolledToFocusRef = useRef(false);
@@ -29,9 +33,7 @@ export function AtBatPage() {
     const socket = getSocket();
 
     const handleAtBats = (payload: GameAtBatsResponse) => {
-      if (payload.gamePk !== gamePkNum) return;
-      setAtBats(payload.atBats);
-      setStatus(payload.status);
+      if (payload.gamePk === gamePkNum) setData(payload);
     };
 
     setLoading(true);
@@ -39,8 +41,7 @@ export function AtBatPage() {
     fetchGameAtBats(gamePkNum)
       .then((d) => {
         if (cancelled) return;
-        setAtBats(d.atBats);
-        setStatus(d.status);
+        setData(d);
         // Anything not yet Final can still change (Preview games go Live);
         // follow the game over the socket so new pitches appear as they happen.
         if (d.status.abstractGameState !== 'Final') {
@@ -141,6 +142,9 @@ export function AtBatPage() {
         )}
 
         {!loading && atBats && hasMovement && <PitchMovementPlots atBats={atBats} />}
+        {!loading && atBats && <FatigueCharts atBats={atBats} />}
+        {!loading && atBats && <PitchUsage atBats={atBats} />}
+        {!loading && data && <SprayCharts data={data} />}
 
         {groups.map((g) => (
           <section key={g.key} className="atbat-inning-group">

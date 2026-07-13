@@ -58,6 +58,9 @@ function buildAtBat(play: RawPlay, gamePk: number): AtBatDetailResponse {
     exitVelocity: hitData?.launchSpeed ?? null,
     launchAngle: hitData?.launchAngle ?? null,
     distance: hitData?.totalDistance ?? null,
+    hitX: hitData?.coordinates?.coordX ?? null,
+    hitY: hitData?.coordinates?.coordY ?? null,
+    trajectory: hitData?.trajectory ?? null,
     pitches: buildPitches(play),
   };
 }
@@ -69,12 +72,21 @@ export function buildGameAtBats(raw: RawLiveFeed, gamePk: number): GameAtBatsRes
     .filter((p) => p.playEvents?.some((e) => e.isPitch))
     .sort((a, b) => a.about.atBatIndex - b.about.atBatIndex)
     .map((p) => buildAtBat(p, gamePk));
+  const teamOf = (side: 'away' | 'home') => {
+    const box = raw.liveData.boxscore.teams[side].team;
+    return {
+      name: box.name,
+      abbreviation: raw.gameData.teams?.[side]?.abbreviation ?? box.abbreviation ?? box.name,
+    };
+  };
+
   return {
     gamePk,
     status: {
       abstractGameState: raw.gameData.status.abstractGameState,
       detailedState: raw.gameData.status.detailedState,
     },
+    teams: { away: teamOf('away'), home: teamOf('home') },
     atBats,
   };
 }

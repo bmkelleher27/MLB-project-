@@ -78,6 +78,45 @@ function PitcherPanel({ side }: { side: GamePreviewSide }) {
               </table>
             </div>
           )}
+          {p.vsLineup.length > 0 && (
+            <>
+              <h4 className="pregame-subhead">vs. this lineup (career)</h4>
+              <div className="pregame-table-wrapper">
+                <table className="pregame-table">
+                  <thead>
+                    <tr>
+                      <th className="pregame-opp">Batter</th>
+                      <th>AB</th>
+                      <th>H</th>
+                      <th>2B</th>
+                      <th>HR</th>
+                      <th>BB</th>
+                      <th>K</th>
+                      <th>AVG</th>
+                      <th>OPS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {p.vsLineup.map((l) => (
+                      <tr key={l.batterId}>
+                        <td className="pregame-opp">
+                          <Link to={`/player/${l.batterId}`} className="player-link">{l.name}</Link>
+                        </td>
+                        <td>{l.ab}</td>
+                        <td>{l.hits}</td>
+                        <td>{l.doubles}</td>
+                        <td>{l.homeRuns}</td>
+                        <td>{l.walks}</td>
+                        <td>{l.strikeouts}</td>
+                        <td>{l.avg}</td>
+                        <td>{l.ops}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
@@ -87,7 +126,7 @@ function PitcherPanel({ side }: { side: GamePreviewSide }) {
 export function PregameView({ preview }: { preview: GamePreviewResponse }) {
   return (
     <section className="pregame-view">
-      <h2 className="pregame-title">Probable starters — last 5 starts</h2>
+      <h2 className="pregame-title">Probable starters</h2>
       <div className="pregame-panels">
         <PitcherPanel side={preview.away} />
         <PitcherPanel side={preview.home} />

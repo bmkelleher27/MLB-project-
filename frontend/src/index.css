@@ -2513,6 +2513,200 @@ a {
   background: var(--hover-bg);
 }
 
+.pregame-subhead {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 12px 0 6px;
+}
+
+/* Spray charts ───────────────────────────────────────────────────── */
+
+.spray-section,
+.fatigue-section,
+.usage-section {
+  margin: 4px 0 26px;
+}
+
+.spray-chart {
+  margin: 0;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: var(--card-shadow);
+}
+
+.spray-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.spray-foul-line,
+.spray-fence {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1.25;
+}
+
+.spray-infield {
+  fill: var(--accent-bg);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.spray-dot {
+  stroke: var(--panel-bg);
+  stroke-width: 0.8;
+}
+
+.spray-dot-single { fill: #27ae60; }
+.spray-dot-double { fill: #2e86de; }
+.spray-dot-triple { fill: #17a2b8; }
+.spray-dot-hr { fill: #d7263d; }
+.spray-dot-out { fill: #9aa3af; }
+
+/* the legend swatches are HTML spans, not SVG - color via background */
+.spray-swatch.spray-dot-single { background: #27ae60; }
+.spray-swatch.spray-dot-double { background: #2e86de; }
+.spray-swatch.spray-dot-triple { background: #17a2b8; }
+.spray-swatch.spray-dot-hr { background: #d7263d; }
+.spray-swatch.spray-dot-out { background: #9aa3af; }
+
+.spray-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.spray-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.spray-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Fatigue charts ─────────────────────────────────────────────────── */
+
+.fatigue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.fatigue-plot {
+  margin: 0;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: var(--card-shadow);
+}
+
+.fatigue-plot svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.fatigue-dot {
+  opacity: 0.85;
+}
+
+.fatigue-trend {
+  stroke: var(--text);
+  stroke-width: 1.75;
+  opacity: 0.75;
+}
+
+.fatigue-tto-line {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.fatigue-tto-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 8px;
+}
+
+.fatigue-tto-chip {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--accent-bg);
+  border-radius: 5px;
+  padding: 2px 8px;
+}
+
+/* Pitch usage ────────────────────────────────────────────────────── */
+
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.usage-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: var(--card-shadow);
+}
+
+.usage-buckets {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 12px;
+}
+
+.usage-bucket {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+}
+
+.usage-bucket-label {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.usage-bucket-pitches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  justify-content: flex-end;
+}
+
+.usage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+
+.usage-table {
+  width: 100%;
+}
+
 .atbat-live-badge {
   display: inline-flex;
   align-items: center;

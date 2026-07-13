@@ -1,11 +1,19 @@
 import type {
+  BatterVsPitcherLine,
   GamePreviewResponse,
   GamePreviewSide,
   PitcherStartLine,
   ProbablePitcherPreview,
 } from '@mlb-scorecards/shared';
 import { TtlCache } from '../cache.js';
-import { getLiveFeed, getPersonGameLog, getTeams, type RawLiveFeed } from '../mlbApi.js';
+import {
+  getActiveRoster,
+  getLiveFeed,
+  getPersonGameLog,
+  getTeams,
+  getVsPitcherTotal,
+  type RawLiveFeed,
+} from '../mlbApi.js';
 
 const STARTS_WANTED = 5;
 
@@ -59,14 +67,63 @@ async function startsForSeason(pitcherId: number, season: number, abbrById: Map<
     .map((s) => toStartLine(s, abbrById));
 }
 
+const BVP_MIN_AB = 3;
+const BVP_MAX_ROWS = 10;
+const BVP_CONCURRENCY = 6;
+
+/** Career lines of the opposing team's position players against this pitcher. */
+async function buildVsLineup(pitcherId: number, opposingTeamId: number): Promise<BatterVsPitcherLine[]> {
+  try {
+    const roster = await getActiveRoster(opposingTeamId);
+    const hitters = (roster.roster ?? []).filter((r) => r.position?.abbreviation !== 'P');
+
+    const lines: BatterVsPitcherLine[] = [];
+    let cursor = 0;
+    async function worker() {
+      while (cursor < hitters.length) {
+        const hitter = hitters[cursor++];
+        try {
+          const log = await getVsPitcherTotal(hitter.person.id, pitcherId);
+          const stat = log.stats?.find((s) => s.splits?.length)?.splits?.[0]?.stat as
+            | Record<string, unknown>
+            | undefined;
+          if (!stat) continue;
+          const ab = Number(stat.atBats ?? 0);
+          if (ab < BVP_MIN_AB) continue;
+          lines.push({
+            batterId: hitter.person.id,
+            name: hitter.person.fullName,
+            ab,
+            hits: Number(stat.hits ?? 0),
+            doubles: Number(stat.doubles ?? 0),
+            homeRuns: Number(stat.homeRuns ?? 0),
+            walks: Number(stat.baseOnBalls ?? 0),
+            strikeouts: Number(stat.strikeOuts ?? 0),
+            avg: String(stat.avg ?? '—'),
+            ops: String(stat.ops ?? '—'),
+          });
+        } catch {
+          // no history for this hitter - skip
+        }
+      }
+    }
+    await Promise.all(Array.from({ length: BVP_CONCURRENCY }, worker));
+    return lines.sort((a, b) => b.ab - a.ab).slice(0, BVP_MAX_ROWS);
+  } catch {
+    return []; // roster unavailable - the panel just omits the matchup table
+  }
+}
+
 async function buildProbable(
   probable: { id: number; fullName: string } | undefined,
   raw: RawLiveFeed,
   season: number,
-  abbrById: Map<number, string>
+  abbrById: Map<number, string>,
+  opposingTeamId: number
 ): Promise<ProbablePitcherPreview | null> {
   if (!probable) return null;
 
+  const vsLineupPromise = buildVsLineup(probable.id, opposingTeamId);
   let starts = await startsForSeason(probable.id, season, abbrById);
   // Early in a season a starter may not have 5 starts yet - top up from the
   // previous year so the view stays informative in April.
@@ -103,6 +160,7 @@ async function buildProbable(
     hand: raw.gameData.players?.[`ID${probable.id}`]?.pitchHand?.code ?? null,
     starts,
     span,
+    vsLineup: await vsLineupPromise,
   };
 }
 
@@ -130,9 +188,12 @@ export async function buildGamePreview(gamePk: number): Promise<GamePreviewRespo
     };
   };
 
+  // Each starter's matchup history is against the OTHER team's hitters.
+  const homeTeamId = raw.liveData.boxscore.teams.home.team.id;
+  const awayTeamId = raw.liveData.boxscore.teams.away.team.id;
   const [awayProbable, homeProbable] = await Promise.all([
-    buildProbable(raw.gameData.probablePitchers?.away, raw, season, abbrById),
-    buildProbable(raw.gameData.probablePitchers?.home, raw, season, abbrById),
+    buildProbable(raw.gameData.probablePitchers?.away, raw, season, abbrById, homeTeamId),
+    buildProbable(raw.gameData.probablePitchers?.home, raw, season, abbrById, awayTeamId),
   ]);
 
   const body: GamePreviewResponse = {

@@ -89,6 +89,25 @@ export function getPerson(personId: number): Promise<RawPerson> {
   return getJson<RawPerson>(`/api/v1/people/${personId}`, 3_600_000);
 }
 
+export interface RawRoster {
+  roster?: Array<{
+    person: { id: number; fullName: string };
+    position?: { abbreviation?: string };
+  }>;
+}
+
+export function getActiveRoster(teamId: number): Promise<RawRoster> {
+  return getJson<RawRoster>(`/api/v1/teams/${teamId}/roster?rosterType=active`, 3_600_000);
+}
+
+/** Career batter-vs-pitcher line (a RawGameLog-shaped stats envelope). */
+export function getVsPitcherTotal(batterId: number, pitcherId: number): Promise<RawGameLog> {
+  return getJson<RawGameLog>(
+    `/api/v1/people/${batterId}/stats?stats=vsPlayerTotal&opposingPlayerId=${pitcherId}&group=hitting`,
+    3_600_000
+  );
+}
+
 export interface RawGameLog {
   stats?: Array<{
     splits?: Array<{
@@ -263,6 +282,8 @@ export interface RawPlayEvent {
     launchAngle?: number;
     totalDistance?: number;
     trajectory?: string;
+    // Gameday field coordinates (0-250 grid, home plate near x=125, y=200).
+    coordinates?: { coordX?: number; coordY?: number };
   };
 }
 
