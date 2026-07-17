@@ -1,0 +1,14 @@
+{
+  "name": "MLB Live Scorecards",
+  "short_name": "Scorecards",
+  "description": "A live MLB scorebook: today's games, real-time scorecards, and pitch-by-pitch detail.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eaf0f4",
+  "theme_color": "#0a4f8a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

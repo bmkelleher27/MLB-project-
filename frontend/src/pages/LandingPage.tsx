@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { ScheduleGame } from '@mlb-scorecards/shared';
-import { fetchSchedule, fetchRandomGame } from '../api/client';
+import type { DailyStarsResponse, ScheduleGame } from '@mlb-scorecards/shared';
+import { fetchDailyStars, fetchRandomGame, fetchSchedule } from '../api/client';
+import { DailyStarsStrip } from '../components/DailyStarsStrip';
 import { DatePicker } from '../components/DatePicker';
 import { GameCard } from '../components/GameCard';
+import { HeroCard } from '../components/HeroCard';
 import { LogoMark } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { getFavoriteTeam, setFavoriteTeam } from '../lib/favorite';
-import { todayIso } from '../lib/date';
+import { addDays, todayIso } from '../lib/date';
+import { getFavoriteTeams, toggleFavoriteTeam } from '../lib/favorite';
+import { drama, getSpoilerSafe, pickHero, setSpoilerSafe } from '../lib/gameSignals';
 
 const POLL_INTERVAL_MS = 30_000;
 
-function involvesTeam(game: ScheduleGame, teamId: number | null): boolean {
-  return teamId !== null && (game.away.id === teamId || game.home.id === teamId);
+function involvesAny(game: ScheduleGame, teamIds: number[]): boolean {
+  return teamIds.includes(game.away.id) || teamIds.includes(game.home.id);
 }
 
 export function LandingPage() {
@@ -22,12 +25,21 @@ export function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [randomLoading, setRandomLoading] = useState(false);
-  const [favorite, setFavorite] = useState<number | null>(getFavoriteTeam);
+  const [favorites, setFavorites] = useState<number[]>(getFavoriteTeams);
+  const [spoilerSafe, setSpoilerSafeState] = useState<boolean>(getSpoilerSafe);
+  const [stars, setStars] = useState<DailyStarsResponse | null>(null);
+
+  const isToday = date === todayIso();
 
   function toggleFavorite(teamId: number) {
-    const next = favorite === teamId ? null : teamId;
-    setFavorite(next);
-    setFavoriteTeam(next);
+    setFavorites(toggleFavoriteTeam(teamId));
+  }
+
+  function toggleSpoilerSafe() {
+    setSpoilerSafeState((prev) => {
+      setSpoilerSafe(!prev);
+      return !prev;
+    });
   }
 
   async function goToRandomGame() {
@@ -66,20 +78,47 @@ export function LandingPage() {
     };
   }, [date]);
 
+  // Yesterday's stars only decorate the "today" dashboard view.
+  useEffect(() => {
+    if (!isToday) {
+      setStars(null);
+      return;
+    }
+    let cancelled = false;
+    fetchDailyStars(addDays(todayIso(), -1))
+      .then((s) => {
+        if (!cancelled) setStars(s);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isToday]);
+
+  const hero = useMemo(
+    () => (isToday ? pickHero(games, favorites, stars) : null),
+    [isToday, games, favorites, stars]
+  );
+
   const groups = useMemo(() => {
-    const favFirst = (list: ScheduleGame[]) =>
-      [...list].sort((a, b) => Number(involvesTeam(b, favorite)) - Number(involvesTeam(a, favorite)));
+    // Favorites always pin first; live games then sort by watchability so a
+    // close-and-late game outranks a blowout.
+    const favFirst = (list: ScheduleGame[], key: (g: ScheduleGame) => number = () => 0) =>
+      [...list].sort(
+        (a, b) =>
+          Number(involvesAny(b, favorites)) - Number(involvesAny(a, favorites)) || key(b) - key(a)
+      );
     const live = games.filter((g) => g.status.abstractGameState === 'Live');
     const upcoming = games
       .filter((g) => g.status.abstractGameState !== 'Live' && g.status.abstractGameState !== 'Final')
       .sort((a, b) => a.gameDate.localeCompare(b.gameDate));
     const finals = games.filter((g) => g.status.abstractGameState === 'Final');
     return [
-      { title: 'Live', games: favFirst(live) },
+      { title: 'Live', games: favFirst(live, drama) },
       { title: 'Upcoming', games: favFirst(upcoming) },
       { title: 'Final', games: favFirst(finals) },
     ].filter((s) => s.games.length > 0);
-  }, [games, favorite]);
+  }, [games, favorites]);
 
   return (
     <div className="landing-page">
@@ -103,8 +142,18 @@ export function LandingPage() {
             {randomLoading ? 'Finding a game…' : '⚄ Random Historical Game'}
           </button>
           <Link to="/season" className="random-game-btn">📅 Season Review</Link>
+          <button
+            className={`random-game-btn${spoilerSafe ? ' spoiler-btn-on' : ''}`}
+            onClick={toggleSpoilerSafe}
+            title="Hide final scores until you reveal them — for games you recorded"
+            aria-pressed={spoilerSafe}
+          >
+            {spoilerSafe ? '🙈 Spoilers hidden' : '👁 Hide final scores'}
+          </button>
         </div>
       </div>
+      {hero && <HeroCard hero={hero} spoilerSafe={spoilerSafe} />}
+      {isToday && stars && !spoilerSafe && <DailyStarsStrip stars={stars} />}
       {loading && games.length === 0 && (
         <div className="game-grid" aria-hidden="true">
           {Array.from({ length: 6 }, (_, i) => (
@@ -122,8 +171,9 @@ export function LandingPage() {
               <GameCard
                 key={game.gamePk}
                 game={game}
-                favoriteTeamId={favorite}
+                favoriteTeamIds={favorites}
                 onToggleFavorite={toggleFavorite}
+                spoilerSafe={spoilerSafe}
               />
             ))}
           </div>

@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScheduleGame } from '@mlb-scorecards/shared';
 import { formatGameTime } from '../lib/date';
+import { gameBadges } from '../lib/gameSignals';
 import { getTeamHex } from '../teamColors';
+import { BasesMini } from './BasesMini';
 
 function statusLabel(game: ScheduleGame): string {
   if (game.status.abstractGameState === 'Live') {
@@ -32,16 +34,26 @@ function TeamMark({ teamId }: { teamId: number }) {
   );
 }
 
-interface GameCardProps {
-  game: ScheduleGame;
-  favoriteTeamId?: number | null;
-  onToggleFavorite?: (teamId: number) => void;
+/** "Yandy Díaz" → "Y. Díaz" so the matchup line fits a card. */
+function shortName(full: string): string {
+  const parts = full.split(' ');
+  if (parts.length < 2) return full;
+  return `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
 }
 
-export function GameCard({ game, favoriteTeamId = null, onToggleFavorite }: GameCardProps) {
+interface GameCardProps {
+  game: ScheduleGame;
+  favoriteTeamIds?: number[];
+  onToggleFavorite?: (teamId: number) => void;
+  spoilerSafe?: boolean;
+}
+
+export function GameCard({ game, favoriteTeamIds = [], onToggleFavorite, spoilerSafe = false }: GameCardProps) {
   const isLive = game.status.abstractGameState === 'Live';
   const isFinal = game.status.abstractGameState === 'Final';
-  const showScore = isLive || isFinal;
+  const [revealed, setRevealed] = useState(false);
+  const masked = spoilerSafe && isFinal && !revealed;
+  const showScore = (isLive || isFinal) && !masked;
 
   const awayHex = getTeamHex(game.away.id) ?? NEUTRAL_HEX;
   const homeHex = getTeamHex(game.home.id) ?? NEUTRAL_HEX;
@@ -51,14 +63,16 @@ export function GameCard({ game, favoriteTeamId = null, onToggleFavorite }: Game
     background: `linear-gradient(135deg, ${awayHex}2b 0%, rgba(255,255,255,0) 45%, rgba(255,255,255,0) 55%, ${homeHex}2b 100%), var(--panel-bg)`,
   };
 
+  const badges = gameBadges(game).filter((b) => !(masked && b.spoils));
+
   function star(teamId: number) {
     if (!onToggleFavorite) return null;
-    const isFav = favoriteTeamId === teamId;
+    const isFav = favoriteTeamIds.includes(teamId);
     return (
       <button
         className={`fav-star${isFav ? ' fav-star-on' : ''}`}
-        title={isFav ? 'Remove favorite team' : 'Set as favorite team'}
-        aria-label={isFav ? 'Remove favorite team' : 'Set as favorite team'}
+        title={isFav ? 'Remove favorite team' : 'Add favorite team'}
+        aria-label={isFav ? 'Remove favorite team' : 'Add favorite team'}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -80,7 +94,7 @@ export function GameCard({ game, favoriteTeamId = null, onToggleFavorite }: Game
           {star(team.id)}
         </span>
         {showScore && <span className="game-card-team-score">{team.score ?? 0}</span>}
-        {!showScore && team.probablePitcher && (
+        {!isLive && !isFinal && team.probablePitcher && (
           <span className="game-card-probable" title="Probable pitcher">{team.probablePitcher}</span>
         )}
       </div>
@@ -91,12 +105,43 @@ export function GameCard({ game, favoriteTeamId = null, onToggleFavorite }: Game
     <Link to={`/game/${game.gamePk}`} className={`game-card${isLive ? ' game-card-live' : ''}`} style={cardStyle}>
       <div className="game-card-status">
         {isLive && <span className="live-dot" />}
-        {statusLabel(game)}
-        {!showScore && <span className="game-card-time">{formatGameTime(game.gameDate)}</span>}
+        {masked ? 'Final' : statusLabel(game)}
+        {!isLive && !isFinal && <span className="game-card-time">{formatGameTime(game.gameDate)}</span>}
+        {badges.map((b) => (
+          <span key={b.key} className={`game-badge ${b.className}`}>{b.label}</span>
+        ))}
       </div>
       {teamRow('away')}
       {teamRow('home')}
-      {game.venue && <div className="game-card-venue">{game.venue}</div>}
+      {isLive && game.situation && (
+        <div className="game-card-situation">
+          <BasesMini
+            first={game.situation.onFirst}
+            second={game.situation.onSecond}
+            third={game.situation.onThird}
+            outs={game.situation.outs}
+          />
+          {game.situation.batter && game.situation.pitcher && (
+            <span className="game-card-matchup">
+              {shortName(game.situation.batter)} <span className="atbat-vs">vs</span>{' '}
+              {shortName(game.situation.pitcher)}
+            </span>
+          )}
+        </div>
+      )}
+      {masked && (
+        <button
+          className="spoiler-reveal"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setRevealed(true);
+          }}
+        >
+          Tap to reveal score
+        </button>
+      )}
+      {game.venue && !masked && <div className="game-card-venue">{game.venue}</div>}
       {showScore && game.linescore && game.linescore.length > 0 && (
         <div className="game-card-linescore">
           <div className="game-card-linescore-row">

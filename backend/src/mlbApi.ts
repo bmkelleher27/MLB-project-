@@ -49,7 +49,23 @@ export interface RawScheduleGame {
   linescore?: {
     currentInning?: number;
     inningState?: string;
-    innings?: Array<{ num: number; home?: { runs?: number }; away?: { runs?: number } }>;
+    outs?: number;
+    balls?: number;
+    strikes?: number;
+    innings?: Array<{ num: number; home?: { runs?: number; hits?: number }; away?: { runs?: number; hits?: number } }>;
+    teams?: {
+      home?: { runs?: number; hits?: number; errors?: number };
+      away?: { runs?: number; hits?: number; errors?: number };
+    };
+    offense?: {
+      batter?: { id: number; fullName: string };
+      first?: { id: number };
+      second?: { id: number };
+      third?: { id: number };
+    };
+    defense?: {
+      pitcher?: { id: number; fullName: string };
+    };
   };
 }
 
@@ -184,6 +200,12 @@ export interface RawBoxscoreTeam {
       position?: { abbreviation?: string };
       battingOrder?: string;
       stats?: {
+        batting?: {
+          hits?: number;
+          atBats?: number;
+          homeRuns?: number;
+          rbi?: number;
+        };
         pitching?: {
           inningsPitched?: string;
           hits?: number;

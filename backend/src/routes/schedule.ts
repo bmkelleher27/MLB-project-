@@ -40,6 +40,21 @@ router.get('/', async (req, res) => {
         away: inn.away?.runs ?? null,
         home: inn.home?.runs ?? null,
       })) ?? null,
+      hits:
+        g.linescore?.teams?.away?.hits != null && g.linescore?.teams?.home?.hits != null
+          ? { away: g.linescore.teams.away.hits, home: g.linescore.teams.home.hits }
+          : null,
+      situation:
+        g.status.abstractGameState === 'Live'
+          ? {
+              outs: g.linescore?.outs ?? 0,
+              onFirst: Boolean(g.linescore?.offense?.first),
+              onSecond: Boolean(g.linescore?.offense?.second),
+              onThird: Boolean(g.linescore?.offense?.third),
+              batter: g.linescore?.offense?.batter?.fullName ?? null,
+              pitcher: g.linescore?.defense?.pitcher?.fullName ?? null,
+            }
+          : null,
     }));
     const response: ScheduleResponse = { date, games };
     res.json(response);

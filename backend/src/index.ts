@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import gameRouter from './routes/game.js';
 import randomGameRouter from './routes/randomGame.js';
 import scheduleRouter from './routes/schedule.js';
+import dailyStarsRouter from './routes/dailyStars.js';
 import { seasonRouter, teamsRouter } from './routes/season.js';
 import playerRouter from './routes/player.js';
 import seasonPredictiveRouter from './routes/seasonPredictive.js';
@@ -32,6 +33,7 @@ app.get('/healthz', (_req, res) => {
 });
 
 app.use('/api/schedule', scheduleRouter);
+app.use('/api/daily-stars', dailyStarsRouter);
 app.use('/api/game', gameRouter);
 app.use('/api/random-game', randomGameRouter);
 app.use('/api/teams', teamsRouter);

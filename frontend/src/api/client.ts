@@ -1,4 +1,5 @@
 import type {
+  DailyStarsResponse,
   GameAtBatsResponse,
   GamePreviewResponse,
   PlayerLogResponse,
@@ -30,6 +31,10 @@ export function fetchGameAtBats(gamePk: number): Promise<GameAtBatsResponse> {
 
 export function fetchGamePreview(gamePk: number): Promise<GamePreviewResponse> {
   return getJson(`/api/game/${gamePk}/preview`, 'preview');
+}
+
+export function fetchDailyStars(date: string): Promise<DailyStarsResponse> {
+  return getJson(`/api/daily-stars?date=${date}`, 'daily stars');
 }
 
 export function fetchRandomGame(): Promise<{ gamePk: number; date: string }> {

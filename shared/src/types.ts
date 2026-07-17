@@ -169,6 +169,17 @@ export interface ScheduleGame {
   home: { id: number; name: string; abbreviation: string; score: number | null; probablePitcher: string | null };
   venue: string | null;
   linescore: Array<{ num: number; away: number | null; home: number | null }> | null;
+  /** Team hit totals (for no-hitter detection); null pre-game. */
+  hits: { away: number; home: number } | null;
+  /** Live base-out state and current matchup; null unless the game is Live. */
+  situation: {
+    outs: number;
+    onFirst: boolean;
+    onSecond: boolean;
+    onThird: boolean;
+    batter: string | null;
+    pitcher: string | null;
+  } | null;
 }
 
 export interface ScheduleResponse {
@@ -180,6 +191,34 @@ export interface TeamInfo {
   id: number;
   name: string;
   abbreviation: string;
+}
+
+// ── Daily stars (yesterday's best performances) ─────────────────────────
+
+export interface DailyStarLine {
+  playerId: number;
+  name: string;
+  teamAbbr: string;
+  gamePk: number;
+  /** DMG for batters, DOM for pitchers. */
+  index: number;
+  /** Human box-score line, e.g. "3-for-4, 2 HR, 4 RBI" or "7.0 IP, 10 K, 1 ER". */
+  line: string;
+}
+
+export interface DailyStarsResponse {
+  date: string;
+  batters: DailyStarLine[];
+  pitchers: DailyStarLine[];
+  /** A finished game worth replaying (walk-off, extras, or the tightest finish). */
+  replayPick: {
+    gamePk: number;
+    awayAbbr: string;
+    homeAbbr: string;
+    awayScore: number;
+    homeScore: number;
+    reason: string;
+  } | null;
 }
 
 export interface SeasonGame {
