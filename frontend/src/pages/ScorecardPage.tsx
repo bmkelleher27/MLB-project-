@@ -4,7 +4,9 @@ import type { Cell, GamePreviewResponse, Scorecard } from '@mlb-scorecards/share
 import { fetchGamePreview, fetchScorecard } from '../api/client';
 import { getSocket } from '../api/socket';
 import { formatFullDate } from '../lib/date';
+import { useIsMobile } from '../lib/useIsMobile';
 import { GameStatusHeader } from '../components/GameStatusHeader';
+import { MobileScorecard } from '../components/MobileScorecard';
 import { NotationLegend } from '../components/NotationLegend';
 import { PitchingTable } from '../components/PitchingTable';
 import { PredictiveStats } from '../components/PredictiveStats';
@@ -90,6 +92,8 @@ export function ScorecardPage() {
 
   const isLive = scorecard?.status.abstractGameState === 'Live';
   const isPreview = scorecard?.status.abstractGameState === 'Preview';
+  const isMobile = useIsMobile();
+  const useMobileLayout = isMobile && !isPreview;
 
   // Pre-game: pull the probable starters' recent-form panel. Purely an
   // enhancement, so a failure here never blocks the page.
@@ -181,7 +185,7 @@ export function ScorecardPage() {
           <ThemeToggle />
         </div>
       </div>
-      <div className="scorecard-page">
+      <div className={`scorecard-page${useMobileLayout ? ' scorecard-page-mobile' : ''}`}>
         {legendOpen && <NotationLegend />}
         {error && <p className="status-message status-error">{error}</p>}
         {!error && !scorecard && (
@@ -208,11 +212,14 @@ export function ScorecardPage() {
               </button>
             )}
             {isPreview && preview && <PregameView preview={preview} />}
-            {!isPreview && <ScoringSummary scorecard={scorecard} onJump={jumpToCell} />}
-            {!isPreview && (
+            {useMobileLayout && (
+              <MobileScorecard scorecard={scorecard} onOpenAtBat={openAtBat} />
+            )}
+            {!isPreview && !useMobileLayout && <ScoringSummary scorecard={scorecard} onJump={jumpToCell} />}
+            {!isPreview && !useMobileLayout && (
               <ReplayControls totalPlays={atBatIndices.length} step={replayStep} onChange={setReplayStep} />
             )}
-            {!isPreview && (
+            {!isPreview && !useMobileLayout && (
             <div className="scorecard-tables">
               <ScorecardTable
                 team={scorecard.teams.away}
