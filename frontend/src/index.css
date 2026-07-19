@@ -3370,6 +3370,10 @@ a {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Centered and capped so the compact view also reads well when a desktop
+     user opts into it. */
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 /* Compact linescore, horizontally scrollable if extra innings */

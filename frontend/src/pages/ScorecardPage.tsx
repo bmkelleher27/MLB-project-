@@ -5,6 +5,7 @@ import { fetchGamePreview, fetchScorecard } from '../api/client';
 import { getSocket } from '../api/socket';
 import { formatFullDate } from '../lib/date';
 import { useIsMobile } from '../lib/useIsMobile';
+import { getScorecardView, setScorecardView, type ScorecardView } from '../lib/viewMode';
 import { GameStatusHeader } from '../components/GameStatusHeader';
 import { MobileScorecard } from '../components/MobileScorecard';
 import { NotationLegend } from '../components/NotationLegend';
@@ -93,7 +94,16 @@ export function ScorecardPage() {
   const isLive = scorecard?.status.abstractGameState === 'Live';
   const isPreview = scorecard?.status.abstractGameState === 'Preview';
   const isMobile = useIsMobile();
-  const useMobileLayout = isMobile && !isPreview;
+  // Explicit preference wins; otherwise default to the device-appropriate view.
+  const [viewPref, setViewPref] = useState<ScorecardView | null>(getScorecardView);
+  const resolvedView: ScorecardView = viewPref ?? (isMobile ? 'compact' : 'grid');
+  const useMobileLayout = !isPreview && resolvedView === 'compact';
+
+  function toggleView() {
+    const next: ScorecardView = resolvedView === 'compact' ? 'grid' : 'compact';
+    setViewPref(next);
+    setScorecardView(next);
+  }
 
   // Pre-game: pull the probable starters' recent-form panel. Purely an
   // enhancement, so a failure here never blocks the page.
@@ -171,6 +181,22 @@ export function ScorecardPage() {
           <span className="scorecard-nav-date">{formatFullDate(scorecard.date)}</span>
         )}
         <div className="scorecard-nav-actions">
+          {scorecard && !isPreview && (
+            <button
+              className="nav-legend-btn"
+              onClick={toggleView}
+              title={
+                resolvedView === 'compact'
+                  ? 'Switch to the traditional grid scorecard'
+                  : 'Switch to the play-by-play view'
+              }
+              aria-label={
+                resolvedView === 'compact' ? 'Switch to grid scorecard' : 'Switch to play-by-play view'
+              }
+            >
+              {resolvedView === 'compact' ? '▦ Grid' : '☰ Play-by-play'}
+            </button>
+          )}
           {scorecard && (
             <button className="nav-legend-btn" onClick={() => window.print()} title="Print or save this scorecard as a PDF">
               ⤓ Export PDF
