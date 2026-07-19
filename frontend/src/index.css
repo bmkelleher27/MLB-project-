@@ -3317,6 +3317,28 @@ a {
   }
 }
 
+/* Nav bar wraps on phones: back + date on the first row, the action buttons
+   drop to their own row (wrapping among themselves) so nothing runs off-screen. */
+@media (max-width: 600px) {
+  .scorecard-nav-bar {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+  .scorecard-nav-date {
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .scorecard-nav-actions {
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .scorecard-nav-actions .nav-legend-btn {
+    padding: 5px 9px;
+  }
+}
+
 /* #3 - Larger touch targets for date picker */
 @media (max-width: 480px) {
   .date-picker button {
