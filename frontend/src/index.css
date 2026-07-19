@@ -2029,10 +2029,26 @@ a {
 
 /* ── Print / PDF export ───────────────────────────────────────────── */
 
+/* Print-only professional scorecard: hidden on screen, laid out for print. */
+.print-scorecard {
+  display: none;
+}
+
 @media print {
   @page {
     size: letter landscape;
-    margin: 9mm;
+    margin: 12mm;
+  }
+
+  /* Swap the interactive app for the dedicated print card, whatever view
+     (grid or play-by-play) is on screen. */
+  .scorecard-nav-bar,
+  .scorecard-page {
+    display: none !important;
+  }
+
+  .print-scorecard {
+    display: block !important;
   }
 
   /* Print always uses the light palette, whatever the screen theme */
@@ -2095,25 +2111,33 @@ a {
     gap: 12px;
   }
 
-  /* Compact cells so 9+ innings fit a landscape letter page */
+  /* Compact cells so a 9-batter team + masthead fit one landscape page */
   .scorecard-cell {
-    min-width: 60px;
-    height: 60px;
+    min-width: 46px;
+    height: 35px;
   }
 
   .at-bat-cell {
-    min-height: 56px;
+    min-height: 31px;
     padding: 1px;
   }
 
   .at-bat-cell-main {
-    width: 46px;
-    height: 46px;
+    width: 30px;
+    height: 30px;
   }
 
   .diamond {
-    width: 46px;
-    height: 46px;
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Tight pitching rows so the box fits under its grid */
+  .pitching-table th,
+  .pitching-table td {
+    padding: 0 4px !important;
+    font-size: 9px !important;
+    line-height: 1.3;
   }
 
   .at-bat-code {
@@ -2169,8 +2193,186 @@ a {
     break-inside: avoid;
   }
 
-  .scorecard-table-wrapper[data-side='home'] {
+  /* Masthead + away on page 1, home team + key on page 2. Bands stay with
+     their grid, and a grid never splits across a page. */
+  .print-team[data-side='home'] {
     break-before: page;
+  }
+
+  .print-team-band {
+    break-after: avoid;
+  }
+
+  .print-team .scorecard-table-wrapper {
+    break-inside: avoid;
+  }
+
+  .print-masthead {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 2.5px solid var(--accent);
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+  }
+
+  .print-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 120px;
+  }
+
+  .print-brand .logo-mark {
+    box-shadow: none;
+  }
+
+  .print-brand-name {
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--accent);
+  }
+
+  .print-title {
+    flex: 1;
+    text-align: center;
+  }
+
+  .print-matchup {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .print-at {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .print-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .print-scoreboard {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 120px;
+    justify-content: flex-end;
+  }
+
+  .print-status {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .print-status-final {
+    color: var(--danger);
+  }
+
+  .print-rhe {
+    border-collapse: collapse;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .print-rhe th,
+  .print-rhe td {
+    padding: 1px 7px;
+    text-align: center;
+  }
+
+  .print-rhe th {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .print-rhe-abbr {
+    font-weight: 700;
+    text-align: left !important;
+  }
+
+  .print-rhe-runs {
+    font-weight: 800;
+    font-size: 15px;
+  }
+
+  .print-team {
+    margin-bottom: 8px;
+  }
+
+  .print-team-band {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 4px 10px;
+    background: var(--accent-bg);
+    margin-bottom: 6px;
+  }
+
+  .print-team-band-side {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .print-team-band-name {
+    font-size: 15px;
+    font-weight: 800;
+    flex: 1;
+  }
+
+  .print-team-band-line {
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .print-team .pitching-table {
+    margin-top: 6px;
+  }
+
+  .print-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+    margin-top: 10px;
+    font-size: 9px;
+    color: var(--text-muted);
+    break-inside: avoid;
+  }
+
+  .print-legend-title {
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+
+  .print-legend-code {
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .print-footer {
+    margin-top: 6px;
+    font-size: 8px;
+    color: var(--text-muted);
+    text-align: center;
   }
 }
 

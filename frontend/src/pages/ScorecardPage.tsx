@@ -9,6 +9,7 @@ import { getScorecardView, setScorecardView, type ScorecardView } from '../lib/v
 import { GameStatusHeader } from '../components/GameStatusHeader';
 import { MobileScorecard } from '../components/MobileScorecard';
 import { NotationLegend } from '../components/NotationLegend';
+import { PrintScorecard } from '../components/PrintScorecard';
 import { PitchingTable } from '../components/PitchingTable';
 import { PredictiveStats } from '../components/PredictiveStats';
 import { PregameView } from '../components/PregameView';
@@ -286,6 +287,9 @@ export function ScorecardPage() {
           </>
         )}
       </div>
+      {/* Always in the DOM but only visible when printing: a self-contained,
+          landscape scorecard independent of the on-screen view. */}
+      {scorecard && !isPreview && <PrintScorecard scorecard={scorecard} />}
     </>
   );
 }
