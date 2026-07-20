@@ -2113,23 +2113,23 @@ a {
 
   /* Compact cells so a 9-batter team + masthead fit one landscape page */
   .scorecard-cell {
-    min-width: 46px;
-    height: 35px;
+    min-width: 43px;
+    height: 31px;
   }
 
   .at-bat-cell {
-    min-height: 31px;
+    min-height: 27px;
     padding: 1px;
   }
 
   .at-bat-cell-main {
-    width: 30px;
-    height: 30px;
+    width: 27px;
+    height: 27px;
   }
 
   .diamond {
-    width: 30px;
-    height: 30px;
+    width: 27px;
+    height: 27px;
   }
 
   /* Tight pitching rows so the box fits under its grid */
@@ -2207,123 +2207,171 @@ a {
     break-inside: avoid;
   }
 
+  /* ── Broadcast-style score-bug masthead ── */
   .print-masthead {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    border-bottom: 2.5px solid var(--accent);
-    padding-bottom: 4px;
-    margin-bottom: 6px;
+    margin-bottom: 9px;
   }
 
-  .print-brand {
+  .print-brand-bar {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    width: 120px;
+    background: #0c1c30;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 5px 5px 0 0;
   }
 
-  .print-brand .logo-mark {
+  .print-wordmark {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .print-wordmark .logo-mark {
     box-shadow: none;
   }
 
-  .print-brand-name {
-    font-size: 11px;
+  .print-meta {
+    font-size: 9px;
+    letter-spacing: 0.02em;
+    opacity: 0.82;
+  }
+
+  .print-scorebug {
+    display: flex;
+    align-items: stretch;
+    border: 1.5px solid #0c1c30;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    overflow: hidden;
+  }
+
+  .print-bug-teams {
+    flex: 0 0 320px;
+    border-right: 1.5px solid #0c1c30;
+  }
+
+  .print-bug-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 12px 4px 0;
+    height: 29px;
+  }
+
+  .print-bug-row + .print-bug-row {
+    border-top: 1px solid var(--border);
+  }
+
+  .print-bug-row-win {
+    background: #eef4fb;
+  }
+
+  .print-bug-bar {
+    width: 6px;
+    align-self: stretch;
+  }
+
+  .print-bug-name {
+    flex: 1;
+    font-size: 14px;
     font-weight: 800;
-    line-height: 1.1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+
+  .print-bug-row-win .print-bug-name::after {
+    content: ' ◂';
     color: var(--accent);
   }
 
-  .print-title {
-    flex: 1;
-    text-align: center;
-  }
-
-  .print-matchup {
-    font-size: 16px;
+  .print-bug-score {
+    font-size: 22px;
     font-weight: 800;
-    letter-spacing: -0.01em;
-    margin: 0;
+    font-variant-numeric: tabular-nums;
+    padding-right: 14px;
   }
 
-  .print-at {
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  .print-sub {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
-
-  .print-scoreboard {
+  .print-bug-line {
+    flex: 1;
     display: flex;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 14px;
-    width: 120px;
-    justify-content: flex-end;
+    gap: 2px;
+    padding: 2px 10px;
   }
 
-  .print-status {
+  .print-bug-status {
     font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-  }
-
-  .print-status-final {
+    letter-spacing: 0.08em;
     color: var(--danger);
   }
 
-  .print-rhe {
+  .print-linescore {
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 11px;
     font-variant-numeric: tabular-nums;
   }
 
-  .print-rhe th,
-  .print-rhe td {
-    padding: 1px 7px;
+  .print-linescore th,
+  .print-linescore td {
+    padding: 0 6px;
     text-align: center;
+    min-width: 15px;
+    line-height: 1.35;
   }
 
-  .print-rhe th {
-    font-size: 9px;
+  .print-linescore thead th {
+    font-size: 8px;
     color: var(--text-muted);
-    font-weight: 600;
-  }
-
-  .print-rhe-abbr {
     font-weight: 700;
-    text-align: left !important;
+    border-bottom: 1px solid var(--border);
   }
 
-  .print-rhe-runs {
+  .print-ls-abbr {
     font-weight: 800;
-    font-size: 15px;
+    text-align: right !important;
+    padding-right: 8px !important;
+  }
+
+  .print-ls-tot {
+    font-weight: 800;
+  }
+
+  .print-ls-runs {
+    border-left: 1px solid var(--border);
   }
 
   .print-team {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
+  /* Team-colored band, broadcast lower-third style */
   .print-team-band {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
-    padding: 4px 10px;
-    background: var(--accent-bg);
-    margin-bottom: 6px;
+    align-items: center;
+    gap: 9px;
+    padding: 3px 12px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+  }
+
+  .print-team-band .print-logo-chip {
+    width: 22px;
+    height: 22px;
   }
 
   .print-team-band-side {
     font-size: 9px;
     font-weight: 800;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    opacity: 0.75;
   }
 
   .print-team-band-name {
@@ -2334,8 +2382,39 @@ a {
 
   .print-team-band-line {
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 800;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Logo chips */
+  .print-logo-chip {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .print-logo-chip img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+  }
+
+  .print-team-band .print-logo-chip img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .print-logo-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
   }
 
   .print-team .pitching-table {
