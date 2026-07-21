@@ -2627,6 +2627,17 @@ a {
   .print-ink svg polygon {
     stroke: #000 !important;
   }
+
+  /* Ink saver drops the full-diamond outline so only the batter's actual path
+     shows: nothing for an out, one line home→first for a single, and a closed
+     diamond only when the runner scored. Keeps outs and runs unmistakable. */
+  .print-ink .diamond-outline {
+    display: none;
+  }
+
+  .print-ink .diamond-path {
+    stroke-width: 2.5 !important;
+  }
 }
 
 
