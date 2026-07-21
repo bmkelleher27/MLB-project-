@@ -1,5 +1,6 @@
 import type { Scorecard, TeamScorecard, TeamTotals } from '@mlb-scorecards/shared';
 import { formatFullDate } from '../lib/date';
+import { DEFAULT_EXPORT_OPTIONS, type ExportOptions } from '../lib/exportOptions';
 import { getTeamColor, getTeamHex } from '../teamColors';
 import { LogoMark } from './Logo';
 import { PitchingTable } from './PitchingTable';
@@ -21,7 +22,8 @@ const LEGEND: Array<[string, string]> = [
 ];
 
 /** Team logo on a white chip, falling back to a team-color dot if it fails. */
-function TeamLogoChip({ teamId }: { teamId: number }) {
+function TeamLogoChip({ teamId, show }: { teamId: number; show: boolean }) {
+  if (!show) return null;
   return (
     <span className="print-logo-chip">
       <TeamLogo teamId={teamId} size={18} fallbackClassName="print-logo-dot" />
@@ -33,15 +35,17 @@ function ScoreBugRow({
   team,
   runs,
   winner,
+  logos,
 }: {
   team: TeamScorecard['team'];
   runs: number;
   winner: boolean;
+  logos: boolean;
 }) {
   return (
     <div className={`print-bug-row${winner ? ' print-bug-row-win' : ''}`}>
       <span className="print-bug-bar" style={{ background: getTeamHex(team.id) ?? NEUTRAL_HEX }} />
-      <TeamLogoChip teamId={team.id} />
+      <TeamLogoChip teamId={team.id} show={logos} />
       <span className="print-bug-name">{team.name}</span>
       <span className="print-bug-score">{runs}</span>
     </div>
@@ -82,11 +86,23 @@ function LineScore({ scorecard }: { scorecard: Scorecard }) {
   );
 }
 
-function TeamBand({ team, totals, side }: { team: TeamScorecard; totals: TeamTotals; side: 'AWAY' | 'HOME' }) {
+function TeamBand({
+  team,
+  totals,
+  side,
+  options,
+}: {
+  team: TeamScorecard;
+  totals: TeamTotals;
+  side: 'AWAY' | 'HOME';
+  options: ExportOptions;
+}) {
   const color = getTeamColor(team.team.id);
+  // Minimal style drops the team-color fill for a neutral band.
+  const bandStyle = options.style === 'broadcast' ? { background: color.bg, color: color.text } : undefined;
   return (
-    <div className="print-team-band" style={{ background: color.bg, color: color.text }}>
-      <TeamLogoChip teamId={team.team.id} />
+    <div className="print-team-band" style={bandStyle}>
+      <TeamLogoChip teamId={team.team.id} show={options.logos} />
       <span className="print-team-band-side">{side}</span>
       <span className="print-team-band-name">{team.team.name}</span>
       <span className="print-team-band-line">
@@ -96,7 +112,13 @@ function TeamBand({ team, totals, side }: { team: TeamScorecard; totals: TeamTot
   );
 }
 
-export function PrintScorecard({ scorecard }: { scorecard: Scorecard }) {
+export function PrintScorecard({
+  scorecard,
+  options = DEFAULT_EXPORT_OPTIONS,
+}: {
+  scorecard: Scorecard;
+  options?: ExportOptions;
+}) {
   const seasonYear = scorecard.date ? Number(scorecard.date.slice(0, 4)) : null;
   const awayR = scorecard.totals.away.r;
   const homeR = scorecard.totals.home.r;
@@ -113,6 +135,7 @@ export function PrintScorecard({ scorecard }: { scorecard: Scorecard }) {
         team={scorecard.teams[side]}
         totals={scorecard.totals[side]}
         side={side === 'away' ? 'AWAY' : 'HOME'}
+        options={options}
       />
       <ScorecardTable
         team={scorecard.teams[side]}
@@ -121,16 +144,20 @@ export function PrintScorecard({ scorecard }: { scorecard: Scorecard }) {
         side={side}
         seasonYear={seasonYear}
       />
-      <PitchingTable
-        teamName={scorecard.teams[side].team.name}
-        pitching={scorecard.teams[side].pitching}
-        seasonYear={seasonYear}
-      />
+      {options.pitching && (
+        <PitchingTable
+          teamName={scorecard.teams[side].team.name}
+          pitching={scorecard.teams[side].pitching}
+          seasonYear={seasonYear}
+        />
+      )}
     </section>
   );
 
+  const rootClass = `print-scorecard print-style-${options.style}${options.inkSaver ? ' print-ink' : ''}`;
+
   return (
-    <div className="print-scorecard">
+    <div className={rootClass}>
       <header className="print-masthead">
         <div className="print-brand-bar">
           <span className="print-wordmark">
@@ -144,8 +171,8 @@ export function PrintScorecard({ scorecard }: { scorecard: Scorecard }) {
         </div>
         <div className="print-scorebug">
           <div className="print-bug-teams">
-            <ScoreBugRow team={scorecard.teams.away.team} runs={awayR} winner={isFinal && awayR > homeR} />
-            <ScoreBugRow team={scorecard.teams.home.team} runs={homeR} winner={isFinal && homeR > awayR} />
+            <ScoreBugRow team={scorecard.teams.away.team} runs={awayR} winner={isFinal && awayR > homeR} logos={options.logos} />
+            <ScoreBugRow team={scorecard.teams.home.team} runs={homeR} winner={isFinal && homeR > awayR} logos={options.logos} />
           </div>
           <div className="print-bug-line">
             <span className="print-bug-status">{statusLabel}</span>
@@ -157,14 +184,16 @@ export function PrintScorecard({ scorecard }: { scorecard: Scorecard }) {
       {team('away')}
       {team('home')}
 
-      <div className="print-legend">
-        <span className="print-legend-title">Scoring key</span>
-        {LEGEND.map(([code, meaning]) => (
-          <span key={code} className="print-legend-item">
-            <span className="print-legend-code">{code}</span> {meaning}
-          </span>
-        ))}
-      </div>
+      {options.legend && (
+        <div className="print-legend">
+          <span className="print-legend-title">Scoring key</span>
+          {LEGEND.map(([code, meaning]) => (
+            <span key={code} className="print-legend-item">
+              <span className="print-legend-code">{code}</span> {meaning}
+            </span>
+          ))}
+        </div>
+      )}
       <div className="print-footer">
         Generated by MLB Live Scorecards · {new Date().toLocaleDateString('en-US', { dateStyle: 'medium' } as Intl.DateTimeFormatOptions)} · Data: MLB Stats API
       </div>

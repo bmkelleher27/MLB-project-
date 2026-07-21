@@ -2034,6 +2034,128 @@ a {
   display: none;
 }
 
+/* ── Export options dialog ──────────────────────────────────────────── */
+
+.export-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(15, 23, 35, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.export-dialog {
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow-hover);
+  padding: 20px 22px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.export-dialog-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.export-dialog-sub {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 4px 0 16px;
+}
+
+.export-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px 12px;
+  margin: 0 0 14px;
+}
+
+.export-group legend {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 0 6px;
+}
+
+.export-radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.export-radio input {
+  margin-top: 3px;
+}
+
+.export-radio span {
+  display: flex;
+  flex-direction: column;
+}
+
+.export-radio strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.export-radio small,
+.export-check small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.export-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.export-btn {
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 9px 16px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.export-btn-ghost {
+  background: var(--panel-bg);
+  color: var(--text);
+}
+
+.export-btn-ghost:hover {
+  background: var(--hover-bg);
+}
+
+.export-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 @media print {
   @page {
     size: letter landscape;
@@ -2452,6 +2574,58 @@ a {
     font-size: 8px;
     color: var(--text-muted);
     text-align: center;
+  }
+
+  /* Minimal style: light header, neutral bands (team-color fill dropped in JS). */
+  .print-style-minimal .print-brand-bar {
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  .print-style-minimal .print-scorebug {
+    border-color: var(--border);
+  }
+
+  .print-style-minimal .print-bug-teams {
+    border-right-color: var(--border);
+  }
+
+  .print-style-minimal .print-bug-status {
+    color: var(--text);
+  }
+
+  .print-style-minimal .print-team-band {
+    background: var(--accent-bg);
+    color: var(--text);
+  }
+
+  /* Ink saver: strip every fill so it prints clean black-on-white. */
+  .print-ink * {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  /* outline (not border) so delineating the header adds no layout height,
+     keeping the 2-page fit. */
+  .print-ink .print-brand-bar,
+  .print-ink .print-scorebug,
+  .print-ink .print-team-band {
+    outline: 1px solid #000;
+    outline-offset: -1px;
+  }
+
+  .print-ink .print-bug-bar {
+    display: none;
+  }
+
+  /* Draw the diamonds and gridlines in black for true monochrome. */
+  .print-ink svg path,
+  .print-ink svg line,
+  .print-ink svg polygon {
+    stroke: #000 !important;
   }
 }
 

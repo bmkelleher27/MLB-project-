@@ -4,8 +4,10 @@ import type { Cell, GamePreviewResponse, Scorecard } from '@mlb-scorecards/share
 import { fetchGamePreview, fetchScorecard } from '../api/client';
 import { getSocket } from '../api/socket';
 import { formatFullDate } from '../lib/date';
+import { loadExportOptions, saveExportOptions, type ExportOptions } from '../lib/exportOptions';
 import { useIsMobile } from '../lib/useIsMobile';
 import { getScorecardView, setScorecardView, type ScorecardView } from '../lib/viewMode';
+import { ExportDialog } from '../components/ExportDialog';
 import { GameStatusHeader } from '../components/GameStatusHeader';
 import { MobileScorecard } from '../components/MobileScorecard';
 import { NotationLegend } from '../components/NotationLegend';
@@ -46,6 +48,22 @@ export function ScorecardPage() {
   const [error, setError] = useState<string | null>(null);
   const [legendOpen, setLegendOpen] = useState(false);
   const [replayStep, setReplayStep] = useState<number | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportOptions, setExportOptions] = useState<ExportOptions>(loadExportOptions);
+  const [printSeq, setPrintSeq] = useState(0);
+
+  // Fire the print dialog only after the chosen options have rendered into the
+  // print card, so the output reflects the selection.
+  useEffect(() => {
+    if (printSeq > 0) window.print();
+  }, [printSeq]);
+
+  function runExport(options: ExportOptions) {
+    saveExportOptions(options);
+    setExportOptions(options);
+    setExportOpen(false);
+    setPrintSeq((n) => n + 1);
+  }
   const prevMaxAbRef = useRef<number | null>(null);
   const deepLinkAppliedRef = useRef(false);
 
@@ -199,7 +217,7 @@ export function ScorecardPage() {
             </button>
           )}
           {scorecard && (
-            <button className="nav-legend-btn" onClick={() => window.print()} title="Print or save this scorecard as a PDF">
+            <button className="nav-legend-btn" onClick={() => setExportOpen(true)} title="Choose options and export this scorecard as a PDF">
               ⤓ Export PDF
             </button>
           )}
@@ -289,7 +307,10 @@ export function ScorecardPage() {
       </div>
       {/* Always in the DOM but only visible when printing: a self-contained,
           landscape scorecard independent of the on-screen view. */}
-      {scorecard && !isPreview && <PrintScorecard scorecard={scorecard} />}
+      {scorecard && !isPreview && <PrintScorecard scorecard={scorecard} options={exportOptions} />}
+      {exportOpen && (
+        <ExportDialog initial={exportOptions} onCancel={() => setExportOpen(false)} onExport={runExport} />
+      )}
     </>
   );
 }
