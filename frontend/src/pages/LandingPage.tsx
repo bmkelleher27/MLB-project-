@@ -10,13 +10,9 @@ import { LogoMark } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { addDays, todayIso } from '../lib/date';
 import { getFavoriteTeams, toggleFavoriteTeam } from '../lib/favorite';
-import { drama, getSpoilerSafe, pickHero, setSpoilerSafe } from '../lib/gameSignals';
+import { drama, getSpoilerSafe, involvesFavorite, pickHero, setSpoilerSafe } from '../lib/gameSignals';
 
 const POLL_INTERVAL_MS = 30_000;
-
-function involvesAny(game: ScheduleGame, teamIds: number[]): boolean {
-  return teamIds.includes(game.away.id) || teamIds.includes(game.home.id);
-}
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -106,7 +102,7 @@ export function LandingPage() {
     const favFirst = (list: ScheduleGame[], key: (g: ScheduleGame) => number = () => 0) =>
       [...list].sort(
         (a, b) =>
-          Number(involvesAny(b, favorites)) - Number(involvesAny(a, favorites)) || key(b) - key(a)
+          Number(involvesFavorite(b, favorites)) - Number(involvesFavorite(a, favorites)) || key(b) - key(a)
       );
     const live = games.filter((g) => g.status.abstractGameState === 'Live');
     const upcoming = games

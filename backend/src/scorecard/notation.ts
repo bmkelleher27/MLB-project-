@@ -1,6 +1,6 @@
 import type { RawPlay, RawRunner, RawRunnerCredit } from '../mlbApi.js';
 
-export const POSITION_NUMBER: Record<string, number> = {
+const POSITION_NUMBER: Record<string, number> = {
   P: 1,
   C: 2,
   '1B': 3,

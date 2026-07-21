@@ -1,10 +1,12 @@
-import { useState } from 'react';
 import type { Scorecard, TeamScorecard, TeamTotals } from '@mlb-scorecards/shared';
 import { formatFullDate } from '../lib/date';
 import { getTeamColor, getTeamHex } from '../teamColors';
 import { LogoMark } from './Logo';
 import { PitchingTable } from './PitchingTable';
 import { ScorecardTable } from './ScorecardTable';
+import { TeamLogo } from './TeamLogo';
+
+const NEUTRAL_HEX = '#64748b';
 
 /** Compact self-documenting key so the printed card explains its own shorthand. */
 const LEGEND: Array<[string, string]> = [
@@ -18,24 +20,11 @@ const LEGEND: Array<[string, string]> = [
   ['◇', 'bases reached (filled = scored)'],
 ];
 
-const NEUTRAL_HEX = '#64748b';
-
 /** Team logo on a white chip, falling back to a team-color dot if it fails. */
-function TeamLogo({ teamId }: { teamId: number }) {
-  const [failed, setFailed] = useState(false);
+function TeamLogoChip({ teamId }: { teamId: number }) {
   return (
     <span className="print-logo-chip">
-      {failed ? (
-        <span className="print-logo-dot" style={{ background: getTeamHex(teamId) ?? NEUTRAL_HEX }} />
-      ) : (
-        <img
-          src={`https://www.mlbstatic.com/team-logos/${teamId}.svg`}
-          alt=""
-          width={20}
-          height={20}
-          onError={() => setFailed(true)}
-        />
-      )}
+      <TeamLogo teamId={teamId} size={18} fallbackClassName="print-logo-dot" />
     </span>
   );
 }
@@ -52,7 +41,7 @@ function ScoreBugRow({
   return (
     <div className={`print-bug-row${winner ? ' print-bug-row-win' : ''}`}>
       <span className="print-bug-bar" style={{ background: getTeamHex(team.id) ?? NEUTRAL_HEX }} />
-      <TeamLogo teamId={team.id} />
+      <TeamLogoChip teamId={team.id} />
       <span className="print-bug-name">{team.name}</span>
       <span className="print-bug-score">{runs}</span>
     </div>
@@ -97,7 +86,7 @@ function TeamBand({ team, totals, side }: { team: TeamScorecard; totals: TeamTot
   const color = getTeamColor(team.team.id);
   return (
     <div className="print-team-band" style={{ background: color.bg, color: color.text }}>
-      <TeamLogo teamId={team.team.id} />
+      <TeamLogoChip teamId={team.team.id} />
       <span className="print-team-band-side">{side}</span>
       <span className="print-team-band-name">{team.team.name}</span>
       <span className="print-team-band-line">

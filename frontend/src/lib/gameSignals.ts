@@ -113,7 +113,8 @@ export function setSpoilerSafe(on: boolean): void {
   }
 }
 
-function involves(game: ScheduleGame, favorites: number[]): boolean {
+/** Whether either team in this game is among the given favorite team ids. */
+export function involvesFavorite(game: ScheduleGame, favorites: number[]): boolean {
   return favorites.includes(game.away.id) || favorites.includes(game.home.id);
 }
 
@@ -130,7 +131,7 @@ export function pickHero(
 ): HeroPick | null {
   const live = games.filter((g) => g.status.abstractGameState === 'Live');
   if (live.length > 0) {
-    const fav = live.find((g) => involves(g, favorites));
+    const fav = live.find((g) => involvesFavorite(g, favorites));
     const game = fav ?? [...live].sort((a, b) => drama(b) - drama(a))[0];
     return { kind: 'live', game };
   }
@@ -138,7 +139,7 @@ export function pickHero(
     .filter((g) => g.status.abstractGameState !== 'Live' && g.status.abstractGameState !== 'Final')
     .sort((a, b) => a.gameDate.localeCompare(b.gameDate));
   if (upcoming.length > 0) {
-    return { kind: 'upcoming', game: upcoming.find((g) => involves(g, favorites)) ?? upcoming[0] };
+    return { kind: 'upcoming', game: upcoming.find((g) => involvesFavorite(g, favorites)) ?? upcoming[0] };
   }
   if (stars?.replayPick) return { kind: 'replay', pick: stars.replayPick };
   return null;

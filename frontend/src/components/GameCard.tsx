@@ -5,6 +5,7 @@ import { formatGameTime } from '../lib/date';
 import { gameBadges } from '../lib/gameSignals';
 import { getTeamHex } from '../teamColors';
 import { BasesMini } from './BasesMini';
+import { TeamLogo } from './TeamLogo';
 
 function statusLabel(game: ScheduleGame): string {
   if (game.status.abstractGameState === 'Live') {
@@ -15,24 +16,6 @@ function statusLabel(game: ScheduleGame): string {
 }
 
 const NEUTRAL_HEX = '#64748b';
-
-function TeamMark({ teamId }: { teamId: number }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return <span className="team-chip" style={{ background: getTeamHex(teamId) ?? NEUTRAL_HEX }} />;
-  }
-  return (
-    <img
-      className="team-logo"
-      src={`https://www.mlbstatic.com/team-logos/${teamId}.svg`}
-      alt=""
-      loading="lazy"
-      width={20}
-      height={20}
-      onError={() => setFailed(true)}
-    />
-  );
-}
 
 /** "Yandy Díaz" → "Y. Díaz" so the matchup line fits a card. */
 function shortName(full: string): string {
@@ -89,7 +72,7 @@ export function GameCard({ game, favoriteTeamIds = [], onToggleFavorite, spoiler
     return (
       <div className="game-card-team">
         <span className="game-card-team-name">
-          <TeamMark teamId={team.id} />
+          <TeamLogo teamId={team.id} imgClassName="team-logo" fallbackClassName="team-chip" />
           {team.name}
           {star(team.id)}
         </span>

@@ -1,6 +1,6 @@
 // Stable color + friendly label per pitch-type code. Colors are chosen to stay
 // legible against both the light and dark panel backgrounds.
-export const PITCH_META: Record<string, { label: string; color: string }> = {
+const PITCH_META: Record<string, { label: string; color: string }> = {
   FF: { label: '4-Seam', color: '#d7263d' },
   FA: { label: 'Fastball', color: '#d7263d' },
   SI: { label: 'Sinker', color: '#f46036' },
