@@ -13,7 +13,7 @@ function heroStyle(awayId: number, homeId: number) {
   const a = getTeamHex(awayId) ?? NEUTRAL_HEX;
   const h = getTeamHex(homeId) ?? NEUTRAL_HEX;
   return {
-    background: `linear-gradient(120deg, ${a}33 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, ${h}33 100%), var(--panel-bg)`,
+    background: `linear-gradient(120deg, ${a}5c 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0) 62%, ${h}5c 100%), var(--panel-bg)`,
   };
 }
 

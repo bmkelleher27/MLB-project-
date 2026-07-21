@@ -43,7 +43,7 @@ export function GameCard({ game, favoriteTeamIds = [], onToggleFavorite, spoiler
   // Two-team wash: away color from the top-left, home from the
   // bottom-right, fading to the panel surface in the middle ("2b" = ~17% alpha).
   const cardStyle = {
-    background: `linear-gradient(135deg, ${awayHex}2b 0%, rgba(255,255,255,0) 45%, rgba(255,255,255,0) 55%, ${homeHex}2b 100%), var(--panel-bg)`,
+    background: `linear-gradient(135deg, ${awayHex}52 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, ${homeHex}52 100%), var(--panel-bg)`,
   };
 
   const badges = gameBadges(game).filter((b) => !(masked && b.spoils));
