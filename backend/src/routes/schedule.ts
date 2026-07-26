@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { ScheduleGame, ScheduleResponse } from '@mlb-scorecards/shared';
+import { setShortCache } from '../http.js';
 import { getSchedule } from '../mlbApi.js';
 
 const router = Router();
@@ -57,6 +58,9 @@ router.get('/', async (req, res) => {
           : null,
     }));
     const response: ScheduleResponse = { date, games };
+    // The frontend polls this every 30s; a short shared cache absorbs bursts of
+    // viewers hitting the same date without going stale enough to matter.
+    setShortCache(res, 15);
     res.json(response);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });

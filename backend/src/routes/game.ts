@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { GameAtBatsResponse, Scorecard } from '@mlb-scorecards/shared';
 import { TtlCache } from '../cache.js';
+import { setGameStateCache } from '../http.js';
 import { getLiveFeed } from '../mlbApi.js';
 import { buildGameAtBats } from '../scorecard/atbats.js';
 import { transformLiveFeed } from '../scorecard/transform.js';
@@ -26,6 +27,7 @@ router.get('/:gamePk/scorecard', async (req, res) => {
 
   const cached = scorecardCache.get(String(gamePk));
   if (cached) {
+    setGameStateCache(res, cached.status.abstractGameState);
     res.json(cached);
     return;
   }
@@ -36,6 +38,7 @@ router.get('/:gamePk/scorecard', async (req, res) => {
     if (scorecard.status.abstractGameState === 'Final') {
       scorecardCache.set(String(gamePk), scorecard, FINAL_TTL_MS);
     }
+    setGameStateCache(res, scorecard.status.abstractGameState);
     res.json(scorecard);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
@@ -51,6 +54,7 @@ router.get('/:gamePk/atbats', async (req, res) => {
 
   const cached = atBatsCache.get(String(gamePk));
   if (cached) {
+    setGameStateCache(res, cached.status.abstractGameState);
     res.json(cached);
     return;
   }
@@ -61,6 +65,7 @@ router.get('/:gamePk/atbats', async (req, res) => {
     if (body.status.abstractGameState === 'Final') {
       atBatsCache.set(String(gamePk), body, FINAL_TTL_MS);
     }
+    setGameStateCache(res, body.status.abstractGameState);
     res.json(body);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
@@ -75,7 +80,10 @@ router.get('/:gamePk/preview', async (req, res) => {
   }
 
   try {
-    res.json(await buildGamePreview(gamePk));
+    const preview = await buildGamePreview(gamePk);
+    // Pregame stats (probables, recent form) shift slowly; a minute is plenty.
+    setGameStateCache(res, 'Preview');
+    res.json(preview);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
   }

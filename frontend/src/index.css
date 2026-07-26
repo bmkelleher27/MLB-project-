@@ -2233,25 +2233,30 @@ a {
     gap: 12px;
   }
 
-  /* Compact cells so a 9-batter team + masthead fit one landscape page */
+  /* Compact cells so a full lineup + masthead + a deep bullpen's pitching box
+     fit one landscape page (away p1, home p2). Row height is driven by the
+     at-bat cell below, not this min-height; every 1px shaved off the cell is
+     ~14px of page height across the grid's rows, which is what keeps
+     extra-inning games with multiple pinch-hitters and 6+ pitchers from
+     spilling to a third page. */
   .scorecard-cell {
     min-width: 43px;
-    height: 31px;
+    height: 25px;
   }
 
   .at-bat-cell {
-    min-height: 27px;
+    min-height: 22px;
     padding: 1px;
   }
 
   .at-bat-cell-main {
-    width: 27px;
-    height: 27px;
+    width: 22px;
+    height: 22px;
   }
 
   .diamond {
-    width: 27px;
-    height: 27px;
+    width: 22px;
+    height: 22px;
   }
 
   /* Tight pitching rows so the box fits under its grid */
@@ -2259,7 +2264,7 @@ a {
   .pitching-table td {
     padding: 0 4px !important;
     font-size: 9px !important;
-    line-height: 1.3;
+    line-height: 1.2;
   }
 
   .at-bat-code {
@@ -2331,7 +2336,7 @@ a {
 
   /* ── Broadcast-style score-bug masthead ── */
   .print-masthead {
-    margin-bottom: 9px;
+    margin-bottom: 6px;
   }
 
   .print-brand-bar {
