@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { Scorecard, TeamScorecard, TeamTotals } from '@mlb-scorecards/shared';
 import { formatFullDate } from '../lib/date';
 import { DEFAULT_EXPORT_OPTIONS, type ExportOptions } from '../lib/exportOptions';
@@ -112,7 +113,9 @@ function TeamBand({
   );
 }
 
-export function PrintScorecard({
+// Always mounted (hidden off-screen for print), so memoize to skip re-renders driven
+// by the live scorecard socket unless the scorecard or export options actually change.
+export const PrintScorecard = memo(function PrintScorecard({
   scorecard,
   options = DEFAULT_EXPORT_OPTIONS,
 }: {
@@ -199,4 +202,4 @@ export function PrintScorecard({
       </div>
     </div>
   );
-}
+});

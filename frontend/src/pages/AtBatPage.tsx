@@ -118,7 +118,19 @@ export function AtBatPage() {
       </div>
       <div className="atbat-page">
         {error && <p className="status-message status-error">{error}</p>}
-        {loading && <p className="status-message">Loading pitches…</p>}
+        {loading && (
+          <div className="atbat-skeleton" aria-hidden="true">
+            <span className="visually-hidden">Loading pitches…</span>
+            <div className="skeleton skeleton-atbat-note" />
+            <div className="atbat-skeleton-plots">
+              <div className="skeleton skeleton-atbat-plot" />
+              <div className="skeleton skeleton-atbat-plot" />
+            </div>
+            <div className="skeleton skeleton-atbat-chart" />
+            <div className="skeleton skeleton-atbat-card" />
+            <div className="skeleton skeleton-atbat-card" />
+          </div>
+        )}
         {!loading && atBats && atBats.length === 0 && (
           <p className="status-message">
             {status && status.abstractGameState !== 'Final'
