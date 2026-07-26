@@ -2378,7 +2378,7 @@ a {
   }
 
   .print-bug-teams {
-    flex: 0 0 320px;
+    flex: 0 0 340px;
     border-right: 1.5px solid #0c1c30;
   }
 
@@ -2405,10 +2405,16 @@ a {
 
   .print-bug-name {
     flex: 1;
-    font-size: 14px;
+    min-width: 0;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.01em;
     text-transform: uppercase;
+    /* Keep the longest team names on one line — wrapping made the top line
+       overflow the row and get clipped by the score-bug's rounded corner. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .print-bug-row-win .print-bug-name::after {
