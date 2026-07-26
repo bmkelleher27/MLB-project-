@@ -17,7 +17,7 @@ function inningsPlayed(game: ScheduleGame): number {
 }
 
 /** True walk-off: home won, scored in their final frame, and needed those runs. */
-function isWalkOff(game: ScheduleGame): boolean {
+export function isWalkOff(game: ScheduleGame): boolean {
   const away = game.away.score ?? 0;
   const home = game.home.score ?? 0;
   const last = game.linescore?.at(-1)?.home ?? 0;
