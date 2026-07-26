@@ -3,6 +3,8 @@ export interface ExportOptions {
   style: 'broadcast' | 'minimal';
   /** Strip background fills for black-on-white printing. */
   inkSaver: boolean;
+  /** Draw only the path the batter reached, no full-diamond outline, in every style. */
+  simpleDiamonds: boolean;
   /** Sections to include. */
   pitching: boolean;
   legend: boolean;
@@ -12,6 +14,7 @@ export interface ExportOptions {
 export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
   style: 'broadcast',
   inkSaver: false,
+  simpleDiamonds: false,
   pitching: true,
   legend: true,
   logos: true,

@@ -2633,14 +2633,17 @@ a {
     stroke: #000 !important;
   }
 
-  /* Ink saver drops the full-diamond outline so only the batter's actual path
-     shows: nothing for an out, one line home→first for a single, and a closed
-     diamond only when the runner scored. Keeps outs and runs unmistakable. */
-  .print-ink .diamond-outline {
+  /* Trace-only diamonds drop the full-diamond outline so only the batter's
+     actual path shows: nothing for an out, one line home→first for a single,
+     and a closed diamond only when the runner scored. Ink saver forces this
+     for legibility; "Simple diamonds" opts into it for any style. */
+  .print-ink .diamond-outline,
+  .print-simple-diamonds .diamond-outline {
     display: none;
   }
 
-  .print-ink .diamond-path {
+  .print-ink .diamond-path,
+  .print-simple-diamonds .diamond-path {
     stroke-width: 2.5 !important;
   }
 }

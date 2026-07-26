@@ -157,7 +157,14 @@ export const PrintScorecard = memo(function PrintScorecard({
     </section>
   );
 
-  const rootClass = `print-scorecard print-style-${options.style}${options.inkSaver ? ' print-ink' : ''}`;
+  const rootClass = [
+    'print-scorecard',
+    `print-style-${options.style}`,
+    options.inkSaver ? 'print-ink' : '',
+    options.simpleDiamonds ? 'print-simple-diamonds' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div className={rootClass}>

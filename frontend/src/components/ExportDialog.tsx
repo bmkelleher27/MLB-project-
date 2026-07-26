@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ExportOptions } from '../lib/exportOptions';
 
 export function ExportDialog({
@@ -14,14 +14,43 @@ export function ExportDialog({
   const set = <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) =>
     setOpts((o) => ({ ...o, [key]: value }));
 
-  // Escape closes the dialog.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const firstFieldRef = useRef<HTMLInputElement>(null);
+
+  // Escape closes; Tab is trapped inside the dialog so keyboard focus can't
+  // wander onto the page behind the modal.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Escape') {
+        onCancel();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
+
+  // Move focus into the dialog on open and restore it to the trigger on close,
+  // so keyboard and screen-reader users aren't dropped at the top of the page.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    firstFieldRef.current?.focus();
+    return () => previouslyFocused?.focus?.();
+  }, []);
 
   return (
     <div className="export-backdrop" onClick={onCancel}>
@@ -30,6 +59,7 @@ export function ExportDialog({
         role="dialog"
         aria-modal="true"
         aria-label="Export scorecard as PDF"
+        ref={dialogRef}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="export-dialog-title">Export scorecard</h2>
@@ -39,6 +69,7 @@ export function ExportDialog({
           <legend>Style</legend>
           <label className="export-radio">
             <input
+              ref={firstFieldRef}
               type="radio"
               name="style"
               checked={opts.style === 'broadcast'}
@@ -84,6 +115,14 @@ export function ExportDialog({
           <label className="export-check">
             <input type="checkbox" checked={opts.inkSaver} onChange={(e) => set('inkSaver', e.target.checked)} />
             Ink saver <small>— black &amp; white, no background fills</small>
+          </label>
+          <label className="export-check">
+            <input
+              type="checkbox"
+              checked={opts.simpleDiamonds}
+              onChange={(e) => set('simpleDiamonds', e.target.checked)}
+            />
+            Simple diamonds <small>— trace only where the batter reached</small>
           </label>
         </fieldset>
 
