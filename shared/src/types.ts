@@ -428,3 +428,107 @@ export interface GamePreviewResponse {
   home: GamePreviewSide;
 }
 
+
+// ── Player search & aggregate profile ───────────────────────────────────
+
+export interface PlayerSearchResult {
+  id: number;
+  name: string;
+  position: string | null;
+  team: string | null;
+  /** Batting side / throwing hand codes ('L' | 'R' | 'S'), when known. */
+  bats: string | null;
+  throws: string | null;
+  active: boolean;
+}
+
+export interface PlayerSearchResponse {
+  query: string;
+  players: PlayerSearchResult[];
+}
+
+/** One pitch type in a player's arsenal — thrown (pitcher) or faced (batter). */
+export interface PitchTypeUsage {
+  /** MLB pitch code, e.g. 'FF', 'SL'. */
+  code: string;
+  /** Human name, e.g. 'Four-seam FB'. */
+  name: string;
+  count: number;
+  /** Share of all pitches, 0..1. */
+  share: number;
+  avgSpeed: number | null;
+}
+
+/** A single cell of the 13-zone Gameday grid (9 in-zone + 4 outside quadrants). */
+export interface ZoneCell {
+  /** '01'-'09' inside the strike zone, '11'-'14' outside quadrants. */
+  zone: string;
+  value: number | null;
+  /** The API's own formatted value, e.g. '.333' or '91.99'. */
+  display: string;
+}
+
+export interface ZoneMetric {
+  /** API name, e.g. 'onBasePlusSlugging'. */
+  name: string;
+  /** Short label for the UI, e.g. 'OPS'. */
+  label: string;
+  /** Longer explanation for a tooltip. */
+  description: string;
+  /**
+   * 'performance' encodes polarity around the player's own average (diverging);
+   * 'volume' encodes plain magnitude such as pitch counts (sequential).
+   */
+  kind: 'performance' | 'volume';
+  cells: ZoneCell[];
+  /** Midpoint for diverging scales / total for volume; null when unavailable. */
+  reference: number | null;
+}
+
+/** Platoon or situational split line. */
+export interface SplitLine {
+  code: string;
+  label: string;
+  plateAppearances: number;
+  avg: string;
+  obp: string;
+  slg: string;
+  ops: string;
+  strikeouts: number;
+  walks: number;
+  homeRuns: number;
+}
+
+/** One month of a season, for trend charts. */
+export interface TrendPoint {
+  month: number;
+  label: string;
+  games: number;
+  /** Primary rate stat: OPS for hitters, ERA for pitchers. */
+  primary: number | null;
+  /** Secondary rate: AVG allowed/hit. */
+  secondary: number | null;
+  strikeoutRate: number | null;
+  walkRate: number | null;
+}
+
+export interface PlayerProfileSide {
+  arsenal: PitchTypeUsage[];
+  zones: ZoneMetric[];
+  splits: SplitLine[];
+  trend: TrendPoint[];
+}
+
+export interface PlayerProfileResponse {
+  id: number;
+  name: string;
+  position: string | null;
+  team: string | null;
+  bats: string | null;
+  throws: string | null;
+  season: number;
+  /** How this player was pitched (present when they batted this season). */
+  batting: PlayerProfileSide | null;
+  /** How this player pitched (present when they pitched this season). */
+  pitching: PlayerProfileSide | null;
+}

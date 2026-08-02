@@ -98,6 +98,8 @@ export interface RawPerson {
     fullName: string;
     primaryPosition?: { abbreviation?: string };
     currentTeam?: { name?: string };
+    batSide?: { code?: string };
+    pitchHand?: { code?: string };
   }>;
 }
 
@@ -333,4 +335,120 @@ export interface RawLinescore {
 
 export function getLiveFeed(gamePk: number): Promise<RawLiveFeed> {
   return getJson<RawLiveFeed>(`/api/v1.1/game/${gamePk}/feed/live`, 0);
+}
+
+// ── Player search & aggregate (season-level) stat endpoints ─────────────
+// These are all pre-aggregated by MLB, so a full player profile costs a
+// handful of small requests rather than one live feed per game played.
+
+export interface RawPeopleSearch {
+  people?: Array<{
+    id: number;
+    fullName: string;
+    active?: boolean;
+    primaryPosition?: { abbreviation?: string };
+    currentTeam?: { name?: string };
+    batSide?: { code?: string };
+    pitchHand?: { code?: string };
+  }>;
+}
+
+export function searchPeople(name: string): Promise<RawPeopleSearch> {
+  return getJson<RawPeopleSearch>(
+    `/api/v1/people/search?names=${encodeURIComponent(name)}&hydrate=currentTeam`,
+    600_000
+  );
+}
+
+export interface RawPitchArsenal {
+  stats?: Array<{
+    splits?: Array<{
+      stat?: {
+        percentage?: number;
+        count?: number;
+        totalPitches?: number;
+        averageSpeed?: number;
+        type?: { code?: string; description?: string };
+      };
+    }>;
+  }>;
+}
+
+/**
+ * group=pitching -> the pitch mix this player throws.
+ * group=hitting  -> the pitch mix thrown *to* this player.
+ */
+export function getPitchArsenal(
+  personId: number,
+  season: number,
+  group: 'hitting' | 'pitching'
+): Promise<RawPitchArsenal> {
+  return getJson<RawPitchArsenal>(
+    `/api/v1/people/${personId}/stats?stats=pitchArsenal&group=${group}&season=${season}`,
+    600_000
+  );
+}
+
+export interface RawHotColdZones {
+  stats?: Array<{
+    splits?: Array<{
+      stat?: {
+        name?: string;
+        zones?: Array<{ zone?: string; value?: string; temp?: string }>;
+      };
+    }>;
+  }>;
+}
+
+export function getHotColdZones(
+  personId: number,
+  season: number,
+  group: 'hitting' | 'pitching'
+): Promise<RawHotColdZones> {
+  return getJson<RawHotColdZones>(
+    `/api/v1/people/${personId}/stats?stats=hotColdZones&group=${group}&season=${season}`,
+    600_000
+  );
+}
+
+export interface RawStatSplits {
+  stats?: Array<{
+    splits?: Array<{
+      split?: { code?: string; description?: string };
+      stat?: Record<string, unknown>;
+    }>;
+  }>;
+}
+
+/** Situational splits (vl/vr = vs left/right-handed opponent). */
+export function getStatSplits(
+  personId: number,
+  season: number,
+  group: 'hitting' | 'pitching',
+  sitCodes: string
+): Promise<RawStatSplits> {
+  return getJson<RawStatSplits>(
+    `/api/v1/people/${personId}/stats?stats=statSplits&group=${group}&season=${season}&sitCodes=${sitCodes}`,
+    600_000
+  );
+}
+
+export interface RawByMonth {
+  stats?: Array<{
+    splits?: Array<{
+      month?: number;
+      stat?: Record<string, unknown>;
+    }>;
+  }>;
+}
+
+export function getByMonth(
+  personId: number,
+  season: number,
+  group: 'hitting' | 'pitching'
+): Promise<RawByMonth> {
+  return getJson<RawByMonth>(
+    `/api/v1/people/${personId}/stats?stats=byMonth&group=${group}&season=${season}`,
+    600_000
+  );
 }

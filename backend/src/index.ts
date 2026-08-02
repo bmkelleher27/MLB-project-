@@ -9,6 +9,8 @@ import scheduleRouter from './routes/schedule.js';
 import dailyStarsRouter from './routes/dailyStars.js';
 import { seasonRouter, teamsRouter } from './routes/season.js';
 import playerRouter from './routes/player.js';
+import playerProfileRouter from './routes/playerProfile.js';
+import playerSearchRouter from './routes/playerSearch.js';
 import seasonPredictiveRouter from './routes/seasonPredictive.js';
 import { registerGameRoomHandlers } from './sockets/gameRoom.js';
 
@@ -39,6 +41,9 @@ app.use('/api/random-game', randomGameRouter);
 app.use('/api/teams', teamsRouter);
 app.use('/api/season/predictive', seasonPredictiveRouter);
 app.use('/api/season', seasonRouter);
+app.use('/api/players/search', playerSearchRouter);
+// Mounted before the game-log router so '/:id/profile' resolves ahead of '/:id'.
+app.use('/api/player', playerProfileRouter);
 app.use('/api/player', playerRouter);
 
 const httpServer = createServer(app);

@@ -7,6 +7,7 @@ import { DatePicker } from '../components/DatePicker';
 import { GameCard } from '../components/GameCard';
 import { HeroCard } from '../components/HeroCard';
 import { LogoMark } from '../components/Logo';
+import { PlayerSearch } from '../components/PlayerSearch';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { addDays, todayIso } from '../lib/date';
 import { getFavoriteTeams, toggleFavoriteTeam } from '../lib/favorite';
@@ -127,6 +128,9 @@ export function LandingPage() {
           <ThemeToggle />
         </div>
       </header>
+      <div className="landing-search-row">
+        <PlayerSearch />
+      </div>
       <div className="landing-toolbar">
         <DatePicker date={date} onChange={setDate} />
         <div className="landing-actions">

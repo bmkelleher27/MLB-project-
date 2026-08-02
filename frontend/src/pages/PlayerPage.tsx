@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import type { PlayerLogResponse } from '@mlb-scorecards/shared';
-import { fetchPlayerLog } from '../api/client';
+import type { PlayerLogResponse, PlayerProfileResponse } from '@mlb-scorecards/shared';
+import { fetchPlayerLog, fetchPlayerProfile } from '../api/client';
+import { PlayerProfileSection } from '../components/PlayerProfileSection';
+import { PlayerSearch } from '../components/PlayerSearch';
 import { formatShortDate, seasonList } from '../lib/date';
 
 function StatTile({ label, value, title }: { label: string; value: string | number; title?: string }) {
@@ -64,8 +66,11 @@ export function PlayerPage() {
   const seasons = seasonList();
 
   const [log, setLog] = useState<PlayerLogResponse | null>(null);
+  const [profile, setProfile] = useState<PlayerProfileResponse | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'trends' | 'log'>('trends');
 
   useEffect(() => {
     if (!id) return;
@@ -87,6 +92,29 @@ export function PlayerPage() {
     };
   }, [id, season]);
 
+  // The profile is a separate, slower set of aggregates; it loads alongside the
+  // game log rather than blocking it. On a season change the previous render is
+  // held at reduced opacity instead of collapsing to a spinner, so the page
+  // doesn't jump.
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setProfileLoading(true);
+    fetchPlayerProfile(Number(id), season)
+      .then((r) => {
+        if (!cancelled) setProfile(r);
+      })
+      .catch(() => {
+        // The game log still stands on its own if the aggregates fail.
+      })
+      .finally(() => {
+        if (!cancelled) setProfileLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, season]);
+
   const goToGame = (gamePk: number | null) => {
     if (gamePk) navigate(`/game/${gamePk}`);
   };
@@ -95,13 +123,19 @@ export function PlayerPage() {
     <>
       <div className="scorecard-nav-bar">
         <Link to="/" className="scorecard-nav-back">‹ Schedule</Link>
-        <span className="scorecard-nav-date">Player game log</span>
+        <span className="scorecard-nav-date">Player profile</span>
+        <PlayerSearch />
       </div>
-      <div className="player-page">
+      <div className="player-page viz-scope">
         <div className="player-header">
           <h1>
             {log?.name ?? 'Player'}
             {log?.position && <span className="player-header-pos">{log.position}</span>}
+            {profile && (profile.bats || profile.throws) && (
+              <span className="player-header-hand" title="Bats / throws">
+                {profile.bats ?? '—'}/{profile.throws ?? '—'}
+              </span>
+            )}
           </h1>
           <label className="season-control">
             Season
@@ -128,7 +162,48 @@ export function PlayerPage() {
 
         {!loading && log && <SeasonTotals log={log} />}
 
-        {!loading && log && log.batting.length > 0 && (
+        {!loading && log && (
+          <div className="player-tabs" role="tablist" aria-label="Player views">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'trends'}
+              className={`player-tab${tab === 'trends' ? ' player-tab-on' : ''}`}
+              onClick={() => setTab('trends')}
+            >
+              Pitch trends
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'log'}
+              className={`player-tab${tab === 'log' ? ' player-tab-on' : ''}`}
+              onClick={() => setTab('log')}
+            >
+              Game log
+            </button>
+          </div>
+        )}
+
+        {!loading && tab === 'trends' && (
+          <div className={profileLoading && profile ? 'profile-refreshing' : undefined}>
+            {!profile && profileLoading && <p className="status-message">Loading pitch trends…</p>}
+            {profile && !profile.batting && !profile.pitching && (
+              <p className="status-message">
+                No pitch-level data for {profile.name} in {season}. Pitch tracking is available from
+                2015 onward.
+              </p>
+            )}
+            {profile?.batting && (
+              <PlayerProfileSection side={profile.batting} mode="batting" playerName={profile.name} />
+            )}
+            {profile?.pitching && (
+              <PlayerProfileSection side={profile.pitching} mode="pitching" playerName={profile.name} />
+            )}
+          </div>
+        )}
+
+        {!loading && tab === 'log' && log && log.batting.length > 0 && (
           <section>
             <h2 className="player-section-title">Batting — {season} ({log.batting.length} games)</h2>
             <div className="player-log-wrapper">
@@ -171,7 +246,7 @@ export function PlayerPage() {
           </section>
         )}
 
-        {!loading && log && log.pitching.length > 0 && (
+        {!loading && tab === 'log' && log && log.pitching.length > 0 && (
           <section>
             <h2 className="player-section-title">Pitching — {season} ({log.pitching.length} games)</h2>
             <div className="player-log-wrapper">
@@ -209,7 +284,9 @@ export function PlayerPage() {
             </div>
           </section>
         )}
-        <p className="player-page-note">Click a row to open that game's scorecard.</p>
+        {tab === 'log' && (
+          <p className="player-page-note">Click a row to open that game's scorecard.</p>
+        )}
       </div>
     </>
   );

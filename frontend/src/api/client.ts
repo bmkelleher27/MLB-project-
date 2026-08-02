@@ -3,6 +3,8 @@ import type {
   GameAtBatsResponse,
   GamePreviewResponse,
   PlayerLogResponse,
+  PlayerProfileResponse,
+  PlayerSearchResponse,
   Scorecard,
   ScheduleResponse,
   SeasonPredictiveResponse,
@@ -56,4 +58,12 @@ export function fetchPlayerLog(id: number, season: number): Promise<PlayerLogRes
 
 export function fetchSeasonPredictive(teamId: number, season: number): Promise<SeasonPredictiveResponse> {
   return getJson(`/api/season/predictive?teamId=${teamId}&season=${season}`, 'season predictive');
+}
+
+export function searchPlayers(query: string): Promise<PlayerSearchResponse> {
+  return getJson(`/api/players/search?q=${encodeURIComponent(query)}`, 'player search');
+}
+
+export function fetchPlayerProfile(id: number, season: number): Promise<PlayerProfileResponse> {
+  return getJson(`/api/player/${id}/profile?season=${season}`, 'player profile');
 }
