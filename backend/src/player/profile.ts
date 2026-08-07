@@ -1,4 +1,5 @@
 import type {
+  PitchTypePerformance,
   PitchTypeUsage,
   PlayerProfileSide,
   SplitLine,
@@ -33,7 +34,10 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-export function buildArsenal(raw: RawPitchArsenal): PitchTypeUsage[] {
+export function buildArsenal(
+  raw: RawPitchArsenal,
+  performance?: Map<string, PitchTypePerformance>
+): PitchTypeUsage[] {
   const splits = raw.stats?.[0]?.splits ?? [];
   const out: PitchTypeUsage[] = [];
   for (const s of splits) {
@@ -46,6 +50,7 @@ export function buildArsenal(raw: RawPitchArsenal): PitchTypeUsage[] {
       count: num(stat.count),
       share: typeof stat.percentage === 'number' ? stat.percentage : 0,
       avgSpeed: typeof stat.averageSpeed === 'number' ? Math.round(stat.averageSpeed * 10) / 10 : null,
+      performance: performance?.get(code) ?? null,
     });
   }
   // Most-used first: the shape of a mix is the story, so lead with the big pitches.

@@ -447,6 +447,27 @@ export interface PlayerSearchResponse {
   players: PlayerSearchResult[];
 }
 
+/**
+ * What happened against one pitch type. Rate stats are null when the sample is
+ * too small to mean anything; the raw counts are always present.
+ */
+export interface PitchTypePerformance {
+  plateAppearances: number;
+  atBats: number;
+  hits: number;
+  totalBases: number;
+  strikeouts: number;
+  swings: number;
+  whiffs: number;
+  /** Batting average against this pitch type (null below the sample floor). */
+  avg: number | null;
+  slg: number | null;
+  strikeoutRate: number | null;
+  /** Whiffs per swing — measured over every pitch, not just PA-ending ones. */
+  whiffRate: number | null;
+  lowSample: boolean;
+}
+
 /** One pitch type in a player's arsenal — thrown (pitcher) or faced (batter). */
 export interface PitchTypeUsage {
   /** MLB pitch code, e.g. 'FF', 'SL'. */
@@ -457,6 +478,8 @@ export interface PitchTypeUsage {
   /** Share of all pitches, 0..1. */
   share: number;
   avgSpeed: number | null;
+  /** Results against this pitch type; null when the per-pitch logs are unavailable. */
+  performance: PitchTypePerformance | null;
 }
 
 /** A single cell of the 13-zone Gameday grid (9 in-zone + 4 outside quadrants). */

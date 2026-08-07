@@ -452,3 +452,54 @@ export function getByMonth(
     600_000
   );
 }
+
+/**
+ * Per-pitch logs. `playLog` is one entry per plate appearance, tagged with the
+ * pitch type that ended it; `pitchLog` is every individual pitch with its call.
+ * Together they give performance (AVG/SLG) and swing behaviour (whiff rate)
+ * broken out by pitch type — neither is available pre-aggregated.
+ */
+export interface RawPitchLogEntry {
+  stat?: {
+    play?: {
+      details?: {
+        call?: { code?: string; description?: string };
+        event?: string;
+        eventType?: string;
+        isInPlay?: boolean;
+        isStrike?: boolean;
+        isBall?: boolean;
+        isBaseHit?: boolean;
+        isAtBat?: boolean;
+        isPlateAppearance?: boolean;
+        type?: { code?: string; description?: string };
+      };
+    };
+  };
+}
+
+export interface RawPitchLog {
+  stats?: Array<{ splits?: RawPitchLogEntry[] }>;
+}
+
+function pitchLogUrl(personId: number, season: number, group: string, stat: string): string {
+  return `/api/v1/people/${personId}/stats?stats=${stat}&group=${group}&season=${season}`;
+}
+
+/** One entry per plate appearance (the pitch that ended it). */
+export function getPlayLog(
+  personId: number,
+  season: number,
+  group: 'hitting' | 'pitching'
+): Promise<RawPitchLog> {
+  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'playLog'), 600_000);
+}
+
+/** One entry per pitch seen or thrown. Large — cached for the same 10 minutes. */
+export function getPitchLog(
+  personId: number,
+  season: number,
+  group: 'hitting' | 'pitching'
+): Promise<RawPitchLog> {
+  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'pitchLog'), 600_000);
+}

@@ -6,8 +6,11 @@ import {
   getHotColdZones,
   getPerson,
   getPitchArsenal,
+  getPitchLog,
+  getPlayLog,
   getStatSplits,
 } from '../mlbApi.js';
+import { buildPitchTypePerformance } from '../player/pitchTypes.js';
 import { buildArsenal, buildSplits, buildTrend, buildZones, hasProfileData } from '../player/profile.js';
 
 const router = Router();
@@ -19,12 +22,22 @@ const router = Router();
  */
 async function buildSide(id: number, season: number, group: 'hitting' | 'pitching'): Promise<PlayerProfileSide | null> {
   // One failing sub-request shouldn't blank the whole profile — take what we get.
-  const [arsenal, zones, splits, trend] = await Promise.all([
-    getPitchArsenal(id, season, group).then(buildArsenal, () => []),
+  const [rawArsenal, zones, splits, trend, playLog, pitchLog] = await Promise.all([
+    getPitchArsenal(id, season, group).catch(() => ({})),
     getHotColdZones(id, season, group).then(buildZones, () => []),
     getStatSplits(id, season, group, 'vl,vr').then((r) => buildSplits(r, group), () => []),
     getByMonth(id, season, group).then((r) => buildTrend(r, group), () => []),
+    getPlayLog(id, season, group).catch(() => null),
+    getPitchLog(id, season, group).catch(() => null),
   ]);
+
+  // Results-by-pitch-type are computed from the per-pitch logs and joined onto
+  // the arsenal by pitch code. If either log is unavailable the usage bars still
+  // render, just without the performance columns.
+  const performance =
+    playLog && pitchLog ? buildPitchTypePerformance(playLog, pitchLog) : undefined;
+  const arsenal = buildArsenal(rawArsenal, performance);
+
   const side: PlayerProfileSide = { arsenal, zones, splits, trend };
   return hasProfileData(side) ? side : null;
 }

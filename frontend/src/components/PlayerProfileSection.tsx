@@ -51,8 +51,9 @@ export function PlayerProfileSection({
       {side.arsenal.length > 0 && (
         <PitchMixChart
           arsenal={side.arsenal}
-          caption={isBatting ? 'Pitch mix he saw' : 'Pitch mix he threw'}
-          subtitle={isBatting ? 'Share of pitches thrown to him' : 'Share of his pitches'}
+          isBatting={isBatting}
+          caption={isBatting ? 'What he saw, and what he did with it' : 'What he threw, and how it fared'}
+          subtitle={isBatting ? 'Pitches thrown to him' : 'His pitch mix'}
         />
       )}
 
