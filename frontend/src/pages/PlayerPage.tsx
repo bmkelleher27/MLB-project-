@@ -68,6 +68,8 @@ export function PlayerPage() {
   const [log, setLog] = useState<PlayerLogResponse | null>(null);
   const [profile, setProfile] = useState<PlayerProfileResponse | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileAttempt, setProfileAttempt] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'trends' | 'log'>('trends');
@@ -100,12 +102,17 @@ export function PlayerPage() {
     if (!id) return;
     let cancelled = false;
     setProfileLoading(true);
+    setProfileError(null);
     fetchPlayerProfile(Number(id), season)
       .then((r) => {
-        if (!cancelled) setProfile(r);
+        if (cancelled) return;
+        setProfile(r);
+        setProfileError(null);
       })
-      .catch(() => {
-        // The game log still stands on its own if the aggregates fail.
+      .catch((err) => {
+        // Surfaced rather than swallowed: this is the default tab, so a silent
+        // failure here leaves the reader staring at an empty page.
+        if (!cancelled) setProfileError((err as Error).message);
       })
       .finally(() => {
         if (!cancelled) setProfileLoading(false);
@@ -113,7 +120,7 @@ export function PlayerPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, season]);
+  }, [id, season, profileAttempt]);
 
   const goToGame = (gamePk: number | null) => {
     if (gamePk) navigate(`/game/${gamePk}`);
@@ -167,7 +174,10 @@ export function PlayerPage() {
             <button
               type="button"
               role="tab"
+              id="tab-trends"
+              aria-controls="panel-trends"
               aria-selected={tab === 'trends'}
+              tabIndex={tab === 'trends' ? 0 : -1}
               className={`player-tab${tab === 'trends' ? ' player-tab-on' : ''}`}
               onClick={() => setTab('trends')}
             >
@@ -176,7 +186,10 @@ export function PlayerPage() {
             <button
               type="button"
               role="tab"
+              id="tab-log"
+              aria-controls="panel-log"
               aria-selected={tab === 'log'}
+              tabIndex={tab === 'log' ? 0 : -1}
               className={`player-tab${tab === 'log' ? ' player-tab-on' : ''}`}
               onClick={() => setTab('log')}
             >
@@ -186,8 +199,28 @@ export function PlayerPage() {
         )}
 
         {!loading && tab === 'trends' && (
-          <div className={profileLoading && profile ? 'profile-refreshing' : undefined}>
+          <div
+            id="panel-trends"
+            role="tabpanel"
+            aria-labelledby="tab-trends"
+            className={profileLoading && profile ? 'profile-refreshing' : undefined}
+          >
             {!profile && profileLoading && <p className="status-message">Loading pitch trends…</p>}
+            {!profile && !profileLoading && profileError && (
+              <div className="status-message status-error">
+                <p>Couldn’t load pitch trends: {profileError}</p>
+                <button
+                  type="button"
+                  className="trend-chip"
+                  onClick={() => setProfileAttempt((n) => n + 1)}
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+            {!profile && !profileLoading && !profileError && (
+              <p className="status-message">No pitch trends available for this player.</p>
+            )}
             {profile && !profile.batting && !profile.pitching && (
               <p className="status-message">
                 No pitch-level data for {profile.name} in {season}. Pitch tracking is available from
@@ -203,7 +236,9 @@ export function PlayerPage() {
           </div>
         )}
 
-        {!loading && tab === 'log' && log && log.batting.length > 0 && (
+        {!loading && tab === 'log' && (
+          <div id="panel-log" role="tabpanel" aria-labelledby="tab-log">
+        {log && log.batting.length > 0 && (
           <section>
             <h2 className="player-section-title">Batting — {season} ({log.batting.length} games)</h2>
             <div className="player-log-wrapper">
@@ -246,7 +281,7 @@ export function PlayerPage() {
           </section>
         )}
 
-        {!loading && tab === 'log' && log && log.pitching.length > 0 && (
+        {log && log.pitching.length > 0 && (
           <section>
             <h2 className="player-section-title">Pitching — {season} ({log.pitching.length} games)</h2>
             <div className="player-log-wrapper">
@@ -284,8 +319,8 @@ export function PlayerPage() {
             </div>
           </section>
         )}
-        {tab === 'log' && (
-          <p className="player-page-note">Click a row to open that game's scorecard.</p>
+        <p className="player-page-note">Click a row to open that game's scorecard.</p>
+          </div>
         )}
       </div>
     </>

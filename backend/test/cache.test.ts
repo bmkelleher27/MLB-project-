@@ -47,3 +47,53 @@ describe('TtlCache', () => {
     expect(c.get('long', 500)).toBe(2);
   });
 });
+
+describe('TtlCache byte budget', () => {
+  it('evicts least-recently-used entries until the byte budget is met', () => {
+    const c = new TtlCache<string>(100, 300);
+    c.set('a', 'x', 1000, { now: 0, bytes: 100 });
+    c.set('b', 'y', 1000, { now: 0, bytes: 100 });
+    c.set('c', 'z', 1000, { now: 0, bytes: 100 });
+    expect(c.bytes).toBe(300);
+
+    // Touch 'a' so 'b' is the least-recently-used, then overflow the budget.
+    c.get('a', 10);
+    c.set('d', 'w', 1000, { now: 10, bytes: 100 });
+
+    expect(c.bytes).toBeLessThanOrEqual(300);
+    expect(c.get('b', 10)).toBeUndefined(); // evicted
+    expect(c.get('a', 10)).toBe('x');
+    expect(c.get('d', 10)).toBe('w');
+  });
+
+  it('does not retain an entry larger than the whole budget', () => {
+    const c = new TtlCache<string>(100, 1000);
+    c.set('huge', 'payload', 1000, { now: 0, bytes: 5000 });
+    expect(c.get('huge', 10)).toBeUndefined();
+    expect(c.bytes).toBe(0);
+    expect(c.size).toBe(0);
+  });
+
+  it('keeps byte accounting correct when a key is overwritten', () => {
+    const c = new TtlCache<string>(100, 1000);
+    c.set('k', 'a', 1000, { now: 0, bytes: 400 });
+    c.set('k', 'b', 1000, { now: 0, bytes: 100 });
+    expect(c.size).toBe(1);
+    expect(c.bytes).toBe(100);
+  });
+
+  it('reclaims bytes on expiry and on sweep', () => {
+    const c = new TtlCache<string>(100, 1000);
+    c.set('short', 'a', 100, { now: 0, bytes: 200 });
+    c.set('long', 'b', 10_000, { now: 0, bytes: 300 });
+    expect(c.bytes).toBe(500);
+    expect(c.sweep(500)).toBe(1);
+    expect(c.bytes).toBe(300);
+  });
+
+  it('is unbounded by bytes when no budget is given', () => {
+    const c = new TtlCache<string>(10);
+    c.set('a', 'x', 1000, { now: 0, bytes: 10 ** 9 });
+    expect(c.get('a', 10)).toBe('x');
+  });
+});

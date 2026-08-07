@@ -8,24 +8,53 @@ const BASE_URL = 'https://statsapi.mlb.com';
 const CACHE_MAX_ENTRIES = 500;
 const CACHE_SWEEP_MS = 10 * 60_000;
 
-const cache = new TtlCache<unknown>(CACHE_MAX_ENTRIES);
+/**
+ * Byte budget for cached MLB payloads. An entry cap alone does not bound
+ * memory here: responses range from a 5 KB zone chart to a 1.3 MB pitch log,
+ * and parsed objects sit at roughly 1.3x their JSON length in heap, so 500
+ * unbounded entries could exceed 800 MB — more than a small instance has.
+ * 48 MB of JSON keeps the working set useful while leaving headroom.
+ */
+const CACHE_MAX_BYTES = 48 * 1024 * 1024;
+
+/** Outbound requests to MLB are aborted rather than hanging a request forever. */
+const FETCH_TIMEOUT_MS = 8_000;
+
+const cache = new TtlCache<unknown>(CACHE_MAX_ENTRIES, CACHE_MAX_BYTES);
 
 // Proactively drop expired entries so memory doesn't hold them until the next
 // read; unref'd so it never keeps the process alive.
 const sweepTimer = setInterval(() => cache.sweep(), CACHE_SWEEP_MS);
 sweepTimer.unref?.();
 
+/** Cache occupancy, surfaced by the health endpoint. */
+export function cacheStats(): { entries: number; bytes: number; maxBytes: number } {
+  return { entries: cache.size, bytes: cache.bytes, maxBytes: CACHE_MAX_BYTES };
+}
+
 async function getJson<T>(path: string, ttlMs: number): Promise<T> {
   const cached = cache.get(path);
   if (cached !== undefined) {
     return cached as T;
   }
-  const res = await fetch(`${BASE_URL}${path}`);
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  } catch (err) {
+    // A timeout surfaces as an AbortError; name it so callers report it usefully.
+    const reason = (err as Error).name === 'TimeoutError' ? `timed out after ${FETCH_TIMEOUT_MS}ms` : (err as Error).message;
+    throw new Error(`MLB API request failed: ${path} -> ${reason}`);
+  }
   if (!res.ok) {
     throw new Error(`MLB API request failed: ${path} -> ${res.status}`);
   }
-  const value = (await res.json()) as T;
-  cache.set(path, value, ttlMs);
+
+  // Read as text first so the payload's size is known without re-serialising it;
+  // the byte budget depends on having a real measurement per entry.
+  const text = await res.text();
+  const value = JSON.parse(text) as T;
+  cache.set(path, value, ttlMs, { bytes: text.length });
   return value;
 }
 
@@ -486,20 +515,25 @@ function pitchLogUrl(personId: number, season: number, group: string, stat: stri
   return `/api/v1/people/${personId}/stats?stats=${stat}&group=${group}&season=${season}`;
 }
 
-/** One entry per plate appearance (the pitch that ended it). */
+/**
+ * One entry per plate appearance (the pitch that ended it), and one entry per
+ * pitch, respectively. Both are deliberately *not* cached: a pitch log is ~1.3 MB
+ * of JSON (~1.7 MB parsed), and holding many of them is what would blow the
+ * memory budget. The caller caches the small derived per-pitch-type summary
+ * instead, so repeat views still skip the round trip.
+ */
 export function getPlayLog(
   personId: number,
   season: number,
   group: 'hitting' | 'pitching'
 ): Promise<RawPitchLog> {
-  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'playLog'), 600_000);
+  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'playLog'), 0);
 }
 
-/** One entry per pitch seen or thrown. Large — cached for the same 10 minutes. */
 export function getPitchLog(
   personId: number,
   season: number,
   group: 'hitting' | 'pitching'
 ): Promise<RawPitchLog> {
-  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'pitchLog'), 600_000);
+  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'pitchLog'), 0);
 }

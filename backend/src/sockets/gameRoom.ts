@@ -5,11 +5,21 @@ import { transformLiveFeed } from '../scorecard/transform.js';
 
 const POLL_INTERVAL_MS = 5_000;
 
+/**
+ * A game that keeps failing upstream (a bogus id, or MLB erroring) must not be
+ * polled forever — it would hammer MLB from this server's IP for as long as a
+ * client stays connected.
+ */
+const MAX_CONSECUTIVE_FAILURES = 3;
+
 interface RoomState {
   subscriberCount: number;
   timer: NodeJS.Timeout | null;
   lastPayload: string | null;
   lastAtBatsPayload: string | null;
+  /** Guards against a slow upstream letting polls overlap and pile up. */
+  polling: boolean;
+  consecutiveFailures: number;
 }
 
 const rooms = new Map<number, RoomState>();
@@ -22,9 +32,20 @@ function atBatsRoomName(gamePk: number): string {
   return `game:${gamePk}:atbats`;
 }
 
+function stopPolling(state: RoomState): void {
+  if (state.timer) {
+    clearInterval(state.timer);
+    state.timer = null;
+  }
+}
+
 async function pollAndEmit(io: Server, gamePk: number): Promise<void> {
   const state = rooms.get(gamePk);
   if (!state) return;
+  // A poll still in flight means MLB is slower than the interval; skip this
+  // tick rather than stacking concurrent fetches for the same game.
+  if (state.polling) return;
+  state.polling = true;
 
   try {
     const raw = await getLiveFeed(gamePk);
@@ -47,14 +68,27 @@ async function pollAndEmit(io: Server, gamePk: number): Promise<void> {
       }
     }
 
+    state.consecutiveFailures = 0;
+
     // Only a Final game is guaranteed to produce no further events; keep polling
     // through Preview (so a pre-first-pitch subscriber sees it go Live) and Live.
-    if (scorecard.status.abstractGameState === 'Final' && state.timer) {
-      clearInterval(state.timer);
-      state.timer = null;
+    if (scorecard.status.abstractGameState === 'Final') {
+      stopPolling(state);
     }
   } catch (err) {
-    console.error(`[gameRoom] poll failed for game ${gamePk}:`, (err as Error).message);
+    state.consecutiveFailures += 1;
+    console.error(
+      `[gameRoom] poll failed for game ${gamePk} (${state.consecutiveFailures}):`,
+      (err as Error).message
+    );
+    if (state.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+      stopPolling(state);
+      io.to(roomName(gamePk)).emit('scorecard:error', {
+        message: 'Live updates stopped — this game could not be reached.',
+      });
+    }
+  } finally {
+    state.polling = false;
   }
 }
 
@@ -69,7 +103,14 @@ function ensurePolling(io: Server, gamePk: number): void {
 function acquireRoom(gamePk: number): RoomState {
   let state = rooms.get(gamePk);
   if (!state) {
-    state = { subscriberCount: 0, timer: null, lastPayload: null, lastAtBatsPayload: null };
+    state = {
+      subscriberCount: 0,
+      timer: null,
+      lastPayload: null,
+      lastAtBatsPayload: null,
+      polling: false,
+      consecutiveFailures: 0,
+    };
     rooms.set(gamePk, state);
   }
   state.subscriberCount++;
@@ -82,7 +123,7 @@ export function registerGameRoomHandlers(io: Server): void {
     if (!state) return;
     state.subscriberCount = Math.max(0, state.subscriberCount - 1);
     if (state.subscriberCount === 0) {
-      if (state.timer) clearInterval(state.timer);
+      stopPolling(state);
       rooms.delete(gamePk);
     }
   }

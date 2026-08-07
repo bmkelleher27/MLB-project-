@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import type { PlayerProfileResponse, PlayerProfileSide } from '@mlb-scorecards/shared';
+import type {
+  PitchTypePerformance,
+  PlayerProfileResponse,
+  PlayerProfileSide,
+} from '@mlb-scorecards/shared';
+import { TtlCache } from '../cache.js';
 import { setShortCache } from '../http.js';
 import {
   getByMonth,
@@ -16,26 +21,51 @@ import { buildArsenal, buildSplits, buildTrend, buildZones, hasProfileData } fro
 const router = Router();
 
 /**
+ * The per-pitch logs behind this are ~1.3 MB each and are never cached raw.
+ * Their *derived* summary is a handful of small objects, so caching that gives
+ * repeat views the same speed-up at a tiny fraction of the memory.
+ */
+const PITCH_TYPE_TTL_MS = 10 * 60_000;
+const pitchTypeCache = new TtlCache<Map<string, PitchTypePerformance>>(200);
+
+async function pitchTypePerformance(
+  id: number,
+  season: number,
+  group: 'hitting' | 'pitching'
+): Promise<Map<string, PitchTypePerformance> | undefined> {
+  const key = `${id}:${season}:${group}`;
+  const cached = pitchTypeCache.get(key);
+  if (cached) return cached;
+
+  const [playLog, pitchLog] = await Promise.all([
+    getPlayLog(id, season, group).catch(() => null),
+    getPitchLog(id, season, group).catch(() => null),
+  ]);
+  if (!playLog || !pitchLog) return undefined;
+
+  const performance = buildPitchTypePerformance(playLog, pitchLog);
+  pitchTypeCache.set(key, performance, PITCH_TYPE_TTL_MS);
+  return performance;
+}
+
+/**
  * Every request here hits MLB's own pre-aggregated season endpoints, so a full
  * profile is four small calls per side rather than one ~1 MB live feed per game
  * the player appeared in. A side that comes back empty is reported as null.
  */
 async function buildSide(id: number, season: number, group: 'hitting' | 'pitching'): Promise<PlayerProfileSide | null> {
   // One failing sub-request shouldn't blank the whole profile — take what we get.
-  const [rawArsenal, zones, splits, trend, playLog, pitchLog] = await Promise.all([
+  const [rawArsenal, zones, splits, trend, performance] = await Promise.all([
     getPitchArsenal(id, season, group).catch(() => ({})),
     getHotColdZones(id, season, group).then(buildZones, () => []),
     getStatSplits(id, season, group, 'vl,vr').then((r) => buildSplits(r, group), () => []),
     getByMonth(id, season, group).then((r) => buildTrend(r, group), () => []),
-    getPlayLog(id, season, group).catch(() => null),
-    getPitchLog(id, season, group).catch(() => null),
+    pitchTypePerformance(id, season, group),
   ]);
 
-  // Results-by-pitch-type are computed from the per-pitch logs and joined onto
-  // the arsenal by pitch code. If either log is unavailable the usage bars still
-  // render, just without the performance columns.
-  const performance =
-    playLog && pitchLog ? buildPitchTypePerformance(playLog, pitchLog) : undefined;
+  // Results-by-pitch-type are joined onto the arsenal by pitch code. If the
+  // per-pitch logs are unavailable the usage bars still render, just without
+  // the performance columns.
   const arsenal = buildArsenal(rawArsenal, performance);
 
   const side: PlayerProfileSide = { arsenal, zones, splits, trend };
