@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { NotFound } from './components/NotFound';
 import { LandingPage } from './pages/LandingPage';
 
 // The landing page is the common entry, so it loads eagerly. Every other route is
@@ -28,6 +29,9 @@ function App() {
             <Route path="/stats" element={<ExplainerPage />} />
             <Route path="/season" element={<SeasonPage />} />
             <Route path="/player/:id" element={<PlayerPage />} />
+            {/* Without a catch-all, an unknown URL matched nothing and rendered
+                a blank page with no way back. */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </ErrorBoundary>

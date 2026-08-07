@@ -5036,3 +5036,26 @@ a {
 .viz-table-scroll .viz-table {
   min-width: 460px;
 }
+
+/* ── Unmatched route ────────────────────────────────────────────────── */
+
+.not-found {
+  max-width: 520px;
+  margin: 12vh auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.not-found h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.not-found p {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+}
+
+.not-found-link {
+  font-weight: 600;
+}

@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A newer push to the same branch makes the in-flight run obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Build, lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit and integration tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: End-to-end (live MLB API)
+    runs-on: ubuntu-latest
+    # These drive a real browser against the real MLB API. A failure can mean
+    # the upstream is having a moment rather than the change being broken, so
+    # they run separately and never block the verify job.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run end-to-end checks
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
