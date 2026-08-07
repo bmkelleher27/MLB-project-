@@ -1,0 +1,629 @@
+/* Print / PDF export and the export options dialog
+   Split out of index.css; @import order there is the cascade order. */
+
+/* ── Print / PDF export ───────────────────────────────────────────── */
+
+/* Print-only professional scorecard: hidden on screen, laid out for print. */
+.print-scorecard {
+  display: none;
+}
+
+/* ── Export options dialog ──────────────────────────────────────────── */
+
+.export-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(15, 23, 35, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.export-dialog {
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow-hover);
+  padding: 20px 22px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.export-dialog-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.export-dialog-sub {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 4px 0 16px;
+}
+
+.export-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px 12px;
+  margin: 0 0 14px;
+}
+
+.export-group legend {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 0 6px;
+}
+
+.export-radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.export-radio input {
+  margin-top: 3px;
+}
+
+.export-radio span {
+  display: flex;
+  flex-direction: column;
+}
+
+.export-radio strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.export-radio small,
+.export-check small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.export-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.export-btn {
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 9px 16px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.export-btn-ghost {
+  background: var(--panel-bg);
+  color: var(--text);
+}
+
+.export-btn-ghost:hover {
+  background: var(--hover-bg);
+}
+
+.export-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+@media print {
+  @page {
+    size: letter landscape;
+    margin: 12mm;
+  }
+
+  /* Swap the interactive app for the dedicated print card, whatever view
+     (grid or play-by-play) is on screen. */
+  .scorecard-nav-bar,
+  .scorecard-page {
+    display: none !important;
+  }
+
+  .print-scorecard {
+    display: block !important;
+  }
+
+  /* Print always uses the light palette, whatever the screen theme */
+  :root,
+  :root[data-theme='dark'] {
+    --text: #1f2430;
+    --text-muted: #6b7280;
+    --bg: #ffffff;
+    --panel-bg: #ffffff;
+    --border: #d9dade;
+    --accent: #0a4f8a;
+    --accent-bg: #e7f0fa;
+    --live: #1c8a4c;
+    --out-bg: #f2e3e3;
+    --scored-bg: #e1f3e6;
+    --rbi-bg: #fdeeca;
+    --row-stripe: #f3f4f6;
+    --total-bg: #d6e6f7;
+    --danger: #b91c1c;
+  }
+
+  .live-ticker,
+  .fav-star,
+  .theme-toggle {
+    display: none !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .scorecard-nav-bar,
+  .notation-legend,
+  .scoring-summary,
+  .replay-bar,
+  .predictive-footnote a {
+    display: none !important;
+  }
+
+  .scorecard-page {
+    padding: 0;
+  }
+
+  .scorecard-page::before {
+    content: none !important; /* mobile rotate hint */
+  }
+
+  .game-status-header {
+    box-shadow: none;
+    margin-bottom: 10px;
+    padding: 8px 14px;
+  }
+
+  .scorecard-tables {
+    gap: 12px;
+  }
+
+  /* Compact cells so a full lineup + masthead + a deep bullpen's pitching box
+     fit one landscape page (away p1, home p2). Row height is driven by the
+     at-bat cell below, not this min-height; every 1px shaved off the cell is
+     ~14px of page height across the grid's rows, which is what keeps
+     extra-inning games with multiple pinch-hitters and 6+ pitchers from
+     spilling to a third page. */
+  .scorecard-cell {
+    min-width: 43px;
+    height: 25px;
+  }
+
+  .at-bat-cell {
+    min-height: 22px;
+    padding: 1px;
+  }
+
+  .at-bat-cell-main {
+    width: 22px;
+    height: 22px;
+  }
+
+  .diamond {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Tight pitching rows so the box fits under its grid */
+  .pitching-table th,
+  .pitching-table td {
+    padding: 0 4px !important;
+    font-size: 9px !important;
+    line-height: 1.2;
+  }
+
+  .at-bat-code {
+    font-size: 8px;
+  }
+
+  .at-bat-count {
+    font-size: 6px;
+  }
+
+  .at-bat-cell-top {
+    font-size: 7px;
+  }
+
+  .hr-data {
+    font-size: 6px;
+    margin-top: 2px;
+  }
+
+  .scorecard-col-player {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    font-size: 10px;
+  }
+
+  .scorecard-table th,
+  .scorecard-table td {
+    font-size: 10px;
+    padding: 1px;
+  }
+
+  .scorecard-table th {
+    position: static; /* no sticky in print */
+  }
+
+  .scorecard-table .scorecard-col-player {
+    position: static;
+  }
+
+  .scorecard-table-wrapper {
+    overflow: visible;
+  }
+
+  .scorecard-table-wrapper::after {
+    content: none !important; /* scroll gradient */
+  }
+
+  /* Keep each table on one page; start the home team on a fresh page */
+  .scorecard-table-wrapper,
+  .pitching-table,
+  .predictive-stats {
+    break-inside: avoid;
+  }
+
+  /* Masthead + away on page 1, home team + key on page 2. Bands stay with
+     their grid, and a grid never splits across a page. */
+  .print-team[data-side='home'] {
+    break-before: page;
+  }
+
+  .print-team-band {
+    break-after: avoid;
+  }
+
+  .print-team .scorecard-table-wrapper {
+    break-inside: avoid;
+  }
+
+  /* ── Broadcast-style score-bug masthead ── */
+  .print-masthead {
+    margin-bottom: 6px;
+  }
+
+  .print-brand-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0c1c30;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 5px 5px 0 0;
+  }
+
+  .print-wordmark {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .print-wordmark .logo-mark {
+    box-shadow: none;
+  }
+
+  .print-meta {
+    font-size: 9px;
+    letter-spacing: 0.02em;
+    opacity: 0.82;
+  }
+
+  .print-scorebug {
+    display: flex;
+    align-items: stretch;
+    border: 1.5px solid #0c1c30;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    overflow: hidden;
+  }
+
+  .print-bug-teams {
+    flex: 0 0 340px;
+    border-right: 1.5px solid #0c1c30;
+  }
+
+  .print-bug-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 12px 4px 0;
+    height: 29px;
+  }
+
+  .print-bug-row + .print-bug-row {
+    border-top: 1px solid var(--border);
+  }
+
+  .print-bug-row-win {
+    background: #eef4fb;
+  }
+
+  .print-bug-bar {
+    width: 6px;
+    align-self: stretch;
+  }
+
+  .print-bug-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    /* Keep the longest team names on one line — wrapping made the top line
+       overflow the row and get clipped by the score-bug's rounded corner. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .print-bug-row-win .print-bug-name::after {
+    content: ' ◂';
+    color: var(--accent);
+  }
+
+  .print-bug-score {
+    font-size: 22px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    padding-right: 14px;
+  }
+
+  .print-bug-line {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 10px;
+  }
+
+  .print-bug-status {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--danger);
+  }
+
+  .print-linescore {
+    border-collapse: collapse;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .print-linescore th,
+  .print-linescore td {
+    padding: 0 6px;
+    text-align: center;
+    min-width: 15px;
+    line-height: 1.35;
+  }
+
+  .print-linescore thead th {
+    font-size: 8px;
+    color: var(--text-muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .print-ls-abbr {
+    font-weight: 800;
+    text-align: right !important;
+    padding-right: 8px !important;
+  }
+
+  .print-ls-tot {
+    font-weight: 800;
+  }
+
+  .print-ls-runs {
+    border-left: 1px solid var(--border);
+  }
+
+  .print-team {
+    margin-bottom: 4px;
+  }
+
+  /* Team-colored band, broadcast lower-third style */
+  .print-team-band {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 3px 12px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+  }
+
+  .print-team-band .print-logo-chip {
+    width: 22px;
+    height: 22px;
+  }
+
+  .print-team-band-side {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    opacity: 0.75;
+  }
+
+  .print-team-band-name {
+    font-size: 15px;
+    font-weight: 800;
+    flex: 1;
+  }
+
+  .print-team-band-line {
+    font-size: 12px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Logo chips */
+  .print-logo-chip {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .print-logo-chip img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+  }
+
+  .print-team-band .print-logo-chip img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .print-logo-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .print-team .pitching-table {
+    margin-top: 6px;
+  }
+
+  .print-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 3px 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+    margin-top: 10px;
+    font-size: 9px;
+    color: var(--text-muted);
+    break-inside: avoid;
+  }
+
+  .print-legend-title {
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+
+  .print-legend-code {
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .print-footer {
+    margin-top: 6px;
+    font-size: 8px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* Minimal style: light header, neutral bands (team-color fill dropped in JS). */
+  .print-style-minimal .print-brand-bar {
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+
+  .print-style-minimal .print-scorebug {
+    border-color: var(--border);
+  }
+
+  .print-style-minimal .print-bug-teams {
+    border-right-color: var(--border);
+  }
+
+  .print-style-minimal .print-bug-status {
+    color: var(--text);
+  }
+
+  .print-style-minimal .print-team-band {
+    background: var(--accent-bg);
+    color: var(--text);
+  }
+
+  /* Ink saver: strip every fill so it prints clean black-on-white. */
+  .print-ink * {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  /* outline (not border) so delineating the header adds no layout height,
+     keeping the 2-page fit. */
+  .print-ink .print-brand-bar,
+  .print-ink .print-scorebug,
+  .print-ink .print-team-band {
+    outline: 1px solid #000;
+    outline-offset: -1px;
+  }
+
+  .print-ink .print-bug-bar {
+    display: none;
+  }
+
+  /* Draw the diamonds and gridlines in black for true monochrome. */
+  .print-ink svg path,
+  .print-ink svg line,
+  .print-ink svg polygon {
+    stroke: #000 !important;
+  }
+
+  /* Trace-only diamonds drop the full-diamond outline so only the batter's
+     actual path shows: nothing for an out, one line home→first for a single,
+     and a closed diamond only when the runner scored. Ink saver forces this
+     for legibility; "Simple diamonds" opts into it for any style. */
+  .print-ink .diamond-outline,
+  .print-simple-diamonds .diamond-outline {
+    display: none;
+  }
+
+  .print-ink .diamond-path,
+  .print-simple-diamonds .diamond-path {
+    stroke-width: 2.5 !important;
+  }
+}

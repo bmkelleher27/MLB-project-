@@ -1,0 +1,365 @@
+/* Player links, live ticker, skeletons, landing extras, game log
+   Split out of index.css; @import order there is the cascade order. */
+
+/* ── Player links ─────────────────────────────────────────────────── */
+
+.player-link {
+  color: inherit;
+  border-bottom: 1px dotted transparent;
+}
+
+.player-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Live follow ticker ───────────────────────────────────────────── */
+
+.live-ticker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 960px;
+  width: 100%;
+  border: 1px solid var(--live);
+  background: var(--panel-bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.live-ticker:hover {
+  background: var(--scored-bg);
+}
+
+.live-ticker-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--live);
+  white-space: nowrap;
+}
+
+.live-ticker-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ── Skeleton loading states ──────────────────────────────────────── */
+
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(100deg, var(--row-stripe) 40%, var(--panel-bg) 50%, var(--row-stripe) 60%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -80% 0;
+  }
+}
+
+.skeleton-game-card {
+  height: 112px;
+}
+
+.skeleton-header {
+  height: 92px;
+  max-width: 760px;
+  margin-bottom: 16px;
+}
+
+.skeleton-table {
+  height: 300px;
+  max-width: 1100px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Pitch-by-pitch page loading skeleton — mirrors the note, movement plots,
+   a fatigue chart, and a couple of at-bat cards so the layout doesn't jump. */
+.atbat-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeleton-atbat-note {
+  height: 64px;
+  border-radius: 8px;
+}
+
+.atbat-skeleton-plots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.skeleton-atbat-plot {
+  flex: 1 1 260px;
+  height: 300px;
+}
+
+.skeleton-atbat-chart {
+  height: 220px;
+}
+
+.skeleton-atbat-card {
+  height: 180px;
+}
+
+/* ── Landing: header bar, sections, probables, favorite ──────────── */
+
+.landing-header-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-mark {
+  flex-shrink: 0;
+  border-radius: 9px;
+  box-shadow: 0 1px 3px rgba(8, 58, 102, 0.35);
+}
+
+.landing-header-bar .theme-toggle {
+  position: absolute;
+  right: 0;
+  margin-left: 0;
+}
+
+.landing-section {
+  margin-bottom: 24px;
+}
+
+.landing-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
+.team-logo {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.game-card-probable {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
+
+.fav-star {
+  border: none;
+  background: none;
+  padding: 0 2px;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.game-card:hover .fav-star {
+  opacity: 0.65;
+}
+
+.fav-star:hover {
+  opacity: 1 !important;
+}
+
+.fav-star-on {
+  color: #d9a514;
+  opacity: 1 !important;
+}
+
+/* ── Season result strip ──────────────────────────────────────────── */
+
+.season-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+
+.season-tick {
+  width: 8px;
+  height: 17px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.season-tick:hover {
+  transform: scaleY(1.25);
+}
+
+/* Wins are filled, losses are hollow (outlined) — a shape cue so the strip
+   isn't distinguishable by color alone. */
+.season-tick-w {
+  background: var(--live);
+}
+
+.season-tick-l {
+  background: transparent;
+  border: 1.5px solid var(--danger);
+}
+
+.season-leaders {
+  margin-top: 26px;
+}
+
+/* ── Player game-log page ─────────────────────────────────────────── */
+
+.player-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 20px 48px;
+}
+
+.player-page h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.player-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.player-header-pos {
+  margin-left: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 5px;
+  padding: 2px 8px;
+  vertical-align: middle;
+}
+
+.player-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 18px 0 8px;
+}
+
+.player-log-wrapper {
+  overflow-x: auto;
+}
+
+.player-log-table {
+  width: 100%;
+}
+
+.player-log-row {
+  cursor: pointer;
+}
+
+.player-log-row:hover td {
+  background: var(--accent-bg);
+}
+
+.player-season-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  box-shadow: var(--card-shadow);
+}
+
+.stat-tile-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+}
+
+.stat-tile-row-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  min-width: 56px;
+}
+
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 40px;
+}
+
+.stat-tile-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.stat-tile-value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.player-page-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 14px;
+}

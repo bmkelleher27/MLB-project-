@@ -1,0 +1,385 @@
+/* Scorebook literacy features
+   Split out of index.css; @import order there is the cascade order. */
+
+/* ── Scorebook literacy features ──────────────────────────────────── */
+
+/* Nav bar action buttons */
+
+.scorecard-nav-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.scorecard-nav-actions .nav-legend-btn {
+  margin-left: 0;
+}
+
+.nav-legend-btn {
+  margin-left: auto;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.nav-legend-btn:hover,
+.nav-legend-btn-active {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+
+/* Notation legend panel */
+
+.notation-legend {
+  max-width: 960px;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px 28px;
+}
+
+.legend-heading {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+
+.legend-bullets {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.legend-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend-swatch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-swatch-box {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+.legend-swatch-scored {
+  background: var(--scored-bg);
+}
+
+.legend-swatch-out {
+  background: var(--out-bg);
+}
+
+.legend-swatch-chip {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.legend-section-positions {
+  grid-column: 1 / -1;
+}
+
+.legend-positions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.legend-field {
+  width: 170px;
+  flex-shrink: 0;
+}
+
+.legend-field-diamond {
+  stroke: var(--border);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.legend-field-pos {
+  fill: var(--accent-bg);
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+
+.legend-field-num {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--accent);
+}
+
+.legend-position-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 3px 14px;
+}
+
+.legend-position-list li {
+  white-space: nowrap;
+}
+
+.legend-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.legend-code-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-code {
+  display: inline-block;
+  min-width: 38px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.legend-section-predictive {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.legend-prose {
+  margin: 0 0 10px;
+  font-size: 13px;
+  max-width: 720px;
+}
+
+.legend-predictive-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px 28px;
+}
+
+.legend-subheading {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+/* Scoring plays summary */
+
+.scoring-summary {
+  max-width: 960px;
+  margin-bottom: 16px;
+}
+
+.scoring-summary-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.scoring-summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scoring-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 14px;
+  font-size: 12px;
+  padding: 3px 10px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.scoring-chip:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+
+.scoring-chip-inning {
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.scoring-chip-team {
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.scoring-chip-code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700;
+}
+
+/* Replay controls */
+
+.replay-bar {
+  max-width: 960px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+}
+
+.replay-bar-idle {
+  border-style: dashed;
+  background: transparent;
+}
+
+.replay-btn {
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.replay-btn:hover:not(:disabled) {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}
+
+.replay-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.replay-start {
+  border-color: var(--accent);
+}
+
+.replay-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.replay-slider {
+  flex: 1;
+  min-width: 120px;
+  accent-color: var(--accent);
+}
+
+.replay-progress {
+  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Cell interaction states */
+
+.at-bat-cell-clickable {
+  cursor: pointer;
+}
+
+.at-bat-cell-clickable:hover {
+  outline: 1.5px solid var(--accent);
+  outline-offset: -1.5px;
+}
+
+.at-bat-cell-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.at-bat-cell-hidden {
+  visibility: hidden;
+}
+
+.at-bat-cell-current {
+  outline: 2px solid var(--live);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 3px rgba(28, 138, 76, 0.25);
+}
+
+.at-bat-cell-flash {
+  animation: cell-flash 1.8s ease;
+}
+
+@keyframes cell-flash {
+  0%, 55% {
+    outline: 3px solid var(--accent);
+    outline-offset: -3px;
+    background: var(--accent-bg);
+  }
+  100% {
+    outline: 3px solid transparent;
+    outline-offset: -3px;
+  }
+}
+
+/* Reading guides: row + column highlight, live inning tint */
+
+.scorecard-table tbody tr:hover > .scorecard-col-player,
+.scorecard-table tbody tr:hover > .scorecard-cell {
+  background: var(--hover-bg);
+}
+
+.scorecard-table td.scorecard-cell.inning-col-hover {
+  background: var(--hover-bg);
+}
+
+.scorecard-table th.inning-col-hover {
+  background: var(--hover-strong);
+}
+
+.scorecard-table th.inning-col-current {
+  background: var(--current-inning-bg);
+  color: var(--live);
+  box-shadow: inset 0 -2px 0 var(--live);
+}
