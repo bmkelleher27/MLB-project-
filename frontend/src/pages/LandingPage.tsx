@@ -1,17 +1,66 @@
-import { useEffect, useState } from 'react';
-import type { ScheduleGame } from '@mlb-scorecards/shared';
-import { fetchSchedule } from '../api/client';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import type { DailyStarsResponse, LevelId, ScheduleGame } from '@mlb-scorecards/shared';
+import { getLevel } from '@mlb-scorecards/shared';
+import { fetchDailyStars, fetchRandomGame, fetchSchedule } from '../api/client';
+import { LevelPicker } from '../components/LevelPicker';
+import { setStoredLevel, storedLevel } from '../lib/level';
+import { DailyStarsStrip } from '../components/DailyStarsStrip';
 import { DatePicker } from '../components/DatePicker';
 import { GameCard } from '../components/GameCard';
-import { todayIso } from '../lib/date';
+import { HeroCard } from '../components/HeroCard';
+import { LogoMark } from '../components/Logo';
+import { PlayerSearch } from '../components/PlayerSearch';
+import { ThemeToggle } from '../components/ThemeToggle';
+import { addDays, todayIso } from '../lib/date';
+import { getFavoriteTeams, toggleFavoriteTeam } from '../lib/favorite';
+import { drama, getSpoilerSafe, involvesFavorite, pickHero, setSpoilerSafe } from '../lib/gameSignals';
 
 const POLL_INTERVAL_MS = 30_000;
 
 export function LandingPage() {
+  const navigate = useNavigate();
   const [date, setDate] = useState(todayIso());
+  const [level, setLevelState] = useState<LevelId>(storedLevel);
   const [games, setGames] = useState<ScheduleGame[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [randomLoading, setRandomLoading] = useState(false);
+  const [favorites, setFavorites] = useState<number[]>(getFavoriteTeams);
+  const [spoilerSafe, setSpoilerSafeState] = useState<boolean>(getSpoilerSafe);
+  const [stars, setStars] = useState<DailyStarsResponse | null>(null);
+  const [levelMismatch, setLevelMismatch] = useState(false);
+
+  const isToday = date === todayIso();
+  const levelInfo = getLevel(level);
+
+  function changeLevel(next: LevelId) {
+    setStoredLevel(next);
+    setLevelState(next);
+  }
+
+  function toggleFavorite(teamId: number) {
+    setFavorites(toggleFavoriteTeam(teamId));
+  }
+
+  function toggleSpoilerSafe() {
+    setSpoilerSafeState((prev) => {
+      setSpoilerSafe(!prev);
+      return !prev;
+    });
+  }
+
+  async function goToRandomGame() {
+    setRandomLoading(true);
+    try {
+      const { gamePk } = await fetchRandomGame();
+      navigate(`/game/${gamePk}`);
+    } catch {
+      // silently fail — button just resets
+    } finally {
+      setRandomLoading(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -20,8 +69,13 @@ export function LandingPage() {
 
     async function load() {
       try {
-        const data = await fetchSchedule(date);
-        if (!cancelled) setGames(data.games);
+        const data = await fetchSchedule(date, level);
+        if (cancelled) return;
+        setGames(data.games);
+        // The response echoes the level it resolved. A mismatch means the API
+        // ignored the request — typically a backend older than this frontend —
+        // which would otherwise look like the level buttons simply doing nothing.
+        setLevelMismatch(data.level !== level);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
       } finally {
@@ -35,22 +89,127 @@ export function LandingPage() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [date]);
+  }, [date, level]);
+
+  // Yesterday's stars only decorate the "today" dashboard view.
+  useEffect(() => {
+    // The strip's DMG/DOM indices come from Statcast inputs (exit velocity,
+    // whiffs) that only exist in the majors, so it stays an MLB-only feature
+    // rather than showing major leaguers beside minor-league games.
+    if (!isToday || level !== 1) {
+      setStars(null);
+      return;
+    }
+    let cancelled = false;
+    fetchDailyStars(addDays(todayIso(), -1))
+      .then((s) => {
+        if (!cancelled) setStars(s);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isToday, level]);
+
+  const hero = useMemo(
+    () => (isToday ? pickHero(games, favorites, stars) : null),
+    [isToday, games, favorites, stars]
+  );
+
+  const groups = useMemo(() => {
+    // Favorites always pin first; live games then sort by watchability so a
+    // close-and-late game outranks a blowout.
+    const favFirst = (list: ScheduleGame[], key: (g: ScheduleGame) => number = () => 0) =>
+      [...list].sort(
+        (a, b) =>
+          Number(involvesFavorite(b, favorites)) - Number(involvesFavorite(a, favorites)) || key(b) - key(a)
+      );
+    const live = games.filter((g) => g.status.abstractGameState === 'Live');
+    const upcoming = games
+      .filter((g) => g.status.abstractGameState !== 'Live' && g.status.abstractGameState !== 'Final')
+      .sort((a, b) => a.gameDate.localeCompare(b.gameDate));
+    const finals = games.filter((g) => g.status.abstractGameState === 'Final');
+    return [
+      { title: 'Live', games: favFirst(live, drama) },
+      { title: 'Upcoming', games: favFirst(upcoming) },
+      { title: 'Final', games: favFirst(finals) },
+    ].filter((s) => s.games.length > 0);
+  }, [games, favorites]);
 
   return (
     <div className="landing-page">
       <header className="landing-header">
-        <h1>MLB Live Scorecards</h1>
+        <div className="landing-header-bar">
+          <h1 className="landing-title">
+            <LogoMark size={34} />
+            MLB Live Scorecards
+          </h1>
+          <ThemeToggle />
+        </div>
       </header>
-      <DatePicker date={date} onChange={setDate} />
-      {loading && games.length === 0 && <p className="status-message">Loading games...</p>}
-      {error && <p className="status-message status-error">{error}</p>}
-      {!loading && !error && games.length === 0 && <p className="status-message">No games scheduled.</p>}
-      <div className="game-grid">
-        {games.map((game) => (
-          <GameCard key={game.gamePk} game={game} />
-        ))}
+      <div className="landing-search-row">
+        <PlayerSearch />
       </div>
+      <div className="landing-toolbar">
+        <DatePicker date={date} onChange={setDate} />
+        <LevelPicker value={level} onChange={changeLevel} />
+        <div className="landing-actions">
+          <button
+            className="random-game-btn"
+            onClick={goToRandomGame}
+            disabled={randomLoading}
+          >
+            {randomLoading ? 'Finding a game…' : '⚄ Random Historical Game'}
+          </button>
+          <Link to="/season" className="random-game-btn">📅 Season Review</Link>
+          <button
+            className={`random-game-btn${spoilerSafe ? ' spoiler-btn-on' : ''}`}
+            onClick={toggleSpoilerSafe}
+            title="Hide final scores until you reveal them — for games you recorded"
+            aria-pressed={spoilerSafe}
+          >
+            {spoilerSafe ? '🙈 Spoilers hidden' : '👁 Hide final scores'}
+          </button>
+        </div>
+      </div>
+      {hero && <HeroCard hero={hero} spoilerSafe={spoilerSafe} />}
+      {isToday && stars && !spoilerSafe && <DailyStarsStrip stars={stars} />}
+      {loading && games.length === 0 && (
+        <div className="game-grid" aria-hidden="true">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="skeleton skeleton-game-card" />
+          ))}
+        </div>
+      )}
+      {error && <p className="status-message status-error">{error}</p>}
+      {levelMismatch && levelInfo && (
+        <p className="status-message status-error">
+          Showing major-league games: the API didn’t apply the {levelInfo.name} filter. This
+          usually means the backend is running an older version than this page.
+        </p>
+      )}
+
+      {!loading && !error && games.length === 0 && (
+        <p className="status-message">
+          No {levelInfo && levelInfo.id !== 1 ? levelInfo.name : ''} games scheduled on this date.
+        </p>
+      )}
+      {groups.map((section) => (
+        <section key={section.title} className="landing-section">
+          {groups.length > 1 && <h2 className="landing-section-title">{section.title}</h2>}
+          <div className="game-grid">
+            {section.games.map((game) => (
+              <GameCard
+                key={game.gamePk}
+                game={game}
+                favoriteTeamIds={favorites}
+                onToggleFavorite={toggleFavorite}
+                spoilerSafe={spoilerSafe}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

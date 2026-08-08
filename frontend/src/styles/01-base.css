@@ -1,0 +1,110 @@
+/* Design tokens, reset, focus, motion, error boundary
+   Split out of index.css; @import order there is the cascade order. */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --text: #1f2430;
+  --text-muted: #6b7280;
+  --bg: #eaf0f4;
+  --panel-bg: #ffffff;
+  --border: #d9dade;
+  --accent: #0a4f8a;
+  --accent-bg: #e7f0fa;
+  --live: #1c8a4c;
+  --out-bg: #f2e3e3;
+  --scored-bg: #e1f3e6;
+  --rbi-bg: #fdeeca;
+  --row-stripe: #f3f4f6;
+  --total-bg: #d6e6f7;
+  --card-shadow: 0 1px 3px rgba(20, 45, 65, 0.06);
+  --card-shadow-hover: 0 8px 20px rgba(20, 45, 65, 0.13);
+  --hover-bg: #edf3fa;
+  --hover-strong: #d5e5f6;
+  --current-inning-bg: #d9f0e2;
+  --danger: #b91c1c;
+
+  font: 16px/1.45 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /* Calm cool-gray wash behind the white panels */
+  background: linear-gradient(180deg, #f0f5f8 0%, #e4ebf1 100%) fixed;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Visible keyboard focus for every interactive element (links, buttons, the
+   role="button" scorecard cells, selects, range inputs). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Respect users who prefer reduced motion: drop the live pulse, skeleton
+   shimmer, hover transforms, and smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.status-message {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.status-error {
+  color: var(--danger);
+}
+
+/* Error boundary fallback */
+
+.error-boundary {
+  max-width: 560px;
+  margin: 64px auto;
+  padding: 28px 24px;
+  text-align: center;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.error-boundary-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+}
+
+.error-boundary-message {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: ui-monospace, Consolas, monospace;
+  word-break: break-word;
+  margin: 0 0 20px;
+}
+
+.error-boundary-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}

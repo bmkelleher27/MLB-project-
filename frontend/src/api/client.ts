@@ -1,15 +1,76 @@
-import type { Scorecard, ScheduleResponse } from '@mlb-scorecards/shared';
+import type {
+  DailyStarsResponse,
+  GameAtBatsResponse,
+  GamePreviewResponse,
+  PlayerLogResponse,
+  PlayerProfileResponse,
+  PlayerSearchResponse,
+  Scorecard,
+  ScheduleResponse,
+  SeasonPredictiveResponse,
+  SeasonResponse,
+  TeamInfo,
+} from '@mlb-scorecards/shared';
+import { API_BASE } from '../lib/apiBase';
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
-
-export async function fetchSchedule(date: string): Promise<ScheduleResponse> {
-  const res = await fetch(`${API_BASE}/api/schedule?date=${date}`);
-  if (!res.ok) throw new Error(`schedule request failed: ${res.status}`);
-  return res.json() as Promise<ScheduleResponse>;
+async function getJson<T>(path: string, label: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`);
+  if (!res.ok) throw new Error(`${label} request failed: ${res.status}`);
+  return res.json() as Promise<T>;
 }
 
-export async function fetchScorecard(gamePk: number): Promise<Scorecard> {
-  const res = await fetch(`${API_BASE}/api/game/${gamePk}/scorecard`);
-  if (!res.ok) throw new Error(`scorecard request failed: ${res.status}`);
-  return res.json() as Promise<Scorecard>;
+export function fetchSchedule(date: string, level?: number): Promise<ScheduleResponse> {
+  const lvl = level != null ? `&level=${level}` : '';
+  return getJson(`/api/schedule?date=${date}${lvl}`, 'schedule');
+}
+
+export function fetchScorecard(gamePk: number): Promise<Scorecard> {
+  return getJson(`/api/game/${gamePk}/scorecard`, 'scorecard');
+}
+
+export function fetchGameAtBats(gamePk: number): Promise<GameAtBatsResponse> {
+  return getJson(`/api/game/${gamePk}/atbats`, 'at-bats');
+}
+
+export function fetchGamePreview(gamePk: number): Promise<GamePreviewResponse> {
+  return getJson(`/api/game/${gamePk}/preview`, 'preview');
+}
+
+export function fetchDailyStars(date: string): Promise<DailyStarsResponse> {
+  return getJson(`/api/daily-stars?date=${date}`, 'daily stars');
+}
+
+export function fetchRandomGame(): Promise<{ gamePk: number; date: string }> {
+  return getJson('/api/random-game', 'random-game');
+}
+
+export async function fetchTeams(season: number): Promise<TeamInfo[]> {
+  const body = await getJson<{ teams: TeamInfo[] }>(`/api/teams?season=${season}`, 'teams');
+  return body.teams;
+}
+
+export function fetchSeason(teamId: number, season: number): Promise<SeasonResponse> {
+  return getJson(`/api/season?teamId=${teamId}&season=${season}`, 'season');
+}
+
+export function fetchPlayerLog(id: number, season: number, level?: number): Promise<PlayerLogResponse> {
+  const lvl = level != null ? `&level=${level}` : '';
+  return getJson(`/api/player/${id}?season=${season}${lvl}`, 'player');
+}
+
+export function fetchSeasonPredictive(teamId: number, season: number): Promise<SeasonPredictiveResponse> {
+  return getJson(`/api/season/predictive?teamId=${teamId}&season=${season}`, 'season predictive');
+}
+
+export function searchPlayers(query: string): Promise<PlayerSearchResponse> {
+  return getJson(`/api/players/search?q=${encodeURIComponent(query)}`, 'player search');
+}
+
+export function fetchPlayerProfile(
+  id: number,
+  season: number,
+  level?: number
+): Promise<PlayerProfileResponse> {
+  const lvl = level != null ? `&level=${level}` : '';
+  return getJson(`/api/player/${id}/profile?season=${season}${lvl}`, 'player profile');
 }

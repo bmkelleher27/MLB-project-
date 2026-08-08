@@ -1,0 +1,58 @@
+/* Dark mode overrides
+   Split out of index.css; @import order there is the cascade order. */
+
+/* ── Dark mode ────────────────────────────────────────────────────── */
+
+:root[data-theme='dark'] {
+  --text: #e7eaf0;
+  --text-muted: #9aa3b0;
+  --bg: #12161c;
+  --panel-bg: #1b222b;
+  --border: #333c48;
+  --accent: #7ab2e8;
+  --accent-bg: #1d2d42;
+  --live: #3dbd77;
+  --out-bg: #3b2629;
+  --scored-bg: #1d3527;
+  --rbi-bg: #3e3418;
+  --row-stripe: #212933;
+  --total-bg: #23374e;
+  --hover-bg: #242e3b;
+  --hover-strong: #2b3c52;
+  --current-inning-bg: #1e3b2b;
+  --danger: #ef6a6a;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme='dark'] body {
+  background: linear-gradient(180deg, #141922 0%, #0e1218 100%) fixed;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --text: #e7eaf0;
+    --text-muted: #9aa3b0;
+    --bg: #12161c;
+    --panel-bg: #1b222b;
+    --border: #333c48;
+    --accent: #7ab2e8;
+    --accent-bg: #1d2d42;
+    --live: #3dbd77;
+    --out-bg: #3b2629;
+    --scored-bg: #1d3527;
+    --rbi-bg: #3e3418;
+    --row-stripe: #212933;
+    --total-bg: #23374e;
+    --hover-bg: #242e3b;
+    --hover-strong: #2b3c52;
+    --current-inning-bg: #1e3b2b;
+    --danger: #ef6a6a;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --card-shadow-hover: 0 8px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  :root:not([data-theme='light']) body {
+    background: linear-gradient(180deg, #141922 0%, #0e1218 100%) fixed;
+  }
+}

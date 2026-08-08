@@ -10,6 +10,35 @@ import type {
   TeamScorecard,
 } from '@mlb-scorecards/shared';
 import { buildBatterCode, buildRunnerAdvancementCode } from './notation.js';
+import { buildPredictive } from './predictive.js';
+import { computeStuff } from './stuff.js';
+
+/** Average estimated Stuff+ per pitcher id, over their tracked pitches this game. */
+function buildPitcherStuff(plays: RawPlay[]): Map<number, number> {
+  const acc = new Map<number, { sum: number; count: number }>();
+  for (const play of plays) {
+    const pitcherId = play.matchup?.pitcher?.id;
+    if (pitcherId == null) continue;
+    for (const e of play.playEvents ?? []) {
+      if (!e.isPitch) continue;
+      const stuff = computeStuff(
+        e.details?.type?.code ?? null,
+        e.pitchData?.startSpeed ?? null,
+        e.pitchData?.breaks?.breakVerticalInduced ?? null,
+        e.pitchData?.breaks?.breakHorizontal ?? null,
+        e.pitchData?.extension ?? null
+      );
+      if (stuff == null) continue;
+      const a = acc.get(pitcherId) ?? { sum: 0, count: 0 };
+      a.sum += stuff;
+      a.count += 1;
+      acc.set(pitcherId, a);
+    }
+  }
+  const avg = new Map<number, number>();
+  for (const [id, a] of acc) avg.set(id, Math.round(a.sum / a.count));
+  return avg;
+}
 
 function toBaseFromLabel(label: string | null): '2B' | '3B' | 'HOME' | null {
   if (label === '2B') return '2B';
@@ -32,6 +61,7 @@ interface SlotInfo {
   entrySeq: number;
   id: number;
   name: string;
+  position: string;
 }
 
 function buildSlotMap(team: RawBoxscoreTeam): { byId: Map<number, number>; lineup: LineupSlot[] } {
@@ -43,7 +73,7 @@ function buildSlotMap(team: RawBoxscoreTeam): { byId: Map<number, number>; lineu
     const slot = Math.floor(bo / 100);
     const entrySeq = bo % 100;
     if (!slot) continue;
-    entries.push({ slot, entrySeq, id: p.person.id, name: p.person.fullName });
+    entries.push({ slot, entrySeq, id: p.person.id, name: p.person.fullName, position: p.position?.abbreviation ?? '' });
   }
   const byId = new Map<number, number>();
   const bySlot = new Map<number, SlotInfo[]>();
@@ -58,12 +88,12 @@ function buildSlotMap(team: RawBoxscoreTeam): { byId: Map<number, number>; lineu
       slot,
       players: players
         .sort((a, b) => a.entrySeq - b.entrySeq)
-        .map((p) => ({ id: p.id, name: p.name, entrySeq: p.entrySeq })),
+        .map((p) => ({ id: p.id, name: p.name, position: p.position, entrySeq: p.entrySeq })),
     }));
   return { byId, lineup };
 }
 
-function buildPitchingLines(team: RawBoxscoreTeam): PitchingLine[] {
+function buildPitchingLines(team: RawBoxscoreTeam, stuffByPitcher: Map<number, number>): PitchingLine[] {
   return team.pitchers.map((id) => {
     const player = team.players[`ID${id}`];
     const stats = player?.stats?.pitching;
@@ -86,6 +116,7 @@ function buildPitchingLines(team: RawBoxscoreTeam): PitchingLine[] {
       homeRuns: stats?.homeRuns ?? 0,
       pitches: stats?.numberOfPitches ?? 0,
       decision,
+      stuff: stuffByPitcher.get(id) ?? null,
     };
   });
 }
@@ -93,7 +124,9 @@ function buildPitchingLines(team: RawBoxscoreTeam): PitchingLine[] {
 function buildTeamScorecard(
   team: RawBoxscoreTeam,
   plays: RawPlay[],
-  halfInningFilter: HalfInning
+  halfInningFilter: HalfInning,
+  stuffByPitcher: Map<number, number>,
+  abbreviation?: string
 ): TeamScorecard {
   const { byId, lineup } = buildSlotMap(team);
   const cellsBySlot: Record<number, Cell[]> = {};
@@ -125,7 +158,11 @@ function buildTeamScorecard(
     // MLB tags some standalone mid-at-bat baserunning events (e.g. a caught stealing that
     // happens before the batter's own plate appearance concludes) as result.type 'atBat' too,
     // but they carry no runner entry for the batter - there's no actual PA outcome to record.
-    const batterRunner = play.runners.find((r) => r.details.runner.id === batterId);
+    // The PA outcome is the entry where the batter leaves home (start == null); the same
+    // play can hold further entries for the batter (e.g. single, then home on a throwing
+    // error), which are handled below as ordinary advancements on the new cell.
+    const batterEntries = play.runners.filter((r) => r.details.runner.id === batterId);
+    const batterRunner = batterEntries.find((r) => r.movement.start == null) ?? batterEntries[0];
 
     if (batterRunner) {
       const slot = byId.get(batterId);
@@ -133,6 +170,7 @@ function buildTeamScorecard(
       const basesReached = basesReachedFromMovement(batterRunner.movement);
       const isOut = batterRunner.movement.isOut;
 
+      const hitData = play.playEvents?.find((e) => e.hitData)?.hitData;
       const cell: Cell = {
         atBatIndex: play.about.atBatIndex,
         inning: play.about.inning,
@@ -147,6 +185,8 @@ function buildTeamScorecard(
         rbi: play.result.rbi,
         basesReached,
         advancement: [],
+        exitVelocity: hitData?.launchSpeed,
+        distance: hitData?.totalDistance,
       };
 
       if (slot !== undefined) {
@@ -159,12 +199,13 @@ function buildTeamScorecard(
       }
     }
 
-    // Every other runner in this play (pre-existing baserunners advancing, put out, or
-    // scoring - including mid-at-bat events like steals/wild pitches/passed balls/balks).
+    // Every other runner entry in this play (pre-existing baserunners advancing, put out,
+    // or scoring - including mid-at-bat events like steals/wild pitches/passed balls/balks,
+    // and the batter's own post-PA movements, e.g. taking extra bases on an error).
     // Looked up by the runner's own id, so multiple sequential entries for the same
     // physical runner within one play all resolve to the same originating cell.
     for (const runner of play.runners) {
-      if (runner.details.runner.id === batterId) continue;
+      if (runner === batterRunner) continue;
       const owningCell = onBase.get(runner.details.runner.id);
       if (!owningCell) continue;
 
@@ -191,18 +232,31 @@ function buildTeamScorecard(
     team: {
       id: team.team.id,
       name: team.team.name,
-      abbreviation: team.team.abbreviation ?? team.team.name,
+      abbreviation: abbreviation ?? team.team.abbreviation ?? team.team.name,
     },
     lineup,
     cellsBySlot,
-    pitching: buildPitchingLines(team),
+    pitching: buildPitchingLines(team, stuffByPitcher),
   };
 }
 
 export function transformLiveFeed(raw: RawLiveFeed): Scorecard {
   const plays = raw.liveData.plays.allPlays;
-  const away = buildTeamScorecard(raw.liveData.boxscore.teams.away, plays, 'top');
-  const home = buildTeamScorecard(raw.liveData.boxscore.teams.home, plays, 'bottom');
+  const stuffByPitcher = buildPitcherStuff(plays);
+  const away = buildTeamScorecard(
+    raw.liveData.boxscore.teams.away,
+    plays,
+    'top',
+    stuffByPitcher,
+    raw.gameData.teams?.away?.abbreviation
+  );
+  const home = buildTeamScorecard(
+    raw.liveData.boxscore.teams.home,
+    plays,
+    'bottom',
+    stuffByPitcher,
+    raw.gameData.teams?.home?.abbreviation
+  );
 
   const linescore = raw.liveData.linescore;
   const innings: InningLine[] = linescore.innings.map((inn) => ({
@@ -235,7 +289,9 @@ export function transformLiveFeed(raw: RawLiveFeed): Scorecard {
       away: { r: linescore.teams.away.runs, h: linescore.teams.away.hits, e: linescore.teams.away.errors },
       home: { r: linescore.teams.home.runs, h: linescore.teams.home.hits, e: linescore.teams.home.errors },
     },
+    predictive: buildPredictive(raw),
     venue: raw.gameData.venue?.name ?? null,
+    date: raw.gameData.datetime?.officialDate ?? null,
     updatedAt: new Date().toISOString(),
   };
 }

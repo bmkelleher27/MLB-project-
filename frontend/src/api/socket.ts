@@ -1,6 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
-
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000';
+import { API_BASE } from '../lib/apiBase';
 
 let socket: Socket | null = null;
 

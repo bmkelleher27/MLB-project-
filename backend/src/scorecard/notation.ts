@@ -1,6 +1,6 @@
 import type { RawPlay, RawRunner, RawRunnerCredit } from '../mlbApi.js';
 
-export const POSITION_NUMBER: Record<string, number> = {
+const POSITION_NUMBER: Record<string, number> = {
   P: 1,
   C: 2,
   '1B': 3,
@@ -28,6 +28,13 @@ export function creditChain(credits: RawRunnerCredit[]): number[] {
 
 function findCredit(credits: RawRunnerCredit[], creditType: string): number | null {
   const c = credits.find((c) => c.credit === creditType);
+  return c ? positionNumber(c.position?.abbreviation) : null;
+}
+
+// MLB splits errors into flavors ('f_error', 'f_throwing_error', ...); any of them
+// identifies the fielder charged with the error.
+function findErrorCredit(credits: RawRunnerCredit[]): number | null {
+  const c = credits.find((c) => c.credit?.includes('error'));
   return c ? positionNumber(c.position?.abbreviation) : null;
 }
 
@@ -78,7 +85,7 @@ export function buildBatterCode(play: RawPlay, batterRunner: RawRunner | undefin
     return { code: fielded ? `${HIT_CODES[eventType]}-${fielded}` : HIT_CODES[eventType], description };
   }
   if (eventType === 'field_error') {
-    const errPos = findCredit(batterCredits, 'f_error') ?? findCredit(play.runners.flatMap((r) => r.credits), 'f_error');
+    const errPos = findErrorCredit(batterCredits) ?? findErrorCredit(play.runners.flatMap((r) => r.credits));
     return { code: errPos ? `E${errPos}` : 'E', description };
   }
   if (eventType === 'grounded_into_double_play' || eventType === 'double_play' || eventType === 'strikeout_double_play') {
@@ -163,7 +170,7 @@ export function buildRunnerAdvancementCode(runner: RawRunner, playDescription: s
   if (match) {
     let code = match[1];
     if (match[0] === 'Error') {
-      const errPos = findCredit(runner.credits, 'f_error');
+      const errPos = findErrorCredit(runner.credits);
       if (errPos) code = `E${errPos}`;
     }
     return { code, description: playDescription };

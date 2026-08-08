@@ -1,4 +1,5 @@
 import type { Cell } from '@mlb-scorecards/shared';
+import type { DiamondProgress } from '../lib/diamond';
 
 const SIZE = 108;
 const R = 40;
@@ -15,44 +16,13 @@ function pt(p: { x: number; y: number }): string {
   return `${p.x},${p.y}`;
 }
 
-export interface DiamondProgress {
-  /** Furthest base physically reached this half-inning; 4 = all the way around to home. */
-  base: 0 | 1 | 2 | 3 | 4;
-  /** Whether the runner was put out at `base`, rather than safe/stranded there. */
-  isOut: boolean;
-}
-
-const BASE_INDEX: Record<Cell['basesReached'], 0 | 1 | 2 | 3 | 4> = {
-  out: 0,
-  '1B': 1,
-  '2B': 2,
-  '3B': 3,
-  HR: 4,
-};
-
-/**
- * The cell's own at-bat only fixes where the batter started (e.g. a single = 1B).
- * Later plays in the same half-inning can advance that same runner further -
- * those are recorded as `advancement` entries on this cell, chronologically,
- * each one superseding the last (a runner can only be safe/out/scored once).
- */
-export function progressFromCell(cell: Cell): DiamondProgress {
-  let base = BASE_INDEX[cell.basesReached];
-  let isOut = false;
-  for (const adv of cell.advancement) {
-    base = adv.toBase === 'HOME' ? 4 : adv.toBase === '3B' ? 3 : 2;
-    isOut = adv.isOut;
-  }
-  return { base, isOut };
-}
-
 const ADVANCEMENT_NODE: Record<'2B' | '3B' | 'HOME', { x: number; y: number }> = {
   '2B': SECOND,
   '3B': THIRD,
   HOME,
 };
 
-const LABEL_OFFSET = 9;
+const LABEL_OFFSET = 8;
 
 function labelPos(node: { x: number; y: number }): { x: number; y: number } {
   const dx = node.x - CX;
@@ -61,7 +31,15 @@ function labelPos(node: { x: number; y: number }): { x: number; y: number } {
   return { x: node.x + (dx / len) * LABEL_OFFSET, y: node.y + (dy / len) * LABEL_OFFSET };
 }
 
-export function Diamond({ progress, advancement = [] }: { progress: DiamondProgress; advancement?: Cell['advancement'] }) {
+export function Diamond({
+  progress,
+  advancement = [],
+  onAdvancementClick,
+}: {
+  progress: DiamondProgress;
+  advancement?: Cell['advancement'];
+  onAdvancementClick?: (atBatIndex: number) => void;
+}) {
   const { base, isOut } = progress;
   const outline = `M${pt(HOME)} L${pt(FIRST)} L${pt(SECOND)} L${pt(THIRD)} Z`;
   const scored = base === 4 && !isOut;
@@ -74,10 +52,17 @@ export function Diamond({ progress, advancement = [] }: { progress: DiamondProgr
   const terminal = base > 0 ? NODES[base === 4 ? 0 : base] : null;
   const labels = advancement
     .filter((a) => a.code)
-    .map((a) => ({ ...labelPos(ADVANCEMENT_NODE[a.toBase]), code: a.code, title: a.description, isOut: a.isOut }));
+    .map((a) => ({
+      ...labelPos(ADVANCEMENT_NODE[a.toBase]),
+      code: a.code,
+      title: a.description,
+      isOut: a.isOut,
+      atBatIndex: a.atBatIndex,
+    }));
 
   return (
-    <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="diamond">
+    // Decorative: the cell's shorthand code + aria-label already convey the play.
+    <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="diamond" aria-hidden="true">
       <path d={outline} className="diamond-outline" fill="none" />
       {path && <path d={path} className={`diamond-path${scored ? ' diamond-scored' : ''}`} fill="none" />}
       {isOut && terminal && <circle cx={terminal.x} cy={terminal.y} r={3} className="diamond-out-marker" />}
@@ -88,9 +73,17 @@ export function Diamond({ progress, advancement = [] }: { progress: DiamondProgr
           y={l.y}
           textAnchor="middle"
           dominantBaseline="middle"
-          className={`diamond-advancement-label${l.isOut ? ' diamond-advancement-out' : ''}`}
+          className={`diamond-advancement-label${l.isOut ? ' diamond-advancement-out' : ''}${onAdvancementClick ? ' diamond-advancement-clickable' : ''}`}
+          onClick={
+            onAdvancementClick
+              ? (e) => {
+                  e.stopPropagation();
+                  onAdvancementClick(l.atBatIndex);
+                }
+              : undefined
+          }
         >
-          <title>{l.title}</title>
+          <title>{`${l.title} (click to show the at-bat this happened during)`}</title>
           {l.code}
         </text>
       ))}
