@@ -137,6 +137,36 @@ test.describe('levels (minor leagues)', () => {
     await expect(page.locator('.scorecard-page, .preview-page')).toBeVisible();
   });
 
+  test('says so when the API ignores the level instead of silently showing MLB', async ({ page }) => {
+    // Reproduces a frontend deployed ahead of its backend: the old API has no
+    // level support, so it returns major-league games whatever is clicked. That
+    // used to be indistinguishable from the buttons not working at all.
+    await page.route('**/api/schedule**', async (route) => {
+      const url = new URL(route.request().url());
+      url.searchParams.delete('level');
+      const res = await route.fetch({ url: url.toString() });
+      const body = await res.json();
+      delete body.level;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+    });
+
+    await page.goto('/');
+    await page.waitForSelector('.level-picker');
+    await page.getByRole('button', { name: 'AAA', exact: true }).click();
+
+    await expect(page.locator('.status-error')).toContainText(/didn’t apply the Triple-A filter/);
+  });
+
+  test('yesterday\'s stars stay out of minor-league views', async ({ page }) => {
+    // The strip's DMG/DOM indices need Statcast, which does not exist below
+    // Triple-A, so showing major leaguers there would misrepresent the level.
+    await page.goto('/');
+    await page.waitForSelector('.level-picker');
+    await page.getByRole('button', { name: 'AA', exact: true }).click();
+    await page.waitForTimeout(1500);
+    await expect(page.locator('.daily-stars-strip, .stars-strip')).toHaveCount(0);
+  });
+
   test('the API rejects a level it does not support', async ({ request }) => {
     // 22 is college baseball — a real MLB sportId this app deliberately excludes.
     const res = await request.get('http://localhost:4000/api/schedule?date=2026-08-05&level=22');

@@ -29,6 +29,7 @@ export function LandingPage() {
   const [favorites, setFavorites] = useState<number[]>(getFavoriteTeams);
   const [spoilerSafe, setSpoilerSafeState] = useState<boolean>(getSpoilerSafe);
   const [stars, setStars] = useState<DailyStarsResponse | null>(null);
+  const [levelMismatch, setLevelMismatch] = useState(false);
 
   const isToday = date === todayIso();
   const levelInfo = getLevel(level);
@@ -69,7 +70,12 @@ export function LandingPage() {
     async function load() {
       try {
         const data = await fetchSchedule(date, level);
-        if (!cancelled) setGames(data.games);
+        if (cancelled) return;
+        setGames(data.games);
+        // The response echoes the level it resolved. A mismatch means the API
+        // ignored the request — typically a backend older than this frontend —
+        // which would otherwise look like the level buttons simply doing nothing.
+        setLevelMismatch(data.level !== level);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
       } finally {
@@ -87,7 +93,10 @@ export function LandingPage() {
 
   // Yesterday's stars only decorate the "today" dashboard view.
   useEffect(() => {
-    if (!isToday) {
+    // The strip's DMG/DOM indices come from Statcast inputs (exit velocity,
+    // whiffs) that only exist in the majors, so it stays an MLB-only feature
+    // rather than showing major leaguers beside minor-league games.
+    if (!isToday || level !== 1) {
       setStars(null);
       return;
     }
@@ -100,7 +109,7 @@ export function LandingPage() {
     return () => {
       cancelled = true;
     };
-  }, [isToday]);
+  }, [isToday, level]);
 
   const hero = useMemo(
     () => (isToday ? pickHero(games, favorites, stars) : null),
@@ -173,6 +182,13 @@ export function LandingPage() {
         </div>
       )}
       {error && <p className="status-message status-error">{error}</p>}
+      {levelMismatch && levelInfo && (
+        <p className="status-message status-error">
+          Showing major-league games: the API didn’t apply the {levelInfo.name} filter. This
+          usually means the backend is running an older version than this page.
+        </p>
+      )}
+
       {!loading && !error && games.length === 0 && (
         <p className="status-message">
           No {levelInfo && levelInfo.id !== 1 ? levelInfo.name : ''} games scheduled on this date.
