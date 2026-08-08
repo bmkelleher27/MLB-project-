@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import type { PlayerLogResponse, PlayerProfileResponse } from '@mlb-scorecards/shared';
+import type { LevelId, PlayerLogResponse, PlayerProfileResponse } from '@mlb-scorecards/shared';
+import { getLevel } from '@mlb-scorecards/shared';
 import { fetchPlayerLog, fetchPlayerProfile } from '../api/client';
 import { PlayerProfileSection } from '../components/PlayerProfileSection';
+import { LevelPicker } from '../components/LevelPicker';
 import { PlayerSearch } from '../components/PlayerSearch';
+import { levelFromParam } from '../lib/level';
 import { formatShortDate, seasonList } from '../lib/date';
 
 function StatTile({ label, value, title }: { label: string; value: string | number; title?: string }) {
@@ -58,12 +61,51 @@ function SeasonTotals({ log }: { log: PlayerLogResponse }) {
   );
 }
 
+/**
+ * Why a profile is empty depends on the level: the minors below Triple-A have
+ * little or no pitch tracking, so "no data" there is expected rather than a
+ * fault. Saying which it is stops the page looking broken.
+ */
+function noDataReason(profile: PlayerProfileResponse, season: number): string {
+  const level = getLevel(profile.level);
+
+  // Nothing anywhere: the player simply didn't appear that season.
+  if (profile.availableLevels.length === 0) {
+    return `No games for ${profile.name} in ${season}.`;
+  }
+  if (level && level.pitchTracking === 'none') {
+    return `${profile.name} played at ${level.name} in ${season}, where pitch tracking isn't installed — so there's no pitch data to chart.`;
+  }
+  if (level && level.id !== 1) {
+    return `No pitch-level data for ${profile.name} at ${level.name} in ${season}. Tracking below Triple-A is only installed at some parks.`;
+  }
+  return `No pitch-level data for ${profile.name} in ${season}. Pitch tracking is available from 2015 onward.`;
+}
+
+/** A caveat shown above partial profiles at levels with patchy tracking. */
+function trackingNote(profile: PlayerProfileResponse): string | null {
+  const level = getLevel(profile.level);
+  if (!level || level.pitchTracking === 'full') return null;
+  const side = profile.batting ?? profile.pitching;
+  const hasPitchData = Boolean(side && (side.arsenal.length > 0 || side.zones.length > 0));
+  if (hasPitchData) return null;
+  return `Pitch mix and zone charts aren't shown: ${level.name} tracking is only installed at some parks, so no pitch data exists for these games. Season trends and splits below come from box scores and are complete.`;
+}
+
 export function PlayerPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const season = parseInt(params.get('season') ?? String(new Date().getFullYear()), 10);
   const seasons = seasonList();
+  // The level lives in the URL so a profile at a specific level is linkable.
+  const level = levelFromParam(params.get('level'));
+
+  function changeLevel(next: LevelId) {
+    const p = new URLSearchParams(params);
+    p.set('level', String(next));
+    setParams(p, { replace: true });
+  }
 
   const [log, setLog] = useState<PlayerLogResponse | null>(null);
   const [profile, setProfile] = useState<PlayerProfileResponse | null>(null);
@@ -79,7 +121,7 @@ export function PlayerPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetchPlayerLog(Number(id), season)
+    fetchPlayerLog(Number(id), season, level)
       .then((r) => {
         if (!cancelled) setLog(r);
       })
@@ -92,7 +134,7 @@ export function PlayerPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, season]);
+  }, [id, season, level]);
 
   // The profile is a separate, slower set of aggregates; it loads alongside the
   // game log rather than blocking it. On a season change the previous render is
@@ -103,7 +145,7 @@ export function PlayerPage() {
     let cancelled = false;
     setProfileLoading(true);
     setProfileError(null);
-    fetchPlayerProfile(Number(id), season)
+    fetchPlayerProfile(Number(id), season, level)
       .then((r) => {
         if (cancelled) return;
         setProfile(r);
@@ -120,7 +162,7 @@ export function PlayerPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, season, profileAttempt]);
+  }, [id, season, level, profileAttempt]);
 
   const goToGame = (gamePk: number | null) => {
     if (gamePk) navigate(`/game/${gamePk}`);
@@ -144,6 +186,13 @@ export function PlayerPage() {
               </span>
             )}
           </h1>
+          {profile && profile.availableLevels.length > 1 && (
+            <LevelPicker
+              value={level}
+              onChange={changeLevel}
+              available={profile.availableLevels.map((l) => l.id)}
+            />
+          )}
           <label className="season-control">
             Season
             <select
@@ -223,9 +272,11 @@ export function PlayerPage() {
             )}
             {profile && !profile.batting && !profile.pitching && (
               <p className="status-message">
-                No pitch-level data for {profile.name} in {season}. Pitch tracking is available from
-                2015 onward.
+                {noDataReason(profile, season)}
               </p>
+            )}
+            {profile && (profile.batting ?? profile.pitching) && trackingNote(profile) && (
+              <p className="profile-tracking-note">{trackingNote(profile)}</p>
             )}
             {profile?.batting && (
               <PlayerProfileSection side={profile.batting} mode="batting" playerName={profile.name} />

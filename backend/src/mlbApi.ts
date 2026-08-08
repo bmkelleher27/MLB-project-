@@ -98,9 +98,9 @@ export interface RawScheduleGame {
   };
 }
 
-export function getSchedule(date: string): Promise<RawSchedule> {
+export function getSchedule(date: string, sportId = 1): Promise<RawSchedule> {
   return getJson<RawSchedule>(
-    `/api/v1/schedule?sportId=1&date=${date}&hydrate=linescore,team,probablePitcher`,
+    `/api/v1/schedule?sportId=${sportId}&date=${date}&hydrate=linescore,team,probablePitcher`,
     15_000
   );
 }
@@ -167,13 +167,23 @@ export interface RawGameLog {
   }>;
 }
 
+/**
+ * `sportId` selects which level's stats come back. Omitting it implies the
+ * majors, which returns nothing for a player who only appeared in the minors —
+ * so every player-stat call threads the level through.
+ */
+function levelParam(sportId?: number): string {
+  return sportId != null ? `&sportId=${sportId}` : '';
+}
+
 export function getPersonSeasonStats(
   personId: number,
   season: number,
-  group: 'hitting' | 'pitching'
+  group: 'hitting' | 'pitching',
+  sportId?: number
 ): Promise<RawGameLog> {
   return getJson<RawGameLog>(
-    `/api/v1/people/${personId}/stats?stats=season&group=${group}&season=${season}`,
+    `/api/v1/people/${personId}/stats?stats=season&group=${group}&season=${season}${levelParam(sportId)}`,
     60_000
   );
 }
@@ -181,10 +191,11 @@ export function getPersonSeasonStats(
 export function getPersonGameLog(
   personId: number,
   season: number,
-  group: 'hitting' | 'pitching'
+  group: 'hitting' | 'pitching',
+  sportId?: number
 ): Promise<RawGameLog> {
   return getJson<RawGameLog>(
-    `/api/v1/people/${personId}/stats?stats=gameLog&group=${group}&season=${season}`,
+    `/api/v1/people/${personId}/stats?stats=gameLog&group=${group}&season=${season}${levelParam(sportId)}`,
     60_000
   );
 }
@@ -410,10 +421,11 @@ export interface RawPitchArsenal {
 export function getPitchArsenal(
   personId: number,
   season: number,
-  group: 'hitting' | 'pitching'
+  group: 'hitting' | 'pitching',
+  sportId?: number
 ): Promise<RawPitchArsenal> {
   return getJson<RawPitchArsenal>(
-    `/api/v1/people/${personId}/stats?stats=pitchArsenal&group=${group}&season=${season}`,
+    `/api/v1/people/${personId}/stats?stats=pitchArsenal&group=${group}&season=${season}${levelParam(sportId)}`,
     600_000
   );
 }
@@ -432,10 +444,11 @@ export interface RawHotColdZones {
 export function getHotColdZones(
   personId: number,
   season: number,
-  group: 'hitting' | 'pitching'
+  group: 'hitting' | 'pitching',
+  sportId?: number
 ): Promise<RawHotColdZones> {
   return getJson<RawHotColdZones>(
-    `/api/v1/people/${personId}/stats?stats=hotColdZones&group=${group}&season=${season}`,
+    `/api/v1/people/${personId}/stats?stats=hotColdZones&group=${group}&season=${season}${levelParam(sportId)}`,
     600_000
   );
 }
@@ -454,10 +467,11 @@ export function getStatSplits(
   personId: number,
   season: number,
   group: 'hitting' | 'pitching',
-  sitCodes: string
+  sitCodes: string,
+  sportId?: number
 ): Promise<RawStatSplits> {
   return getJson<RawStatSplits>(
-    `/api/v1/people/${personId}/stats?stats=statSplits&group=${group}&season=${season}&sitCodes=${sitCodes}`,
+    `/api/v1/people/${personId}/stats?stats=statSplits&group=${group}&season=${season}&sitCodes=${sitCodes}${levelParam(sportId)}`,
     600_000
   );
 }
@@ -474,10 +488,11 @@ export interface RawByMonth {
 export function getByMonth(
   personId: number,
   season: number,
-  group: 'hitting' | 'pitching'
+  group: 'hitting' | 'pitching',
+  sportId?: number
 ): Promise<RawByMonth> {
   return getJson<RawByMonth>(
-    `/api/v1/people/${personId}/stats?stats=byMonth&group=${group}&season=${season}`,
+    `/api/v1/people/${personId}/stats?stats=byMonth&group=${group}&season=${season}${levelParam(sportId)}`,
     600_000
   );
 }
@@ -511,8 +526,10 @@ export interface RawPitchLog {
   stats?: Array<{ splits?: RawPitchLogEntry[] }>;
 }
 
-function pitchLogUrl(personId: number, season: number, group: string, stat: string): string {
-  return `/api/v1/people/${personId}/stats?stats=${stat}&group=${group}&season=${season}`;
+function pitchLogUrl(
+  personId: number, season: number, group: string, stat: string, sportId?: number
+): string {
+  return `/api/v1/people/${personId}/stats?stats=${stat}&group=${group}&season=${season}${levelParam(sportId)}`;
 }
 
 /**
@@ -525,15 +542,17 @@ function pitchLogUrl(personId: number, season: number, group: string, stat: stri
 export function getPlayLog(
   personId: number,
   season: number,
-  group: 'hitting' | 'pitching'
+  group: 'hitting' | 'pitching',
+  sportId?: number
 ): Promise<RawPitchLog> {
-  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'playLog'), 0);
+  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'playLog', sportId), 0);
 }
 
 export function getPitchLog(
   personId: number,
   season: number,
-  group: 'hitting' | 'pitching'
+  group: 'hitting' | 'pitching',
+  sportId?: number
 ): Promise<RawPitchLog> {
-  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'pitchLog'), 0);
+  return getJson<RawPitchLog>(pitchLogUrl(personId, season, group, 'pitchLog', sportId), 0);
 }

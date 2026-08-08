@@ -112,6 +112,38 @@ test.describe('player profile', () => {
   });
 });
 
+test.describe('levels (minor leagues)', () => {
+  test('the schedule can be switched to a minor-league level', async ({ page }) => {
+    const errors = collectAppErrors(page);
+    await page.goto('/');
+    await page.waitForSelector('.level-picker');
+
+    await page.getByRole('button', { name: 'AAA', exact: true }).click();
+    await expect(page.locator('.level-chip-on')).toHaveText('AAA');
+    // Either Triple-A games or an explicit empty state — never a blank list.
+    await expect(page.locator('a[href^="/game/"], .status-message')).not.toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('a minor-league game opens the same scorecard as a major-league one', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForSelector('.level-picker');
+    await page.getByRole('button', { name: 'AAA', exact: true }).click();
+    await page.waitForTimeout(1500);
+
+    const game = page.locator('a[href^="/game/"]').first();
+    test.skip((await game.count()) === 0, 'no Triple-A games scheduled today');
+    await game.click();
+    await expect(page.locator('.scorecard-page, .preview-page')).toBeVisible();
+  });
+
+  test('the API rejects a level it does not support', async ({ request }) => {
+    // 22 is college baseball — a real MLB sportId this app deliberately excludes.
+    const res = await request.get('http://localhost:4000/api/schedule?date=2026-08-05&level=22');
+    expect(res.status()).toBe(400);
+  });
+});
+
 test.describe('scorecard', () => {
   test('opening a game from the schedule renders a scorecard or its preview', async ({ page }) => {
     await page.goto('/');

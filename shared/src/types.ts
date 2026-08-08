@@ -184,6 +184,8 @@ export interface ScheduleGame {
 
 export interface ScheduleResponse {
   date: string;
+  /** The level these games came from (MLB sportId). */
+  level: number;
   games: ScheduleGame[];
 }
 
@@ -303,6 +305,8 @@ export interface PlayerLogResponse {
   position: string | null;
   team: string | null;
   season: number;
+  /** The level these stats came from (MLB sportId). */
+  level: number;
   seasonBatting: SeasonBattingTotals | null;
   seasonPitching: SeasonPitchingTotals | null;
   batting: BattingLogEntry[];
@@ -550,8 +554,58 @@ export interface PlayerProfileResponse {
   bats: string | null;
   throws: string | null;
   season: number;
+  /** The level these stats came from (MLB sportId). */
+  level: number;
+  /** Every level this player has games at this season, most senior first. */
+  availableLevels: Array<{ id: number; abbreviation: string; games: number }>;
   /** How this player was pitched (present when they batted this season). */
   batting: PlayerProfileSide | null;
   /** How this player pitched (present when they pitched this season). */
   pitching: PlayerProfileSide | null;
+}
+
+// ── Levels (MLB and its minor-league affiliates) ────────────────────────
+
+/** MLB's `sportId` values for the levels this app covers. */
+export type LevelId = 1 | 11 | 12 | 13 | 14 | 16;
+
+export interface Level {
+  id: LevelId;
+  /** Short label for controls, e.g. 'AAA'. */
+  abbreviation: string;
+  /** Full name, e.g. 'Triple-A'. */
+  name: string;
+  /**
+   * Whether pitch tracking (velocity, movement, pitch type) is generally
+   * available at this level. Hawk-Eye is installed throughout MLB and Triple-A;
+   * lower levels are partial or absent, so anything derived from pitch data is
+   * hidden rather than shown empty.
+   */
+  pitchTracking: 'full' | 'partial' | 'none';
+}
+
+/** Display order runs from the majors down. */
+export const LEVELS: Level[] = [
+  { id: 1, abbreviation: 'MLB', name: 'Major League Baseball', pitchTracking: 'full' },
+  { id: 11, abbreviation: 'AAA', name: 'Triple-A', pitchTracking: 'full' },
+  { id: 12, abbreviation: 'AA', name: 'Double-A', pitchTracking: 'partial' },
+  { id: 13, abbreviation: 'A+', name: 'High-A', pitchTracking: 'partial' },
+  { id: 14, abbreviation: 'A', name: 'Single-A', pitchTracking: 'partial' },
+  { id: 16, abbreviation: 'ROK', name: 'Rookie', pitchTracking: 'none' },
+];
+
+export const DEFAULT_LEVEL_ID: LevelId = 1;
+
+export function isLevelId(value: unknown): value is LevelId {
+  return LEVELS.some((l) => l.id === value);
+}
+
+export function getLevel(id: number): Level | undefined {
+  return LEVELS.find((l) => l.id === id);
+}
+
+/** Levels a player actually has data for in a given season. */
+export interface PlayerLevels {
+  season: number;
+  levels: Array<{ id: LevelId; abbreviation: string; games: number }>;
 }

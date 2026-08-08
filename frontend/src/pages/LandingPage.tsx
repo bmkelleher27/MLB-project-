@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { DailyStarsResponse, ScheduleGame } from '@mlb-scorecards/shared';
+import type { DailyStarsResponse, LevelId, ScheduleGame } from '@mlb-scorecards/shared';
+import { getLevel } from '@mlb-scorecards/shared';
 import { fetchDailyStars, fetchRandomGame, fetchSchedule } from '../api/client';
+import { LevelPicker } from '../components/LevelPicker';
+import { setStoredLevel, storedLevel } from '../lib/level';
 import { DailyStarsStrip } from '../components/DailyStarsStrip';
 import { DatePicker } from '../components/DatePicker';
 import { GameCard } from '../components/GameCard';
@@ -18,6 +21,7 @@ const POLL_INTERVAL_MS = 30_000;
 export function LandingPage() {
   const navigate = useNavigate();
   const [date, setDate] = useState(todayIso());
+  const [level, setLevelState] = useState<LevelId>(storedLevel);
   const [games, setGames] = useState<ScheduleGame[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +31,12 @@ export function LandingPage() {
   const [stars, setStars] = useState<DailyStarsResponse | null>(null);
 
   const isToday = date === todayIso();
+  const levelInfo = getLevel(level);
+
+  function changeLevel(next: LevelId) {
+    setStoredLevel(next);
+    setLevelState(next);
+  }
 
   function toggleFavorite(teamId: number) {
     setFavorites(toggleFavoriteTeam(teamId));
@@ -58,7 +68,7 @@ export function LandingPage() {
 
     async function load() {
       try {
-        const data = await fetchSchedule(date);
+        const data = await fetchSchedule(date, level);
         if (!cancelled) setGames(data.games);
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -73,7 +83,7 @@ export function LandingPage() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [date]);
+  }, [date, level]);
 
   // Yesterday's stars only decorate the "today" dashboard view.
   useEffect(() => {
@@ -133,6 +143,7 @@ export function LandingPage() {
       </div>
       <div className="landing-toolbar">
         <DatePicker date={date} onChange={setDate} />
+        <LevelPicker value={level} onChange={changeLevel} />
         <div className="landing-actions">
           <button
             className="random-game-btn"
@@ -162,7 +173,11 @@ export function LandingPage() {
         </div>
       )}
       {error && <p className="status-message status-error">{error}</p>}
-      {!loading && !error && games.length === 0 && <p className="status-message">No games scheduled.</p>}
+      {!loading && !error && games.length === 0 && (
+        <p className="status-message">
+          No {levelInfo && levelInfo.id !== 1 ? levelInfo.name : ''} games scheduled on this date.
+        </p>
+      )}
       {groups.map((section) => (
         <section key={section.title} className="landing-section">
           {groups.length > 1 && <h2 className="landing-section-title">{section.title}</h2>}

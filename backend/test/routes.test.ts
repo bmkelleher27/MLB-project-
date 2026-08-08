@@ -16,7 +16,17 @@ vi.mock('../src/mlbApi.js', () => ({
   getByMonth: vi.fn(async () => ({})),
   getPlayLog: vi.fn(async () => ({})),
   getPitchLog: vi.fn(async () => ({})),
+  getPersonSeasonStats: vi.fn(async () => ({})),
 }));
+
+/** Season-totals stub used by level discovery: games per level. */
+function levelGames(byLevel: Record<number, number>) {
+  return vi.mocked(api.getPersonSeasonStats).mockImplementation(async (_id, _season, group, sportId) =>
+    group === 'hitting' && sportId != null && byLevel[sportId]
+      ? { stats: [{ splits: [{ stat: { gamesPlayed: byLevel[sportId] } }] }] }
+      : {}
+  );
+}
 
 const api = await import('../src/mlbApi.js');
 const { default: playerSearchRouter } = await import('../src/routes/playerSearch.js');
@@ -85,6 +95,8 @@ describe('GET /api/players/search', () => {
 
 describe('GET /api/player/:id/profile', () => {
   const app = appWith('/api/player', playerProfileRouter);
+  // The route caches discovered levels by player id + season for 30 minutes,
+  // so each level test uses its own id rather than reading a neighbour's result.
 
   it('rejects a non-numeric id', async () => {
     expect((await request(app).get('/api/player/abc/profile')).status).toBe(400);
@@ -110,6 +122,49 @@ describe('GET /api/player/:id/profile', () => {
     const res = await request(app).get('/api/player/1/profile?season=1970');
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ name: 'Nobody', batting: null, pitching: null });
+  });
+
+  it('reports the levels a player appeared at, most senior first', async () => {
+    vi.mocked(api.getPerson).mockResolvedValue({ people: [{ id: 1, fullName: 'Prospect' }] });
+    levelGames({ 1: 13, 11: 63 });
+
+    const res = await request(app).get('/api/player/101/profile?season=2026');
+    expect(res.body.availableLevels).toEqual([
+      { id: 1, abbreviation: 'MLB', games: 13 },
+      { id: 11, abbreviation: 'AAA', games: 63 },
+    ]);
+  });
+
+  it('honours a requested level the player actually played at', async () => {
+    vi.mocked(api.getPerson).mockResolvedValue({ people: [{ id: 1, fullName: 'Prospect' }] });
+    levelGames({ 1: 13, 11: 63 });
+
+    const res = await request(app).get('/api/player/102/profile?season=2026&level=11');
+    expect(res.body.level).toBe(11);
+  });
+
+  it('falls back to the busiest level when the requested one has no games', async () => {
+    // A reader browsing Triple-A opening a player who never played there should
+    // land on that player's real level, not an empty page.
+    vi.mocked(api.getPerson).mockResolvedValue({ people: [{ id: 1, fullName: 'Big Leaguer' }] });
+    levelGames({ 1: 59 });
+
+    const res = await request(app).get('/api/player/103/profile?season=2026&level=11');
+    expect(res.body.level).toBe(1);
+  });
+
+  it('prefers the level with the most games among several', async () => {
+    vi.mocked(api.getPerson).mockResolvedValue({ people: [{ id: 1, fullName: 'Climber' }] });
+    levelGames({ 12: 10, 13: 45 });
+
+    const res = await request(app).get('/api/player/104/profile?season=2026&level=1');
+    expect(res.body.level).toBe(13); // High-A, 45 games
+  });
+
+  it('rejects an unsupported level rather than proxying it upstream', async () => {
+    const res = await request(app).get('/api/player/1/profile?season=2026&level=22');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/level/);
   });
 
   it('builds a side from the arsenal when data exists', async () => {

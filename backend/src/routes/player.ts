@@ -6,6 +6,7 @@ import type {
   SeasonBattingTotals,
   SeasonPitchingTotals,
 } from '@mlb-scorecards/shared';
+import { parseLevel } from '../levels.js';
 import { getPerson, getPersonGameLog, getPersonSeasonStats } from '../mlbApi.js';
 
 const router = Router();
@@ -22,13 +23,18 @@ router.get('/:id', async (req, res) => {
     res.status(400).json({ error: 'invalid player id or season' });
     return;
   }
+  const level = parseLevel(req.query.level);
+  if (level === null) {
+    res.status(400).json({ error: 'query param "level" is not a supported level' });
+    return;
+  }
   try {
     const [person, hitting, pitching, seasonHitting, seasonPitching] = await Promise.all([
       getPerson(id),
-      getPersonGameLog(id, season, 'hitting'),
-      getPersonGameLog(id, season, 'pitching'),
-      getPersonSeasonStats(id, season, 'hitting'),
-      getPersonSeasonStats(id, season, 'pitching'),
+      getPersonGameLog(id, season, 'hitting', level),
+      getPersonGameLog(id, season, 'pitching', level),
+      getPersonSeasonStats(id, season, 'hitting', level),
+      getPersonSeasonStats(id, season, 'pitching', level),
     ]);
     const info = person.people?.[0];
     if (!info) {
@@ -102,6 +108,7 @@ router.get('/:id', async (req, res) => {
       position: info.primaryPosition?.abbreviation ?? null,
       team: info.currentTeam?.name ?? null,
       season,
+      level,
       seasonBatting,
       seasonPitching: seasonPitchingTotals,
       batting,

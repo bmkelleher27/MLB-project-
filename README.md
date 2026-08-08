@@ -1,8 +1,9 @@
 # MLB Live Scorecards
 
-A live MLB scorebook. Browse each day's games, click through to a full
-scorecard that updates in real time, drill into pitch-by-pitch detail, and
-search any player to see how they were pitched — or how they pitched.
+A live baseball scorebook covering the majors and the affiliated minors.
+Browse each day's games at any level, click through to a full scorecard that
+updates in real time, drill into pitch-by-pitch detail, and search any player
+to see how they were pitched — or how they pitched.
 
 npm workspaces monorepo:
 
@@ -27,8 +28,22 @@ movement, an estimated Stuff index, usage by count, and spray charts.
 - a 13-zone hot/cold heat map on MLB's Gameday grid
 - month-by-month trends and platoon splits
 
+**Levels** — MLB, Triple-A, Double-A, High-A, Single-A and Rookie ball. The
+scorecard, play-by-play and game log work identically at every level; a player
+who moved between levels in a season gets a switcher showing only the levels
+they actually played at.
+
 **PDF export** — a print-tuned two-page landscape scorecard with style, ink-saver
 and content options.
+
+### A note on minor-league pitch data
+
+Scorecards, box scores, game logs and season trends are complete at every level.
+Pitch-level features — pitch mix, velocity, movement, zone charts, Stuff — depend
+on Hawk-Eye tracking, which is installed throughout MLB and Triple-A but only at
+some parks below that. Where the tracking doesn't exist the app says so rather
+than rendering empty charts; the levels' tracking status is declared in
+`shared/src/types.ts` alongside the level list.
 
 ## Local development
 
@@ -67,6 +82,14 @@ summing per-pitch-type at-bats reproduces a player's official AVG/SLG exactly,
 which is how a swing-classification bug was caught.
 
 ## Architecture notes
+
+**Levels.** MLB's API keys levels by `sportId`, and a player-stats call without
+one silently returns major-league stats only — which is empty for most minor
+leaguers. Every player-stat call therefore threads the level through, and the
+supported ids are validated against an allowlist rather than proxied upstream.
+A profile discovers which levels a player appeared at (six small cached probes)
+and falls back to the level they played most if the requested one has no games,
+so following a link never lands on an empty page.
 
 **Aggregation strategy.** Player profiles use MLB's pre-aggregated stat
 endpoints (`pitchArsenal`, `hotColdZones`, `statSplits`, `byMonth`) rather than

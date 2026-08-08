@@ -19,8 +19,9 @@ async function getJson<T>(path: string, label: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export function fetchSchedule(date: string): Promise<ScheduleResponse> {
-  return getJson(`/api/schedule?date=${date}`, 'schedule');
+export function fetchSchedule(date: string, level?: number): Promise<ScheduleResponse> {
+  const lvl = level != null ? `&level=${level}` : '';
+  return getJson(`/api/schedule?date=${date}${lvl}`, 'schedule');
 }
 
 export function fetchScorecard(gamePk: number): Promise<Scorecard> {
@@ -52,8 +53,9 @@ export function fetchSeason(teamId: number, season: number): Promise<SeasonRespo
   return getJson(`/api/season?teamId=${teamId}&season=${season}`, 'season');
 }
 
-export function fetchPlayerLog(id: number, season: number): Promise<PlayerLogResponse> {
-  return getJson(`/api/player/${id}?season=${season}`, 'player');
+export function fetchPlayerLog(id: number, season: number, level?: number): Promise<PlayerLogResponse> {
+  const lvl = level != null ? `&level=${level}` : '';
+  return getJson(`/api/player/${id}?season=${season}${lvl}`, 'player');
 }
 
 export function fetchSeasonPredictive(teamId: number, season: number): Promise<SeasonPredictiveResponse> {
@@ -64,6 +66,11 @@ export function searchPlayers(query: string): Promise<PlayerSearchResponse> {
   return getJson(`/api/players/search?q=${encodeURIComponent(query)}`, 'player search');
 }
 
-export function fetchPlayerProfile(id: number, season: number): Promise<PlayerProfileResponse> {
-  return getJson(`/api/player/${id}/profile?season=${season}`, 'player profile');
+export function fetchPlayerProfile(
+  id: number,
+  season: number,
+  level?: number
+): Promise<PlayerProfileResponse> {
+  const lvl = level != null ? `&level=${level}` : '';
+  return getJson(`/api/player/${id}/profile?season=${season}${lvl}`, 'player profile');
 }
