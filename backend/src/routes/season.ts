@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { SeasonGame, SeasonResponse, TeamInfo } from '@mlb-scorecards/shared';
+import { setShortCache } from '../http.js';
 import { getTeams, getTeamSeasonSchedule } from '../mlbApi.js';
 
 const FIRST_SEASON = 2010;
@@ -17,6 +18,8 @@ teamsRouter.get('/', async (req, res) => {
     const teams: TeamInfo[] = raw.teams
       .map((t) => ({ id: t.id, name: t.name, abbreviation: t.abbreviation ?? t.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
+    // The team list for a season is effectively fixed.
+    setShortCache(res, 3600);
     res.json({ season, teams });
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
@@ -69,6 +72,7 @@ seasonRouter.get('/', async (req, res) => {
         };
       });
     const body: SeasonResponse = { teamId, season, games };
+    setShortCache(res, 60);
     res.json(body);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });

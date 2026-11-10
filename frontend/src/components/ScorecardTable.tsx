@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Cell, InningLine, TeamScorecard, TeamTotals } from '@mlb-scorecards/shared';
 import { AtBatCell } from './AtBatCell';
@@ -33,23 +33,45 @@ export function ScorecardTable({
 }: ScorecardTableProps) {
   const [hoverInning, setHoverInning] = useState<number | null>(null);
 
-  const maxInningFromCells = Math.max(
-    0,
-    ...Object.values(team.cellsBySlot).flatMap((cells) => cells.map((c) => c.inning))
-  );
-  const inningCount = Math.max(linescore.length, maxInningFromCells, 9);
-  const inningNums = Array.from({ length: inningCount }, (_, i) => i + 1);
-  // When the team bats around, a slot can come up more than once in an inning.
-  // Scorebook convention: the inning spills into extra column(s) — one column
-  // per "pass", with the inning number heading the whole group.
-  const passesFor = (n: number) =>
-    Math.max(
-      1,
-      ...Object.values(team.cellsBySlot).map((cells) => cells.filter((c) => c.inning === n).length)
-    );
-  const inningGroups = inningNums.map((n) => ({ num: n, passes: passesFor(n) }));
-  const lineFor = (n: number) => linescore.find((l) => l.num === n);
-  const totalLob = linescore.reduce((sum, l) => sum + (side === 'away' ? l.away.lob : l.home.lob), 0);
+  // The grid's shape is derived once per scorecard update, in a single pass
+  // over the cells, rather than re-filtering every slot's cells for every
+  // column on every render (hovering a header re-renders the table).
+  const { inningGroups, cellsBySlotInning, columnCount } = useMemo(() => {
+    const bySlotInning = new Map<number, Map<number, Cell[]>>();
+    // When the team bats around, a slot can come up more than once in an inning.
+    // Scorebook convention: the inning spills into extra column(s) — one column
+    // per "pass", with the inning number heading the whole group.
+    const passes = new Map<number, number>();
+    let maxInning = 0;
+    for (const [slot, cells] of Object.entries(team.cellsBySlot)) {
+      const byInning = new Map<number, Cell[]>();
+      for (const c of cells) {
+        let list = byInning.get(c.inning);
+        if (!list) {
+          list = [];
+          byInning.set(c.inning, list);
+        }
+        list.push(c);
+        if (c.inning > maxInning) maxInning = c.inning;
+        if (list.length > (passes.get(c.inning) ?? 1)) passes.set(c.inning, list.length);
+      }
+      bySlotInning.set(Number(slot), byInning);
+    }
+    const inningCount = Math.max(linescore.length, maxInning, 9);
+    const groups = Array.from({ length: inningCount }, (_, i) => ({
+      num: i + 1,
+      passes: passes.get(i + 1) ?? 1,
+    }));
+    return {
+      inningGroups: groups,
+      cellsBySlotInning: bySlotInning,
+      columnCount: groups.reduce((sum, g) => sum + g.passes, 0),
+    };
+  }, [team.cellsBySlot, linescore.length]);
+
+  const linesByInning = useMemo(() => new Map(linescore.map((l) => [l.num, l])), [linescore]);
+  const lineFor = (n: number) => linesByInning.get(n)?.[side];
+  const totalLob = linescore.reduce((sum, l) => sum + l[side].lob, 0);
 
   const teamColor = getTeamColor(team.team.id);
 
@@ -84,7 +106,7 @@ export function ScorecardTable({
       </thead>
       <tbody>
         {team.lineup.map((slot) => {
-          const cells = team.cellsBySlot[slot.slot] ?? [];
+          const cellsByInning = cellsBySlotInning.get(slot.slot);
           return (
             <tr key={slot.slot} className={slot.slot % 2 === 0 ? 'scorecard-row-stripe' : undefined}>
               <td className="scorecard-col-player">
@@ -103,7 +125,7 @@ export function ScorecardTable({
                 ))}
               </td>
               {inningGroups.flatMap((g) => {
-                const cellsInInning = cells.filter((c) => c.inning === g.num);
+                const cellsInInning = cellsByInning?.get(g.num) ?? [];
                 return Array.from({ length: g.passes }, (_, pass) => {
                   const c = cellsInInning[pass];
                   return (
@@ -131,7 +153,7 @@ export function ScorecardTable({
         })}
         {team.lineup.length === 0 && (
           <tr>
-            <td className="scorecard-col-player" colSpan={inningGroups.reduce((s, g) => s + g.passes, 0) + 2}>
+            <td className="scorecard-col-player" colSpan={columnCount + 2}>
               Lineup not yet available
             </td>
           </tr>
@@ -142,7 +164,7 @@ export function ScorecardTable({
           <td className="scorecard-col-player">Runs</td>
           {inningGroups.map((g) => (
             <td key={g.num} colSpan={g.passes}>
-              {lineFor(g.num) ? (side === 'away' ? lineFor(g.num)!.away.runs : lineFor(g.num)!.home.runs) : ''}
+              {lineFor(g.num)?.runs ?? ''}
             </td>
           ))}
           <td className="scorecard-total">{totals.r}</td>
@@ -151,7 +173,7 @@ export function ScorecardTable({
           <td className="scorecard-col-player">Hits</td>
           {inningGroups.map((g) => (
             <td key={g.num} colSpan={g.passes}>
-              {lineFor(g.num) ? (side === 'away' ? lineFor(g.num)!.away.hits : lineFor(g.num)!.home.hits) : ''}
+              {lineFor(g.num)?.hits ?? ''}
             </td>
           ))}
           <td className="scorecard-total">{totals.h}</td>
@@ -160,7 +182,7 @@ export function ScorecardTable({
           <td className="scorecard-col-player">LOB</td>
           {inningGroups.map((g) => (
             <td key={g.num} colSpan={g.passes}>
-              {lineFor(g.num) ? (side === 'away' ? lineFor(g.num)!.away.lob : lineFor(g.num)!.home.lob) : ''}
+              {lineFor(g.num)?.lob ?? ''}
             </td>
           ))}
           <td className="scorecard-total">{totalLob}</td>

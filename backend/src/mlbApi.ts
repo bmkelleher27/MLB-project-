@@ -32,12 +32,20 @@ export function cacheStats(): { entries: number; bytes: number; maxBytes: number
   return { entries: cache.size, bytes: cache.bytes, maxBytes: CACHE_MAX_BYTES };
 }
 
-async function getJson<T>(path: string, ttlMs: number): Promise<T> {
-  const cached = cache.get(path);
-  if (cached !== undefined) {
-    return cached as T;
-  }
+/**
+ * Requests currently on the wire, keyed by path. A second caller asking for the
+ * same path while the first is still in flight shares that promise instead of
+ * opening another connection.
+ *
+ * This matters most for what the cache deliberately does not hold: the ~1 MB
+ * live feed and the ~1.3 MB pitch logs (ttl 0). Opening a scorecard asks for
+ * the same feed over REST and over the socket at the same instant, and a player
+ * page asks for the same season totals from two routes at once — without this
+ * each of those was downloaded and parsed twice.
+ */
+const inflight = new Map<string, Promise<unknown>>();
 
+async function fetchJson<T>(path: string, ttlMs: number): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${BASE_URL}${path}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
@@ -56,6 +64,22 @@ async function getJson<T>(path: string, ttlMs: number): Promise<T> {
   const value = JSON.parse(text) as T;
   cache.set(path, value, ttlMs, { bytes: text.length });
   return value;
+}
+
+function getJson<T>(path: string, ttlMs: number): Promise<T> {
+  const cached = cache.get(path);
+  if (cached !== undefined) {
+    return Promise.resolve(cached as T);
+  }
+
+  const pending = inflight.get(path);
+  if (pending) return pending as Promise<T>;
+
+  // Cleared on settle either way, so a failure is never pinned: the next caller
+  // after a rejection starts a fresh request.
+  const request = fetchJson<T>(path, ttlMs).finally(() => inflight.delete(path));
+  inflight.set(path, request);
+  return request;
 }
 
 export interface RawSchedule {

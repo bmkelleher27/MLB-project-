@@ -105,6 +105,19 @@ bound memory. `GET /healthz` reports cache occupancy and heap use.
 client is subscribed, skips a tick if the previous poll is still in flight, and
 stops after repeated failures so a bad game id can't drive an endless retry loop
 against MLB.
+A poll only pushes to viewers when the game actually changed (compared
+without the scorecard's build timestamp, which is new every time). The frontend
+opens a socket only for games that are not Final, loads the socket client on
+demand, and re-sends its subscription on every reconnect — rooms are tracked per
+connection, so a phone returning from the background would otherwise stay
+connected but stop receiving updates.
+
+**Request coalescing.** Concurrent requests for the same MLB path share one
+in-flight fetch. This covers what the cache deliberately won't hold (the ~1 MB
+live feed and pitch logs): a scorecard's REST call and socket snapshot, or a
+player page's two routes probing the same season totals, cost one download
+rather than two. Team-season leaderboards keep running totals and only read
+games finished since the last refresh, instead of re-downloading the season.
 
 ## Deploying
 
