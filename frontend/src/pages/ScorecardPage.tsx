@@ -9,6 +9,7 @@ import { useIsMobile } from '../lib/useIsMobile';
 import { getScorecardView, setScorecardView, type ScorecardView } from '../lib/viewMode';
 import { ExportDialog } from '../components/ExportDialog';
 import { GameStatusHeader } from '../components/GameStatusHeader';
+import { Icon } from '../components/Icon';
 import { MobileScorecard } from '../components/MobileScorecard';
 import { NotationLegend } from '../components/NotationLegend';
 import { PrintScorecard } from '../components/PrintScorecard';
@@ -18,7 +19,6 @@ import { PregameView } from '../components/PregameView';
 import { ReplayControls } from '../components/ReplayControls';
 import { ScorecardTable } from '../components/ScorecardTable';
 import { ScoringSummary } from '../components/ScoringSummary';
-import { ThemeToggle } from '../components/ThemeToggle';
 
 function* allCells(scorecard: Scorecard): Generator<Cell> {
   for (const side of ['away', 'home'] as const) {
@@ -220,21 +220,23 @@ export function ScorecardPage() {
                 resolvedView === 'compact' ? 'Switch to grid scorecard' : 'Switch to play-by-play view'
               }
             >
-              {resolvedView === 'compact' ? '▦ Grid' : '☰ Play-by-play'}
+              <Icon name={resolvedView === 'compact' ? 'grid' : 'list'} size={14} />
+              {resolvedView === 'compact' ? 'Grid' : 'Play-by-play'}
             </button>
           )}
           {scorecard && (
             <button className="nav-legend-btn" onClick={() => setExportOpen(true)} title="Choose options and export this scorecard as a PDF">
-              ⤓ Export PDF
+              <Icon name="download" size={14} />
+              Export PDF
             </button>
           )}
           <button
             className={`nav-legend-btn${legendOpen ? ' nav-legend-btn-active' : ''}`}
             onClick={() => setLegendOpen((o) => !o)}
           >
-            ? How to read
+            <Icon name="help" size={14} />
+            How to read
           </button>
-          <ThemeToggle />
         </div>
       </div>
       <div className={`scorecard-page${useMobileLayout ? ' scorecard-page-mobile' : ''}`}>

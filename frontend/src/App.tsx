@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Loading } from './components/Loading';
 import { NotFound } from './components/NotFound';
+import { SiteNav } from './components/SiteNav';
 import { LandingPage } from './pages/LandingPage';
 
 // The landing page is the common entry, so it loads eagerly. Every other route is
@@ -20,8 +22,10 @@ const PlayerPage = lazy(() => import('./pages/PlayerPage').then((m) => ({ defaul
 function App() {
   return (
     <BrowserRouter>
+      {/* Outside the error boundary so navigation survives a page crash. */}
+      <SiteNav />
       <ErrorBoundary>
-        <Suspense fallback={<p className="status-message">Loading…</p>}>
+        <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/game/:gamePk" element={<ScorecardPage />} />

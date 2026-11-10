@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ExportOptions } from '../lib/exportOptions';
+import { Icon } from './Icon';
 
 export function ExportDialog({
   initial,
@@ -131,7 +132,8 @@ export function ExportDialog({
             Cancel
           </button>
           <button className="export-btn export-btn-primary" onClick={() => onExport(opts)}>
-            ⤓ Export PDF
+            <Icon name="download" size={14} />
+            Export PDF
           </button>
         </div>
       </div>

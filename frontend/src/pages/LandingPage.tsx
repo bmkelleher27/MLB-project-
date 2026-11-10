@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { DailyStarsResponse, LevelId, ScheduleGame } from '@mlb-scorecards/shared';
 import { getLevel } from '@mlb-scorecards/shared';
 import { fetchDailyStars, fetchRandomGame, fetchSchedule } from '../api/client';
@@ -9,9 +9,8 @@ import { DailyStarsStrip } from '../components/DailyStarsStrip';
 import { DatePicker } from '../components/DatePicker';
 import { GameCard } from '../components/GameCard';
 import { HeroCard } from '../components/HeroCard';
-import { LogoMark } from '../components/Logo';
+import { Icon } from '../components/Icon';
 import { PlayerSearch } from '../components/PlayerSearch';
-import { ThemeToggle } from '../components/ThemeToggle';
 import { addDays, todayIso } from '../lib/date';
 import { getFavoriteTeams, toggleFavoriteTeam } from '../lib/favorite';
 import { drama, getSpoilerSafe, involvesFavorite, pickHero, setSpoilerSafe } from '../lib/gameSignals';
@@ -152,15 +151,8 @@ export function LandingPage() {
 
   return (
     <div className="landing-page">
-      <header className="landing-header">
-        <div className="landing-header-bar">
-          <h1 className="landing-title">
-            <LogoMark size={34} />
-            MLB Live Scorecards
-          </h1>
-          <ThemeToggle />
-        </div>
-      </header>
+      {/* The site nav carries the brand; the page still needs a heading. */}
+      <h1 className="visually-hidden">Scores and schedule</h1>
       <div className="landing-search-row">
         <PlayerSearch />
       </div>
@@ -169,20 +161,21 @@ export function LandingPage() {
         <LevelPicker value={level} onChange={changeLevel} />
         <div className="landing-actions">
           <button
-            className="random-game-btn"
+            className="random-game-btn btn-quiet"
             onClick={goToRandomGame}
             disabled={randomLoading}
           >
-            {randomLoading ? 'Finding a game…' : '⚄ Random Historical Game'}
+            <Icon name="dice" />
+            {randomLoading ? 'Finding a game…' : 'Random historical game'}
           </button>
-          <Link to="/season" className="random-game-btn">📅 Season Review</Link>
           <button
-            className={`random-game-btn${spoilerSafe ? ' spoiler-btn-on' : ''}`}
+            className={`random-game-btn btn-quiet${spoilerSafe ? ' spoiler-btn-on' : ''}`}
             onClick={toggleSpoilerSafe}
             title="Hide final scores until you reveal them — for games you recorded"
             aria-pressed={spoilerSafe}
           >
-            {spoilerSafe ? '🙈 Spoilers hidden' : '👁 Hide final scores'}
+            <Icon name={spoilerSafe ? 'eyeOff' : 'eye'} />
+            {spoilerSafe ? 'Final scores hidden' : 'Hide final scores'}
           </button>
         </div>
       </div>

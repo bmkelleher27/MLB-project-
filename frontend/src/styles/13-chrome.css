@@ -1,0 +1,264 @@
+/* App chrome and shared UI polish: site nav, icons, button hierarchy, team
+   tint, loading and error states, touch targets.
+   Imported last, so these rules win over the page stylesheets above. */
+
+/* ── Site navigation ──────────────────────────────────────────────── */
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 20px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.site-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.site-nav-link:hover {
+  background: var(--hover-bg);
+  color: var(--text);
+}
+
+/* Current section: filled pill plus heavier weight, so it does not rely on
+   color alone. */
+.site-nav-link-on,
+.site-nav-link-on:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.site-nav .theme-toggle {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .site-nav {
+    gap: 8px;
+    padding: 6px 10px;
+  }
+
+  /* Logo only on phones; the link keeps its accessible name. */
+  .site-nav-brand-text {
+    display: none;
+  }
+
+  .site-nav-link {
+    padding: 0 10px;
+  }
+}
+
+@media print {
+  .site-nav {
+    display: none !important;
+  }
+}
+
+/* ── Icons and buttons ────────────────────────────────────────────── */
+
+.icon {
+  flex-shrink: 0;
+}
+
+.random-game-btn,
+.nav-legend-btn,
+.replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Utility actions sit below the date and level controls in importance, so
+   they read as text buttons until hovered or switched on. */
+.btn-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 7px 12px;
+}
+
+.btn-quiet:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.btn-quiet.spoiler-btn-on {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Favorite star ────────────────────────────────────────────────── */
+
+.fav-star {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+/* Keyboard users could tab to an invisible control. */
+.fav-star:focus-visible {
+  opacity: 1;
+}
+
+/* Touch screens have no hover, so the star was never revealed there. Show it
+   dimmed, and pad it out (with a matching negative margin so the row does not
+   grow) to give the finger something to hit. */
+@media (hover: none) {
+  .fav-star {
+    opacity: 0.55;
+    padding: 12px;
+    margin: -12px -6px;
+  }
+}
+
+/* ── Team tint on game and hero cards ─────────────────────────────── */
+
+/* Components set --team-away / --team-home. Each color is drawn as a solid
+   edge bar plus a faint corner wash, which keeps the muted status and venue
+   text on a near-neutral surface. Declared after a plain fallback for
+   browsers without color-mix(). */
+.team-tint {
+  --team-away-ink: var(--team-away);
+  --team-home-ink: var(--team-home);
+  background: var(--panel-bg);
+  background:
+    linear-gradient(var(--team-away-ink), var(--team-away-ink)) left / 4px 100% no-repeat,
+    linear-gradient(var(--team-home-ink), var(--team-home-ink)) right / 4px 100% no-repeat,
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--team-away-ink) 11%, transparent) 0%,
+      transparent 38%,
+      transparent 62%,
+      color-mix(in srgb, var(--team-home-ink) 11%, transparent) 100%
+    ),
+    var(--panel-bg);
+}
+
+/* Navy and black team colors vanish against the dark panel; lift them. */
+:root[data-theme='dark'] .team-tint {
+  --team-away-ink: color-mix(in srgb, var(--team-away) 60%, white);
+  --team-home-ink: color-mix(in srgb, var(--team-home) 60%, white);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .team-tint {
+    --team-away-ink: color-mix(in srgb, var(--team-away) 60%, white);
+    --team-home-ink: color-mix(in srgb, var(--team-home) 60%, white);
+  }
+}
+
+/* ── Loading and error states ─────────────────────────────────────── */
+
+.status-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Errors used to be the empty-state text in red. Box them so a failure is
+   recognisable at a glance and not by color alone. */
+.status-error {
+  max-width: 560px;
+  margin: 16px auto;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--panel-bg);
+  background: color-mix(in srgb, var(--danger) 8%, var(--panel-bg));
+  border: 1px solid var(--danger);
+  border-left-width: 4px;
+  border-radius: 8px;
+}
+
+.status-error p {
+  margin: 0 0 8px;
+}
+
+/* ── Touch targets ────────────────────────────────────────────────── */
+
+@media (pointer: coarse) {
+  .level-chip {
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .level-picker {
+    gap: 6px;
+  }
+
+  .random-game-btn,
+  .nav-legend-btn,
+  .replay-btn,
+  .date-picker-today {
+    min-height: 40px;
+  }
+
+  .date-picker-today {
+    padding: 6px 12px;
+  }
+
+  .site-nav-link,
+  .site-nav .theme-toggle {
+    min-height: 44px;
+  }
+
+  .site-nav .theme-toggle {
+    width: 44px;
+  }
+
+  /* One tick per game is an overview; the full-width rows below it remain
+     the comfortable target. Still, make each tick big enough to hit. */
+  .season-strip {
+    gap: 4px;
+  }
+
+  .season-tick {
+    width: 14px;
+    height: 30px;
+    border-radius: 3px;
+  }
+}

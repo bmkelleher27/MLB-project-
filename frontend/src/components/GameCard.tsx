@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import type { ScheduleGame } from '@mlb-scorecards/shared';
 import { formatGameTime } from '../lib/date';
 import { gameBadges } from '../lib/gameSignals';
 import { getTeamHex } from '../teamColors';
 import { BasesMini } from './BasesMini';
+import { Icon } from './Icon';
 import { TeamLogo } from './TeamLogo';
 
 function statusLabel(game: ScheduleGame): string {
@@ -40,11 +41,10 @@ export function GameCard({ game, favoriteTeamIds = [], onToggleFavorite, spoiler
 
   const awayHex = getTeamHex(game.away.id) ?? NEUTRAL_HEX;
   const homeHex = getTeamHex(game.home.id) ?? NEUTRAL_HEX;
-  // Two-team wash: away color from the top-left, home from the
-  // bottom-right, fading to the panel surface in the middle ("2b" = ~17% alpha).
-  const cardStyle = {
-    background: `linear-gradient(135deg, ${awayHex}52 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, ${homeHex}52 100%), var(--panel-bg)`,
-  };
+  // The card only hands the two team colors to CSS. The stylesheet draws them
+  // as edge bars plus a faint wash, and lightens them in dark mode — a strong
+  // inline wash sat under the muted status and venue text and cost contrast.
+  const cardStyle = { '--team-away': awayHex, '--team-home': homeHex } as CSSProperties;
 
   const badges = gameBadges(game).filter((b) => !(masked && b.spoils));
 
@@ -62,7 +62,7 @@ export function GameCard({ game, favoriteTeamIds = [], onToggleFavorite, spoiler
           onToggleFavorite(teamId);
         }}
       >
-        {isFav ? '★' : '☆'}
+        <Icon name={isFav ? 'starFilled' : 'star'} size={15} />
       </button>
     );
   }
@@ -85,7 +85,7 @@ export function GameCard({ game, favoriteTeamIds = [], onToggleFavorite, spoiler
   }
 
   return (
-    <Link to={`/game/${game.gamePk}`} className={`game-card${isLive ? ' game-card-live' : ''}`} style={cardStyle}>
+    <Link to={`/game/${game.gamePk}`} className={`game-card team-tint${isLive ? ' game-card-live' : ''}`} style={cardStyle}>
       <div className="game-card-status">
         {isLive && <span className="live-dot" />}
         {masked ? 'Final' : statusLabel(game)}

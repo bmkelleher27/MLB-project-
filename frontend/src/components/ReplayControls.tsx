@@ -1,3 +1,5 @@
+import { Icon } from './Icon';
+
 interface ReplayControlsProps {
   totalPlays: number;
   /** Index into the game's ordered at-bats, or null when replay mode is off. */
@@ -12,7 +14,8 @@ export function ReplayControls({ totalPlays, step, onChange }: ReplayControlsPro
     return (
       <div className="replay-bar replay-bar-idle">
         <button className="replay-btn replay-start" onClick={() => onChange(0)}>
-          ▶ Replay this game
+          <Icon name="play" size={14} />
+          Replay this game
         </button>
         <span className="replay-hint">
           Step through at-bat by at-bat and watch the scorecard fill in
@@ -24,7 +27,8 @@ export function ReplayControls({ totalPlays, step, onChange }: ReplayControlsPro
   return (
     <div className="replay-bar">
       <button className="replay-btn" onClick={() => onChange(null)}>
-        ✕ Exit replay
+        <Icon name="close" size={14} />
+        Exit replay
       </button>
       <button className="replay-btn" onClick={() => onChange(Math.max(0, step - 1))} disabled={step === 0}>
         ‹ Prev

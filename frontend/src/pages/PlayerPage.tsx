@@ -5,6 +5,7 @@ import { getLevel } from '@mlb-scorecards/shared';
 import { fetchPlayerLog, fetchPlayerProfile } from '../api/client';
 import { PlayerProfileSection } from '../components/PlayerProfileSection';
 import { LevelPicker } from '../components/LevelPicker';
+import { Loading } from '../components/Loading';
 import { PlayerSearch } from '../components/PlayerSearch';
 import { levelFromParam } from '../lib/level';
 import { formatShortDate, seasonList } from '../lib/date';
@@ -211,7 +212,7 @@ export function PlayerPage() {
         </div>
 
         {error && <p className="status-message status-error">{error}</p>}
-        {loading && <p className="status-message">Loading game log…</p>}
+        {loading && <Loading label="Loading game log…" />}
         {!loading && log && log.batting.length === 0 && log.pitching.length === 0 && (
           <p className="status-message">No games for {log.name} in {season}.</p>
         )}
@@ -254,7 +255,7 @@ export function PlayerPage() {
             aria-labelledby="tab-trends"
             className={profileLoading && profile ? 'profile-refreshing' : undefined}
           >
-            {!profile && profileLoading && <p className="status-message">Loading pitch trends…</p>}
+            {!profile && profileLoading && <Loading label="Loading pitch trends…" />}
             {!profile && !profileLoading && profileError && (
               <div className="status-message status-error">
                 <p>Couldn’t load pitch trends: {profileError}</p>
