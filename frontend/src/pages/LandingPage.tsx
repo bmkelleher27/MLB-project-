@@ -64,6 +64,9 @@ export function LandingPage() {
 
   useEffect(() => {
     let cancelled = false;
+    // A past date whose games are all Final can never change, so there is
+    // nothing to poll for; today and future dates always might.
+    let mayChange = true;
     setLoading(true);
     setError(null);
 
@@ -72,6 +75,8 @@ export function LandingPage() {
         const data = await fetchSchedule(date, level);
         if (cancelled) return;
         setGames(data.games);
+        mayChange =
+          date >= todayIso() || data.games.some((g) => g.status.abstractGameState !== 'Final');
         // The response echoes the level it resolved. A mismatch means the API
         // ignored the request — typically a backend older than this frontend —
         // which would otherwise look like the level buttons simply doing nothing.
@@ -84,10 +89,19 @@ export function LandingPage() {
     }
 
     load();
-    const interval = setInterval(load, POLL_INTERVAL_MS);
+    // A tab nobody is looking at does not poll; it catches up the moment it is
+    // shown again instead.
+    const interval = setInterval(() => {
+      if (mayChange && !document.hidden) load();
+    }, POLL_INTERVAL_MS);
+    const onVisibilityChange = () => {
+      if (mayChange && !document.hidden) load();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
       cancelled = true;
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [date, level]);
 

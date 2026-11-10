@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { Cell, GamePreviewResponse, Scorecard } from '@mlb-scorecards/shared';
 import { fetchGamePreview, fetchScorecard } from '../api/client';
-import { getSocket } from '../api/socket';
+import { followGame } from '../api/liveGame';
 import { formatFullDate } from '../lib/date';
 import { loadExportOptions, saveExportOptions, type ExportOptions } from '../lib/exportOptions';
 import { useIsMobile } from '../lib/useIsMobile';
@@ -77,29 +77,29 @@ export function ScorecardPage() {
     prevMaxAbRef.current = null;
     deepLinkAppliedRef.current = false;
 
+    let stopFollowing: (() => void) | null = null;
+
     fetchScorecard(gamePkNum)
       .then((sc) => {
-        if (!cancelled) setScorecard(sc);
+        if (cancelled) return;
+        setScorecard(sc);
+        // A Final game cannot change, so it needs no live connection at all.
+        // Anything else (Preview games go Live) is followed over the socket.
+        if (sc.status.abstractGameState === 'Final') return;
+        stopFollowing = followGame('subscribe', gamePkNum, {
+          scorecard: (next: Scorecard) => {
+            if (next.gamePk === gamePkNum) setScorecard(next);
+          },
+          'scorecard:error': (e: { message: string }) => setError(e.message),
+        });
       })
       .catch((err) => {
         if (!cancelled) setError((err as Error).message);
       });
 
-    const socket = getSocket();
-    const handleScorecard = (sc: Scorecard) => {
-      if (sc.gamePk === gamePkNum) setScorecard(sc);
-    };
-    const handleScorecardError = (e: { message: string }) => setError(e.message);
-
-    socket.on('scorecard', handleScorecard);
-    socket.on('scorecard:error', handleScorecardError);
-    socket.emit('subscribe', gamePkNum);
-
     return () => {
       cancelled = true;
-      socket.emit('unsubscribe');
-      socket.off('scorecard', handleScorecard);
-      socket.off('scorecard:error', handleScorecardError);
+      stopFollowing?.();
     };
   }, [gamePk]);
 
@@ -175,22 +175,29 @@ export function ScorecardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scorecard, atBatIndices]);
 
-  function openAtBat(atBatIndex: number) {
-    navigate(`/game/${gamePk}/atbat/${atBatIndex}`);
-  }
+  // Stable identities for the handlers passed down to the scorecard grid, so
+  // its memoised cells are not all re-rendered by unrelated page state.
+  const openAtBat = useCallback(
+    (atBatIndex: number) => navigate(`/game/${gamePk}/atbat/${atBatIndex}`),
+    [navigate, gamePk]
+  );
+  const selectCell = useCallback((cell: Cell) => openAtBat(cell.atBatIndex), [openAtBat]);
 
   const replayLimit =
     replayStep === null || atBatIndices.length === 0
       ? null
       : atBatIndices[Math.min(replayStep, atBatIndices.length - 1)];
 
-  function jumpToCell(atBatIndex: number) {
-    // If replay mode hasn't reached this play yet, advance the replay to it first.
-    const pos = atBatIndices.indexOf(atBatIndex);
-    if (replayStep !== null && pos > replayStep) setReplayStep(pos);
-    // Defer so a replay-step re-render can unhide the cell before we scroll to it.
-    window.setTimeout(() => flashCell(atBatIndex, true), 60);
-  }
+  const jumpToCell = useCallback(
+    (atBatIndex: number) => {
+      // If replay mode hasn't reached this play yet, advance the replay to it first.
+      const pos = atBatIndices.indexOf(atBatIndex);
+      setReplayStep((step) => (step !== null && pos > step ? pos : step));
+      // Defer so a replay-step re-render can unhide the cell before we scroll to it.
+      window.setTimeout(() => flashCell(atBatIndex, true), 60);
+    },
+    [atBatIndices]
+  );
 
   return (
     <>
@@ -273,7 +280,7 @@ export function ScorecardPage() {
                 side="away"
                 currentInning={isLive && scorecard.halfInning === 'top' ? scorecard.inning : null}
                 replayLimit={replayLimit}
-                onSelectCell={(cell) => openAtBat(cell.atBatIndex)}
+                onSelectCell={selectCell}
                 onAdvancementClick={jumpToCell}
                 seasonYear={scorecard.date ? Number(scorecard.date.slice(0, 4)) : null}
               />
@@ -290,7 +297,7 @@ export function ScorecardPage() {
                 side="home"
                 currentInning={isLive && scorecard.halfInning === 'bottom' ? scorecard.inning : null}
                 replayLimit={replayLimit}
-                onSelectCell={(cell) => openAtBat(cell.atBatIndex)}
+                onSelectCell={selectCell}
                 onAdvancementClick={jumpToCell}
                 seasonYear={scorecard.date ? Number(scorecard.date.slice(0, 4)) : null}
               />

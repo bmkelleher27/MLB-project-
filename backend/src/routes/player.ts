@@ -6,6 +6,7 @@ import type {
   SeasonBattingTotals,
   SeasonPitchingTotals,
 } from '@mlb-scorecards/shared';
+import { setShortCache } from '../http.js';
 import { parseLevel } from '../levels.js';
 import { getPerson, getPersonGameLog, getPersonSeasonStats } from '../mlbApi.js';
 
@@ -114,6 +115,8 @@ router.get('/:id', async (req, res) => {
       batting,
       pitching: pitchingLog,
     };
+    // A game log gains a row at most once a day; a minute absorbs reloads.
+    setShortCache(res, 60);
     res.json(body);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
