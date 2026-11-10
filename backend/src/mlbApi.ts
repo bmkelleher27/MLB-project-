@@ -92,11 +92,16 @@ export interface RawSchedule {
 export interface RawScheduleGame {
   gamePk: number;
   gameDate: string;
+  /** The game's calendar date as MLB records it, "YYYY-MM-DD". */
+  officialDate?: string;
   gameType?: string;
+  /** 'N' single game, 'Y' traditional or 'S' split doubleheader. */
+  doubleHeader?: string;
+  gameNumber?: number;
   status: { abstractGameState: string; detailedState: string };
   teams: {
-    away: { team: { id: number; name: string; abbreviation?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
-    home: { team: { id: number; name: string; abbreviation?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
+    away: { team: { id: number; name: string; abbreviation?: string; teamName?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
+    home: { team: { id: number; name: string; abbreviation?: string; teamName?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
   };
   venue?: { name: string };
   linescore?: {
@@ -120,6 +125,15 @@ export interface RawScheduleGame {
       pitcher?: { id: number; fullName: string };
     };
   };
+}
+
+/**
+ * One game's schedule row: date, clubs and doubleheader slot, a few KB rather
+ * than the ~1 MB live feed. An hour's caching is plenty for a game whose
+ * details only matter once it's over.
+ */
+export function getScheduleGame(gamePk: number): Promise<RawSchedule> {
+  return getJson<RawSchedule>(`/api/v1/schedule?gamePk=${gamePk}&hydrate=team`, 3_600_000);
 }
 
 export function getSchedule(date: string, sportId = 1): Promise<RawSchedule> {

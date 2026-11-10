@@ -9,6 +9,7 @@ import { useIsMobile } from '../lib/useIsMobile';
 import { getScorecardView, setScorecardView, type ScorecardView } from '../lib/viewMode';
 import { ExportDialog } from '../components/ExportDialog';
 import { GameStatusHeader } from '../components/GameStatusHeader';
+import { GameVideo } from '../components/GameVideo';
 import { Icon } from '../components/Icon';
 import { MobileScorecard } from '../components/MobileScorecard';
 import { NotationLegend } from '../components/NotationLegend';
@@ -252,6 +253,7 @@ export function ScorecardPage() {
         {scorecard && (
           <>
             <GameStatusHeader scorecard={scorecard} />
+            {scorecard.status.abstractGameState === 'Final' && <GameVideo gamePk={scorecard.gamePk} />}
             {isLive && latestCell && (
               <button
                 className="live-ticker"

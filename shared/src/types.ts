@@ -609,3 +609,26 @@ export interface PlayerLevels {
   season: number;
   levels: Array<{ id: LevelId; abbreviation: string; games: number }>;
 }
+
+/** A YouTube video for a finished game, from one of MLB's own channels. */
+export interface GameVideo {
+  /** `full`: the complete broadcast. `highlights`: MLB's ~10-minute full-game highlights. */
+  kind: 'full' | 'highlights';
+  videoId: string;
+  title: string;
+  channelTitle: string;
+  publishedAt: string;
+}
+
+export interface GameVideoResponse {
+  gamePk: number;
+  /** Best match first: a full game when one exists, then highlights. Empty when none found. */
+  videos: GameVideo[];
+  /** MLB's YouTube channel search for this game; always present as a fallback. */
+  searchUrl: string;
+  /**
+   * `youtube` when the server searched YouTube; `disabled` when it has no API
+   * key configured, so only `searchUrl` can be offered.
+   */
+  lookup: 'youtube' | 'disabled';
+}
