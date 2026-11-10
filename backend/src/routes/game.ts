@@ -1,6 +1,7 @@
 import { Router, type Response } from 'express';
 import { setGameStateCache } from '../http.js';
 import { loadAtBats, loadScorecard } from '../scorecard/gameStore.js';
+import { handleGameVideo } from './gameVideo.js';
 import { buildGamePreview } from './preview.js';
 
 const router = Router();
@@ -53,6 +54,14 @@ router.get('/:gamePk/preview', async (req, res) => {
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
   }
+});
+
+// Official YouTube video for a finished game: full broadcast if MLB has posted
+// one, otherwise MLB's full-game highlights. 409 for games not yet Final.
+router.get('/:gamePk/video', async (req, res) => {
+  const gamePk = parseGamePk(req.params.gamePk, res);
+  if (gamePk === null) return;
+  await handleGameVideo(gamePk, res);
 });
 
 export default router;

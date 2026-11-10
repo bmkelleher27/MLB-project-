@@ -2,6 +2,7 @@ import type {
   DailyStarsResponse,
   GameAtBatsResponse,
   GamePreviewResponse,
+  GameVideoResponse,
   PlayerLogResponse,
   PlayerProfileResponse,
   PlayerSearchResponse,
@@ -34,6 +35,10 @@ export function fetchGameAtBats(gamePk: number): Promise<GameAtBatsResponse> {
 
 export function fetchGamePreview(gamePk: number): Promise<GamePreviewResponse> {
   return getJson(`/api/game/${gamePk}/preview`, 'preview');
+}
+
+export function fetchGameVideo(gamePk: number): Promise<GameVideoResponse> {
+  return getJson(`/api/game/${gamePk}/video`, 'video');
 }
 
 export function fetchDailyStars(date: string): Promise<DailyStarsResponse> {

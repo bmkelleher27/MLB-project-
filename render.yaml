@@ -6,3 +6,8 @@ services:
     buildCommand: npm install && npm run build --workspace backend
     startCommand: npm run start --workspace backend
     healthCheckPath: /healthz
+    envVars:
+      # Optional. Enables finding each finished game's official YouTube video
+      # (YouTube Data API v3 key). Without it the scorecard offers a search link.
+      - key: YOUTUBE_API_KEY
+        sync: false
