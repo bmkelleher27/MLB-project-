@@ -1,9 +1,15 @@
+import { useId } from 'react';
+
 /**
  * Site mark: the scorebook diamond with the run traced home — the same visual
  * the scorecard uses for a scored run. Keep in sync with public/favicon.svg,
  * which is a standalone copy of this drawing.
  */
 export function LogoMark({ size = 28 }: { size?: number }) {
+  // The mark can appear more than once on a page (site nav + the print card),
+  // and one of those copies may be display:none. A shared gradient id would
+  // make every copy depend on whichever came first in the document.
+  const gradientId = `logo-tile-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
     <svg
       width={size}
@@ -14,12 +20,12 @@ export function LogoMark({ size = 28 }: { size?: number }) {
       className="logo-mark"
     >
       <defs>
-        <linearGradient id="logo-tile" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#11639f" />
           <stop offset="1" stopColor="#083a66" />
         </linearGradient>
       </defs>
-      <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#logo-tile)" />
+      <rect x="2" y="2" width="60" height="60" rx="14" fill={`url(#${gradientId})`} />
       {/* basepaths, traced like a scored run */}
       <path
         d="M32 54 L53 33 L32 12 L11 33 Z"

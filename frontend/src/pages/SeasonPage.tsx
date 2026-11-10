@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { SeasonGame, SeasonPredictiveResponse, TeamInfo } from '@mlb-scorecards/shared';
 import { fetchSeason, fetchSeasonPredictive, fetchTeams } from '../api/client';
+import { Icon } from '../components/Icon';
+import { Loading } from '../components/Loading';
 import { formatMonthYear, formatWeekdayDate, seasonList } from '../lib/date';
 import { getFavoriteTeam } from '../lib/favorite';
 import { getTeamHex } from '../teamColors';
@@ -167,7 +169,7 @@ export function SeasonPage() {
 
         {error && <p className="status-message status-error">{error}</p>}
         {!teamId && !error && <p className="status-message">Pick a team to see every game of its {season} season.</p>}
-        {loading && <p className="status-message">Loading season…</p>}
+        {loading && <Loading label="Loading season…" />}
 
         {team && games && !loading && (
           <>
@@ -229,14 +231,15 @@ export function SeasonPage() {
               {!leaders && !leadersLoading && (
                 <div className="replay-bar replay-bar-idle">
                   <button className="replay-btn replay-start" onClick={loadLeaders}>
-                    ⚡ Compute predictive leaders
+                    <Icon name="bolt" size={14} />
+                    Compute predictive leaders
                   </button>
                   <span className="replay-hint">
                     Aggregates every game of the season — the first run for a team can take a minute
                   </span>
                 </div>
               )}
-              {leadersLoading && <p className="status-message">Crunching {games.length} games…</p>}
+              {leadersLoading && <Loading label={`Crunching ${games.length} games…`} />}
               {leadersError && <p className="status-message status-error">{leadersError}</p>}
               {leaders && <SeasonLeaders leaders={leaders} />}
             </section>

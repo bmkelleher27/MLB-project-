@@ -28,7 +28,7 @@ test.describe('app shell', () => {
     const errors = collectAppErrors(page);
     await page.goto('/');
 
-    await expect(page.locator('.landing-title')).toBeVisible();
+    await expect(page.locator('.site-nav-brand')).toBeVisible();
     await expect(page.locator('.player-search-input')).toBeVisible();
     expect(errors).toEqual([]);
   });

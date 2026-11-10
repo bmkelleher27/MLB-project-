@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import type { DailyStarsResponse, GamePreviewResponse, Scorecard, ScheduleGame } from '@mlb-scorecards/shared';
 import { fetchGamePreview } from '../api/client';
@@ -12,9 +12,8 @@ const NEUTRAL_HEX = '#64748b';
 function heroStyle(awayId: number, homeId: number) {
   const a = getTeamHex(awayId) ?? NEUTRAL_HEX;
   const h = getTeamHex(homeId) ?? NEUTRAL_HEX;
-  return {
-    background: `linear-gradient(120deg, ${a}5c 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0) 62%, ${h}5c 100%), var(--panel-bg)`,
-  };
+  // Colors only; the stylesheet's .team-tint rule draws them (see GameCard).
+  return { '--team-away': a, '--team-home': h } as CSSProperties;
 }
 
 function LiveHero({ game }: { game: ScheduleGame }) {
@@ -49,7 +48,7 @@ function LiveHero({ game }: { game: ScheduleGame }) {
   const reason = dramaReason(game);
 
   return (
-    <Link to={`/game/${game.gamePk}`} className="hero-card" style={heroStyle(game.away.id, game.home.id)}>
+    <Link to={`/game/${game.gamePk}`} className="hero-card team-tint" style={heroStyle(game.away.id, game.home.id)}>
       <div className="hero-status">
         <span className="live-dot" /> LIVE · {half} {inning}
         {reason && <span className="hero-reason">{reason}</span>}
@@ -112,7 +111,7 @@ function UpcomingHero({ game }: { game: ScheduleGame }) {
   };
 
   return (
-    <Link to={`/game/${game.gamePk}`} className="hero-card" style={heroStyle(game.away.id, game.home.id)}>
+    <Link to={`/game/${game.gamePk}`} className="hero-card team-tint" style={heroStyle(game.away.id, game.home.id)}>
       <div className="hero-status">
         NEXT UP ·{' '}
         {new Date(game.gameDate).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
