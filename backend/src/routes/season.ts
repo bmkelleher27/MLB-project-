@@ -70,7 +70,12 @@ seasonRouter.get('/', async (req, res) => {
           won: isFinal && us.isWinner != null ? us.isWinner : null,
           venue: g.venue?.name ?? null,
         };
-      });
+      })
+      // The de-duplication above keeps a rescheduled game in the slot of its
+      // original date while carrying its makeup date, so the list is no longer
+      // chronological — an April postponement played in August would start an
+      // "August" group between April and May. ISO timestamps sort as strings.
+      .sort((a, b) => a.gameDate.localeCompare(b.gameDate));
     const body: SeasonResponse = { teamId, season, games };
     setShortCache(res, 60);
     res.json(body);

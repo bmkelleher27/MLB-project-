@@ -88,7 +88,12 @@ export function SeasonPage() {
     setError(null);
     fetchSeason(teamId, season)
       .then((r) => {
-        if (!cancelled) setGames(r.games);
+        // Sorted here as well as on the server: the month groups and the result
+        // strip are both built in list order, so one out-of-place game (a
+        // makeup date, a cached older API response) scrambles the months.
+        if (!cancelled) {
+          setGames([...r.games].sort((a, b) => a.gameDate.localeCompare(b.gameDate)));
+        }
       })
       .catch((err) => {
         if (!cancelled) setError((err as Error).message);
