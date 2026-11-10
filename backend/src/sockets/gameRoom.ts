@@ -1,6 +1,12 @@
 import type { Server, Socket } from 'socket.io';
 import { getLiveFeed } from '../mlbApi.js';
 import { buildGameAtBats } from '../scorecard/atbats.js';
+import {
+  loadScorecard,
+  rememberAtBats,
+  rememberScorecard,
+  scorecardSignature,
+} from '../scorecard/gameStore.js';
 import { transformLiveFeed } from '../scorecard/transform.js';
 
 const POLL_INTERVAL_MS = 5_000;
@@ -15,7 +21,12 @@ const MAX_CONSECUTIVE_FAILURES = 3;
 interface RoomState {
   subscriberCount: number;
   timer: NodeJS.Timeout | null;
-  lastPayload: string | null;
+  /**
+   * What the room was last sent, so an unchanged poll emits nothing. Written
+   * only by the poller: it is a record of what *everyone* in the room has, and
+   * a snapshot sent to one new subscriber does not change that.
+   */
+  lastSignature: string | null;
   lastAtBatsPayload: string | null;
   /** Guards against a slow upstream letting polls overlap and pile up. */
   polling: boolean;
@@ -49,10 +60,13 @@ async function pollAndEmit(io: Server, gamePk: number): Promise<void> {
 
   try {
     const raw = await getLiveFeed(gamePk);
-    const scorecard = transformLiveFeed(raw);
-    const payload = JSON.stringify(scorecard);
-    if (payload !== state.lastPayload) {
-      state.lastPayload = payload;
+    const scorecard = rememberScorecard(transformLiveFeed(raw));
+    // Compared without `updatedAt`, which is new on every transform and would
+    // otherwise make every poll look like a change and push the full scorecard
+    // to every viewer every five seconds.
+    const signature = scorecardSignature(scorecard);
+    if (signature !== state.lastSignature) {
+      state.lastSignature = signature;
       io.to(roomName(gamePk)).emit('scorecard', scorecard);
     }
 
@@ -60,7 +74,7 @@ async function pollAndEmit(io: Server, gamePk: number): Promise<void> {
     // raw feed (no extra MLB API call), but only when someone is watching it —
     // it is much heavier than the scorecard.
     if ((io.sockets.adapter.rooms.get(atBatsRoomName(gamePk))?.size ?? 0) > 0) {
-      const atBats = buildGameAtBats(raw, gamePk);
+      const atBats = rememberAtBats(buildGameAtBats(raw, gamePk));
       const atBatsPayload = JSON.stringify(atBats);
       if (atBatsPayload !== state.lastAtBatsPayload) {
         state.lastAtBatsPayload = atBatsPayload;
@@ -95,6 +109,9 @@ async function pollAndEmit(io: Server, gamePk: number): Promise<void> {
 function ensurePolling(io: Server, gamePk: number): void {
   const state = rooms.get(gamePk);
   if (!state || state.timer) return;
+  // A room whose poller gave up earlier gets a clean slate when someone asks
+  // again, rather than stopping at the first new failure.
+  state.consecutiveFailures = 0;
   state.timer = setInterval(() => {
     void pollAndEmit(io, gamePk);
   }, POLL_INTERVAL_MS);
@@ -106,7 +123,7 @@ function acquireRoom(gamePk: number): RoomState {
     state = {
       subscriberCount: 0,
       timer: null,
-      lastPayload: null,
+      lastSignature: null,
       lastAtBatsPayload: null,
       polling: false,
       consecutiveFailures: 0,
@@ -155,12 +172,12 @@ export function registerGameRoomHandlers(io: Server): void {
       dropScorecardSub();
       subscribedGamePk = gamePk;
       socket.join(roomName(gamePk));
-      const state = acquireRoom(gamePk);
+      acquireRoom(gamePk);
 
       try {
-        const raw = await getLiveFeed(gamePk);
-        const scorecard = transformLiveFeed(raw);
-        state.lastPayload = JSON.stringify(scorecard);
+        // Served from the Final cache when the game is over, and sharing the
+        // in-flight feed request with the page's REST call when it is not.
+        const scorecard = await loadScorecard(gamePk);
         socket.emit('scorecard', scorecard);
         // Poll for anything not yet Final: a Preview game may transition to Live
         // while this client is watching, and it must receive those updates.

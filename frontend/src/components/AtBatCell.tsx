@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { Cell } from '@mlb-scorecards/shared';
 import { progressFromCell } from '../lib/diamond';
 import { Diamond } from './Diamond';
@@ -13,7 +14,18 @@ interface AtBatCellProps {
   onAdvancementClick?: (atBatIndex: number) => void;
 }
 
-export function AtBatCell({ cell, selected, onSelect, replayLimit = null, onAdvancementClick }: AtBatCellProps) {
+/**
+ * Memoised: a scorecard holds ~80 of these, each with its own SVG diamond, and
+ * the table around them re-renders on every header hover. With stable props a
+ * cell only re-renders when its own at-bat (or the replay position) changes.
+ */
+export const AtBatCell = memo(function AtBatCell({
+  cell,
+  selected,
+  onSelect,
+  replayLimit = null,
+  onAdvancementClick,
+}: AtBatCellProps) {
   const hidden = replayLimit !== null && cell.atBatIndex > replayLimit;
   const isCurrent = replayLimit !== null && cell.atBatIndex === replayLimit;
   const advancement =
@@ -71,4 +83,4 @@ export function AtBatCell({ cell, selected, onSelect, replayLimit = null, onAdva
       )}
     </div>
   );
-}
+});

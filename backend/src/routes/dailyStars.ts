@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { DailyStarLine, DailyStarsResponse } from '@mlb-scorecards/shared';
 import { TtlCache } from '../cache.js';
+import { setShortCache } from '../http.js';
 import { getLiveFeed, getSchedule, type RawLiveFeed, type RawScheduleGame } from '../mlbApi.js';
 import { buildPredictive } from '../scorecard/predictive.js';
 
@@ -15,6 +16,15 @@ const CONCURRENCY = 6;
 const cache = new TtlCache<DailyStarsResponse>(20);
 const DONE_TTL_MS = 24 * 60 * 60 * 1000;
 const LIVE_TTL_MS = 5 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Building a day's stars downloads every finished game's feed (~15 x 1 MB).
+// Callers that arrive while that is under way share the one build.
+const inflight = new Map<string, Promise<DailyStarsResponse>>();
+
+function utcDate(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
 
 function batterLine(feed: RawLiveFeed, side: 'away' | 'home', id: number): string {
   const stat = feed.liveData.boxscore.teams[side].players[`ID${id}`]?.stats?.batting;
@@ -71,11 +81,18 @@ function replayPickFrom(finals: RawScheduleGame[]): DailyStarsResponse['replayPi
   };
 }
 
-async function buildDailyStars(date: string, isPastDate: boolean): Promise<DailyStarsResponse> {
+async function buildDailyStars(date: string): Promise<DailyStarsResponse> {
   const schedule = await getSchedule(date);
-  const finals = (schedule.dates[0]?.games ?? []).filter(
-    (g) => g.status.abstractGameState === 'Final'
-  );
+  const games = schedule.dates[0]?.games ?? [];
+  const finals = games.filter((g) => g.status.abstractGameState === 'Final');
+
+  // A date is only settled once its games are over. "Earlier than today in
+  // UTC" is not enough: US night games run past midnight UTC, so a request in
+  // that window used to pin a half-finished slate for 24 hours. Two days on,
+  // anything still not Final (a suspended game) is not going to change it.
+  const now = Date.now();
+  const settled =
+    date < utcDate(now) && (finals.length === games.length || date < utcDate(now - 2 * DAY_MS));
 
   const batters: DailyStarLine[] = [];
   const pitchers: DailyStarLine[] = [];
@@ -131,7 +148,7 @@ async function buildDailyStars(date: string, isPastDate: boolean): Promise<Daily
     pitchers: pitchers.slice(0, TOP_N),
     replayPick: replayPickFrom(finals),
   };
-  cache.set(date, body, isPastDate ? DONE_TTL_MS : LIVE_TTL_MS);
+  cache.set(date, body, settled ? DONE_TTL_MS : LIVE_TTL_MS);
   return body;
 }
 
@@ -142,15 +159,24 @@ router.get('/', async (req, res) => {
     return;
   }
 
+  // Matches the shortest server-side TTL, so a browser never holds a slate
+  // longer than this server would.
   const cached = cache.get(date);
   if (cached) {
+    setShortCache(res, 300);
     res.json(cached);
     return;
   }
 
   try {
-    const todayUtc = new Date().toISOString().slice(0, 10);
-    res.json(await buildDailyStars(date, date < todayUtc));
+    let pending = inflight.get(date);
+    if (!pending) {
+      pending = buildDailyStars(date).finally(() => inflight.delete(date));
+      inflight.set(date, pending);
+    }
+    const body = await pending;
+    setShortCache(res, 300);
+    res.json(body);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
   }

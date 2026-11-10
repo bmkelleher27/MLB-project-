@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { AtBatDetailResponse, GameAtBatsResponse } from '@mlb-scorecards/shared';
 import { fetchGameAtBats } from '../api/client';
-import { getSocket } from '../api/socket';
+import { followGame } from '../api/liveGame';
 import { AtBatCard } from '../components/AtBatCard';
 import { FatigueCharts } from '../components/FatigueChart';
 import { PitchMovementPlots } from '../components/PitchMovementPlots';
@@ -29,12 +29,7 @@ export function AtBatPage() {
     if (!gamePk) return;
     const gamePkNum = Number(gamePk);
     let cancelled = false;
-    let subscribed = false;
-    const socket = getSocket();
-
-    const handleAtBats = (payload: GameAtBatsResponse) => {
-      if (payload.gamePk === gamePkNum) setData(payload);
-    };
+    let stopFollowing: (() => void) | null = null;
 
     setLoading(true);
     setError(null);
@@ -45,9 +40,11 @@ export function AtBatPage() {
         // Anything not yet Final can still change (Preview games go Live);
         // follow the game over the socket so new pitches appear as they happen.
         if (d.status.abstractGameState !== 'Final') {
-          subscribed = true;
-          socket.on('atbats', handleAtBats);
-          socket.emit('subscribe:atbats', gamePkNum);
+          stopFollowing = followGame('subscribe:atbats', gamePkNum, {
+            atbats: (payload: GameAtBatsResponse) => {
+              if (payload.gamePk === gamePkNum) setData(payload);
+            },
+          });
         }
       })
       .catch((err) => {
@@ -59,10 +56,7 @@ export function AtBatPage() {
 
     return () => {
       cancelled = true;
-      if (subscribed) {
-        socket.emit('unsubscribe');
-        socket.off('atbats', handleAtBats);
-      }
+      stopFollowing?.();
     };
   }, [gamePk]);
 
