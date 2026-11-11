@@ -159,6 +159,14 @@ export interface Scorecard {
   updatedAt: string;
 }
 
+/** Where a game can be watched, as far as MLB's broadcast listing says. */
+export interface GameWatch {
+  /** Streaming services carrying the game, e.g. 'MLB.TV (out of market)'. */
+  streams: string[];
+  /** National TV channels with no stream listed. */
+  tv: string[];
+}
+
 export interface ScheduleGame {
   gamePk: number;
   gameDate: string;
@@ -174,6 +182,11 @@ export interface ScheduleGame {
    * can be grouped by league.
    */
   league?: string | null;
+  /**
+   * Where to watch. Null when MLB lists no video feed for the game (it holds
+   * no rights to some winter leagues), which means unknown rather than none.
+   */
+  watch?: GameWatch | null;
   linescore: Array<{ num: number; away: number | null; home: number | null }> | null;
   /** Team hit totals (for no-hitter detection); null pre-game. */
   hits: { away: number; home: number } | null;

@@ -18,6 +18,18 @@ function statusLabel(game: ScheduleGame): string {
 
 const NEUTRAL_HEX = '#64748b';
 
+/**
+ * The "where to watch" line for a game that hasn't finished. Nothing is shown
+ * when the API predates the field; a game MLB lists no feed for says so.
+ */
+function watchLabel(game: ScheduleGame): { text: string; on: boolean } | null {
+  if (game.watch === undefined) return null;
+  const watch = game.watch;
+  if (watch && watch.streams.length > 0) return { text: `Stream: ${watch.streams.join(', ')}`, on: true };
+  if (watch && watch.tv.length > 0) return { text: `TV only: ${watch.tv.join(', ')}`, on: false };
+  return { text: 'No stream listed', on: false };
+}
+
 /** "Yandy Díaz" → "Y. Díaz" so the matchup line fits a card. */
 function shortName(full: string): string {
   const parts = full.split(' ');
@@ -45,6 +57,8 @@ export function GameCard({ game, favoriteTeamIds = [], onToggleFavorite, spoiler
   // as edge bars plus a faint wash, and lightens them in dark mode — a strong
   // inline wash sat under the muted status and venue text and cost contrast.
   const cardStyle = { '--team-away': awayHex, '--team-home': homeHex } as CSSProperties;
+
+  const watchNote = isFinal ? null : watchLabel(game);
 
   const badges = gameBadges(game).filter((b) => !(masked && b.spoils));
 
@@ -125,6 +139,12 @@ export function GameCard({ game, favoriteTeamIds = [], onToggleFavorite, spoiler
         </button>
       )}
       {game.venue && !masked && <div className="game-card-venue">{game.venue}</div>}
+      {watchNote && (
+        <div className={`game-card-watch${watchNote.on ? ' game-card-watch-on' : ''}`}>
+          {watchNote.on && <Icon name="play" size={11} />}
+          {watchNote.text}
+        </div>
+      )}
       {showScore && game.linescore && game.linescore.length > 0 && (
         <div className="game-card-linescore">
           <div className="game-card-linescore-row">

@@ -28,6 +28,10 @@ movement, an estimated Stuff index, usage by count, and spray charts.
 - a 13-zone hot/cold heat map on MLB's Gameday grid
 - month-by-month trends and platoon splits
 
+**Where to watch** — upcoming and live games show the streaming service MLB
+lists for them (MLB.TV, MiLB.TV, a national network, the free MLB.com stream),
+or say that none is listed.
+
 **Levels** — MLB, Triple-A, Double-A, High-A, Single-A, Rookie ball and the
 winter leagues (Arizona Fall, Dominican, Mexican Pacific, Puerto Rican,
 Venezuelan, Australian, Caribbean Series), whose schedule is grouped by league. The

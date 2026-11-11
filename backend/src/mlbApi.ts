@@ -1,4 +1,5 @@
 import { TtlCache } from './cache.js';
+import type { RawBroadcast } from './broadcasts.js';
 
 const BASE_URL = 'https://statsapi.mlb.com';
 
@@ -113,6 +114,8 @@ export interface RawScheduleGame {
     home: { team: RawScheduleTeam; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
   };
   venue?: { name: string };
+  /** Present with `hydrate=broadcasts(all)`. */
+  broadcasts?: RawBroadcast[];
   linescore?: {
     currentInning?: number;
     inningState?: string;
@@ -147,7 +150,7 @@ export function getScheduleGame(gamePk: number): Promise<RawSchedule> {
 
 export function getSchedule(date: string, sportId = 1): Promise<RawSchedule> {
   return getJson<RawSchedule>(
-    `/api/v1/schedule?sportId=${sportId}&date=${date}&hydrate=linescore,team,probablePitcher`,
+    `/api/v1/schedule?sportId=${sportId}&date=${date}&hydrate=linescore,team,probablePitcher,broadcasts(all)`,
     15_000
   );
 }

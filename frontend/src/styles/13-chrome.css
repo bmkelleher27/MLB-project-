@@ -390,3 +390,18 @@
     display: none !important;
   }
 }
+
+/* "Where to watch" line on schedule cards. */
+.game-card-watch {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.game-card-watch-on {
+  font-weight: 600;
+  color: var(--text);
+}

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { ScheduleGame, ScheduleResponse } from '@mlb-scorecards/shared';
+import { watchInfo } from '../broadcasts.js';
 import { setShortCache } from '../http.js';
 import { getLevel } from '@mlb-scorecards/shared';
 import { leagueLabel, parseLevel } from '../levels.js';
@@ -44,6 +45,7 @@ router.get('/', async (req, res) => {
         probablePitcher: g.teams.home.probablePitcher?.fullName ?? null,
       },
       venue: g.venue?.name ?? null,
+      watch: watchInfo(g.broadcasts, level),
       league: multiLeague ? leagueLabel(g.teams.home.team.league) : null,
       linescore: g.linescore?.innings?.map((inn) => ({
         num: inn.num,
