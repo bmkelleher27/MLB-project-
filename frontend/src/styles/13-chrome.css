@@ -405,3 +405,29 @@
   font-weight: 600;
   color: var(--text);
 }
+
+/*
+ * Schedule level selector: one centred row of equal-width chips. As a wrapping
+ * inline row it broke onto a second, left-aligned line on phones once the
+ * chips no longer fit beside the "Level" label.
+ */
+.landing-toolbar .level-picker {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 4px;
+  width: 100%;
+  max-width: 460px;
+}
+
+/* The group keeps its aria-label; the visible word only cost a chip's width. */
+.landing-toolbar .level-picker-label {
+  display: none;
+}
+
+.landing-toolbar .level-chip {
+  padding-left: 0;
+  padding-right: 0;
+  text-align: center;
+  white-space: nowrap;
+}
