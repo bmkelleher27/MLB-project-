@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import type { ScheduleGame, ScheduleResponse } from '@mlb-scorecards/shared';
 import { setShortCache } from '../http.js';
-import { parseLevel } from '../levels.js';
+import { getLevel } from '@mlb-scorecards/shared';
+import { leagueLabel, parseLevel } from '../levels.js';
 import { getSchedule } from '../mlbApi.js';
 
 const router = Router();
@@ -21,6 +22,7 @@ router.get('/', async (req, res) => {
   try {
     const raw = await getSchedule(date, level);
     const rawGames = raw.dates[0]?.games ?? [];
+    const multiLeague = Boolean(getLevel(level)?.multiLeague);
     const games: ScheduleGame[] = rawGames.map((g) => ({
       gamePk: g.gamePk,
       gameDate: g.gameDate,
@@ -42,6 +44,7 @@ router.get('/', async (req, res) => {
         probablePitcher: g.teams.home.probablePitcher?.fullName ?? null,
       },
       venue: g.venue?.name ?? null,
+      league: multiLeague ? leagueLabel(g.teams.home.team.league) : null,
       linescore: g.linescore?.innings?.map((inn) => ({
         num: inn.num,
         away: inn.away?.runs ?? null,

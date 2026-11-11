@@ -168,6 +168,12 @@ export interface ScheduleGame {
   away: { id: number; name: string; abbreviation: string; score: number | null; probablePitcher: string | null };
   home: { id: number; name: string; abbreviation: string; score: number | null; probablePitcher: string | null };
   venue: string | null;
+  /**
+   * The league the game belongs to, set only at levels that bundle several
+   * unrelated leagues under one sportId (the winter leagues), so the schedule
+   * can be grouped by league.
+   */
+  league?: string | null;
   linescore: Array<{ num: number; away: number | null; home: number | null }> | null;
   /** Team hit totals (for no-hitter detection); null pre-game. */
   hits: { away: number; home: number } | null;
@@ -564,10 +570,10 @@ export interface PlayerProfileResponse {
   pitching: PlayerProfileSide | null;
 }
 
-// ── Levels (MLB and its minor-league affiliates) ────────────────────────
+// ── Levels (MLB, its minor-league affiliates and the winter leagues) ────
 
 /** MLB's `sportId` values for the levels this app covers. */
-export type LevelId = 1 | 11 | 12 | 13 | 14 | 16;
+export type LevelId = 1 | 11 | 12 | 13 | 14 | 16 | 17;
 
 export interface Level {
   id: LevelId;
@@ -582,9 +588,17 @@ export interface Level {
    * hidden rather than shown empty.
    */
   pitchTracking: 'full' | 'partial' | 'none';
+  /**
+   * True when the sportId covers several separate leagues rather than one
+   * rung of the affiliated ladder, so its schedule is grouped by league.
+   */
+  multiLeague?: boolean;
 }
 
-/** Display order runs from the majors down. */
+/** MLB's sportId for the offseason leagues (Arizona Fall, Caribbean, Australian). */
+export const WINTER_LEVEL_ID = 17;
+
+/** Display order runs from the majors down, with the winter leagues last. */
 export const LEVELS: Level[] = [
   { id: 1, abbreviation: 'MLB', name: 'Major League Baseball', pitchTracking: 'full' },
   { id: 11, abbreviation: 'AAA', name: 'Triple-A', pitchTracking: 'full' },
@@ -592,6 +606,9 @@ export const LEVELS: Level[] = [
   { id: 13, abbreviation: 'A+', name: 'High-A', pitchTracking: 'partial' },
   { id: 14, abbreviation: 'A', name: 'Single-A', pitchTracking: 'partial' },
   { id: 16, abbreviation: 'ROK', name: 'Rookie', pitchTracking: 'none' },
+  // Arizona Fall League parks have tracking; the Caribbean and Australian
+  // leagues' feeds carry pitch locations but no velocity or movement.
+  { id: 17, abbreviation: 'WIN', name: 'Winter League', pitchTracking: 'partial', multiLeague: true },
 ];
 
 export const DEFAULT_LEVEL_ID: LevelId = 1;

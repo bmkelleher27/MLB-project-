@@ -89,6 +89,15 @@ export interface RawSchedule {
   }>;
 }
 
+export interface RawScheduleTeam {
+  id: number;
+  name: string;
+  abbreviation?: string;
+  teamName?: string;
+  /** Present with `hydrate=team`. */
+  league?: { id?: number; name?: string };
+}
+
 export interface RawScheduleGame {
   gamePk: number;
   gameDate: string;
@@ -100,8 +109,8 @@ export interface RawScheduleGame {
   gameNumber?: number;
   status: { abstractGameState: string; detailedState: string };
   teams: {
-    away: { team: { id: number; name: string; abbreviation?: string; teamName?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
-    home: { team: { id: number; name: string; abbreviation?: string; teamName?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
+    away: { team: RawScheduleTeam; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
+    home: { team: RawScheduleTeam; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
   };
   venue?: { name: string };
   linescore?: {
