@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_LEVEL_ID, LEVELS, getLevel, isLevelId } from '@mlb-scorecards/shared';
-import { parseLevel } from '../src/levels.js';
+import { isWinterLeague, leagueLabel, parseLevel } from '../src/levels.js';
 
 describe('parseLevel', () => {
   it('defaults to the majors when absent or empty', () => {
@@ -30,9 +30,17 @@ describe('parseLevel', () => {
 });
 
 describe('level metadata', () => {
-  it('runs from the majors down', () => {
+  it('runs from the majors down, with the winter leagues last', () => {
     expect(LEVELS[0].abbreviation).toBe('MLB');
-    expect(LEVELS.at(-1)?.abbreviation).toBe('ROK');
+    expect(LEVELS.at(-2)?.abbreviation).toBe('ROK');
+    expect(LEVELS.at(-1)?.abbreviation).toBe('WIN');
+  });
+
+  it('treats the winter level as several leagues with patchy tracking', () => {
+    expect(isLevelId(17)).toBe(true);
+    expect(getLevel(17)?.multiLeague).toBe(true);
+    expect(getLevel(17)?.pitchTracking).toBe('partial');
+    expect(getLevel(11)?.multiLeague).toBeFalsy();
   });
 
   it('marks pitch tracking only where it actually exists', () => {
@@ -50,5 +58,19 @@ describe('level metadata', () => {
 
   it('returns undefined for an unknown level', () => {
     expect(getLevel(999)).toBeUndefined();
+  });
+});
+
+describe('winter leagues', () => {
+  it('names the leagues readers know, falling back to the API name', () => {
+    expect(leagueLabel({ id: 131, name: 'Liga de Beisbol Dominicano' })).toBe('Dominican League (LIDOM)');
+    expect(leagueLabel({ id: 9999, name: 'Some New League' })).toBe('Some New League');
+    expect(leagueLabel(undefined)).toBeNull();
+  });
+
+  it('recognises winter leagues by id, and nothing else', () => {
+    expect(isWinterLeague(119)).toBe(true); // Arizona Fall League
+    expect(isWinterLeague(103)).toBe(false); // American League
+    expect(isWinterLeague(undefined)).toBe(false);
   });
 });

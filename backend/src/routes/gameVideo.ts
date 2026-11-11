@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import type { GameVideo, GameVideoResponse } from '@mlb-scorecards/shared';
 import { TtlCache } from '../cache.js';
+import { isWinterLeague } from '../levels.js';
 import { getScheduleGame, type RawScheduleGame } from '../mlbApi.js';
 import { channelSearchUrl, HIGHLIGHT_WINDOW, pickVideos, type SearchItem, type VideoGame } from '../video/match.js';
 import { MLB_CHANNEL_ID, officialChannelIds, searchVideos, YouTubeQuotaError, youtubeApiKey } from '../video/youtube.js';
@@ -71,11 +72,14 @@ async function findVideos(game: VideoGame, key: string): Promise<GameVideo[]> {
   }));
 }
 
-async function lookup(gamePk: number): Promise<GameVideoResponse | 'not-final'> {
+async function lookup(gamePk: number): Promise<GameVideoResponse | 'not-final' | 'no-video'> {
   const schedule = await getScheduleGame(gamePk);
   const raw = schedule.dates?.flatMap((d) => d.games).find((g) => g.gamePk === gamePk);
   if (!raw) throw new Error('game not found');
   if (raw.status.abstractGameState !== 'Final') return 'not-final';
+  // MLB's YouTube channels don't post winter-league games, so a search would
+  // only spend quota and the "find it on MLB's channel" link would lead nowhere.
+  if (isWinterLeague(raw.teams.home.team.league?.id)) return 'no-video';
 
   const game = toVideoGame(raw);
   const searchUrl = channelSearchUrl(game);
@@ -114,6 +118,10 @@ export async function handleGameVideo(gamePk: number, res: Response): Promise<vo
     const body = await lookup(gamePk);
     if (body === 'not-final') {
       res.status(409).json({ error: 'game is not final' });
+      return;
+    }
+    if (body === 'no-video') {
+      res.status(404).json({ error: 'no official video for this league' });
       return;
     }
     // Hits are stable; a miss may turn into a hit once MLB uploads, so it is

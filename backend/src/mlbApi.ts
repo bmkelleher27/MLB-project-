@@ -1,4 +1,5 @@
 import { TtlCache } from './cache.js';
+import type { RawBroadcast } from './broadcasts.js';
 
 const BASE_URL = 'https://statsapi.mlb.com';
 
@@ -89,6 +90,15 @@ export interface RawSchedule {
   }>;
 }
 
+export interface RawScheduleTeam {
+  id: number;
+  name: string;
+  abbreviation?: string;
+  teamName?: string;
+  /** Present with `hydrate=team`. */
+  league?: { id?: number; name?: string };
+}
+
 export interface RawScheduleGame {
   gamePk: number;
   gameDate: string;
@@ -100,10 +110,12 @@ export interface RawScheduleGame {
   gameNumber?: number;
   status: { abstractGameState: string; detailedState: string };
   teams: {
-    away: { team: { id: number; name: string; abbreviation?: string; teamName?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
-    home: { team: { id: number; name: string; abbreviation?: string; teamName?: string }; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
+    away: { team: RawScheduleTeam; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
+    home: { team: RawScheduleTeam; score?: number; isWinner?: boolean; probablePitcher?: { id: number; fullName: string } };
   };
   venue?: { name: string };
+  /** Present with `hydrate=broadcasts(all)`. */
+  broadcasts?: RawBroadcast[];
   linescore?: {
     currentInning?: number;
     inningState?: string;
@@ -138,7 +150,7 @@ export function getScheduleGame(gamePk: number): Promise<RawSchedule> {
 
 export function getSchedule(date: string, sportId = 1): Promise<RawSchedule> {
   return getJson<RawSchedule>(
-    `/api/v1/schedule?sportId=${sportId}&date=${date}&hydrate=linescore,team,probablePitcher`,
+    `/api/v1/schedule?sportId=${sportId}&date=${date}&hydrate=linescore,team,probablePitcher,broadcasts(all)`,
     15_000
   );
 }
