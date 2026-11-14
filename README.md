@@ -28,7 +28,16 @@ movement, an estimated Stuff index, usage by count, and spray charts.
 - a 13-zone hot/cold heat map on MLB's Gameday grid
 - month-by-month trends and platoon splits
 
-**Levels** — MLB, Triple-A, Double-A, High-A, Single-A and Rookie ball. The
+**Game video** — finished major-league games show MLB's own condensed game and
+recap, played straight from MLB's servers. No API key is needed.
+
+**Where to watch** — upcoming and live games show the streaming service MLB
+lists for them (MLB.TV, MiLB.TV, a national network, the free MLB.com stream),
+or say that none is listed.
+
+**Levels** — MLB, Triple-A, Double-A, High-A, Single-A, Rookie ball and the
+winter leagues (Arizona Fall, Dominican, Mexican Pacific, Puerto Rican,
+Venezuelan, Australian, Caribbean Series), whose schedule is grouped by league. The
 scorecard, play-by-play and game log work identically at every level; a player
 who moved between levels in a season gets a switcher showing only the levels
 they actually played at.
@@ -41,7 +50,8 @@ and content options.
 Scorecards, box scores, game logs and season trends are complete at every level.
 Pitch-level features — pitch mix, velocity, movement, zone charts, Stuff — depend
 on Hawk-Eye tracking, which is installed throughout MLB and Triple-A but only at
-some parks below that. Where the tracking doesn't exist the app says so rather
+some parks below that. Among the winter leagues only the Arizona Fall League is
+tracked. Where the tracking doesn't exist the app says so rather
 than rendering empty charts; the levels' tracking status is declared in
 `shared/src/types.ts` alongside the level list.
 

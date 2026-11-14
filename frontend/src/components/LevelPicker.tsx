@@ -1,7 +1,8 @@
 import { LEVELS, type LevelId } from '@mlb-scorecards/shared';
 
 /**
- * Level selector: the majors and the affiliated minor leagues below them.
+ * Level selector: the majors, the affiliated minor leagues below them, and
+ * the winter leagues.
  *
  * Only levels the caller says are available are shown as enabled — on a player
  * page that's the levels they actually played at, so the control never offers a

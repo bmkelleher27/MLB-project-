@@ -142,12 +142,27 @@ export function LandingPage() {
       .filter((g) => g.status.abstractGameState !== 'Live' && g.status.abstractGameState !== 'Final')
       .sort((a, b) => a.gameDate.localeCompare(b.gameDate));
     const finals = games.filter((g) => g.status.abstractGameState === 'Final');
+
+    // The winter level is several unrelated leagues, so its games are grouped
+    // by league (live first within each) instead of by status across all.
+    if (levelInfo?.multiLeague && games.some((g) => g.league)) {
+      const ordered = [...favFirst(live, drama), ...favFirst(upcoming), ...favFirst(finals)];
+      const byLeague = new Map<string, ScheduleGame[]>();
+      for (const g of ordered) {
+        const key = g.league ?? 'Other';
+        byLeague.set(key, [...(byLeague.get(key) ?? []), g]);
+      }
+      return [...byLeague.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([title, list]) => ({ title, games: list, always: true }));
+    }
+
     return [
-      { title: 'Live', games: favFirst(live, drama) },
-      { title: 'Upcoming', games: favFirst(upcoming) },
-      { title: 'Final', games: favFirst(finals) },
+      { title: 'Live', games: favFirst(live, drama), always: false },
+      { title: 'Upcoming', games: favFirst(upcoming), always: false },
+      { title: 'Final', games: favFirst(finals), always: false },
     ].filter((s) => s.games.length > 0);
-  }, [games, favorites]);
+  }, [games, favorites, levelInfo]);
 
   return (
     <div className="landing-page">
@@ -203,7 +218,9 @@ export function LandingPage() {
       )}
       {groups.map((section) => (
         <section key={section.title} className="landing-section">
-          {groups.length > 1 && <h2 className="landing-section-title">{section.title}</h2>}
+          {(section.always || groups.length > 1) && (
+            <h2 className="landing-section-title">{section.title}</h2>
+          )}
           <div className="game-grid">
             {section.games.map((game) => (
               <GameCard

@@ -8,7 +8,7 @@ describe('LevelPicker', () => {
   it('offers every level by default, majors first', () => {
     render(<LevelPicker value={1} onChange={() => {}} />);
     const labels = screen.getAllByRole('button').map((b) => b.textContent);
-    expect(labels).toEqual(['MLB', 'AAA', 'AA', 'A+', 'A', 'ROK']);
+    expect(labels).toEqual(['MLB', 'AAA', 'AA', 'A+', 'A', 'ROK', 'WIN']);
   });
 
   it('marks the current level as pressed', () => {

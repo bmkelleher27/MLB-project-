@@ -77,6 +77,9 @@ function noDataReason(profile: PlayerProfileResponse, season: number): string {
   if (level && level.pitchTracking === 'none') {
     return `${profile.name} played at ${level.name} in ${season}, where pitch tracking isn't installed — so there's no pitch data to chart.`;
   }
+  if (level?.multiLeague) {
+    return `No pitch-level data for ${profile.name} in ${season} winter ball. Only the Arizona Fall League parks have pitch tracking.`;
+  }
   if (level && level.id !== 1) {
     return `No pitch-level data for ${profile.name} at ${level.name} in ${season}. Tracking below Triple-A is only installed at some parks.`;
   }
@@ -90,6 +93,9 @@ function trackingNote(profile: PlayerProfileResponse): string | null {
   const side = profile.batting ?? profile.pitching;
   const hasPitchData = Boolean(side && (side.arsenal.length > 0 || side.zones.length > 0));
   if (hasPitchData) return null;
+  if (level.multiLeague) {
+    return `Pitch mix and zone charts aren't shown: outside the Arizona Fall League, winter-league games aren't pitch-tracked. Season trends and splits below come from box scores and are complete.`;
+  }
   return `Pitch mix and zone charts aren't shown: ${level.name} tracking is only installed at some parks, so no pitch data exists for these games. Season trends and splits below come from box scores and are complete.`;
 }
 

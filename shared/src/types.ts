@@ -159,6 +159,14 @@ export interface Scorecard {
   updatedAt: string;
 }
 
+/** Where a game can be watched, as far as MLB's broadcast listing says. */
+export interface GameWatch {
+  /** Streaming services carrying the game, e.g. 'MLB.TV (out of market)'. */
+  streams: string[];
+  /** National TV channels with no stream listed. */
+  tv: string[];
+}
+
 export interface ScheduleGame {
   gamePk: number;
   gameDate: string;
@@ -168,6 +176,17 @@ export interface ScheduleGame {
   away: { id: number; name: string; abbreviation: string; score: number | null; probablePitcher: string | null };
   home: { id: number; name: string; abbreviation: string; score: number | null; probablePitcher: string | null };
   venue: string | null;
+  /**
+   * The league the game belongs to, set only at levels that bundle several
+   * unrelated leagues under one sportId (the winter leagues), so the schedule
+   * can be grouped by league.
+   */
+  league?: string | null;
+  /**
+   * Where to watch. Null when MLB lists no video feed for the game (it holds
+   * no rights to some winter leagues), which means unknown rather than none.
+   */
+  watch?: GameWatch | null;
   linescore: Array<{ num: number; away: number | null; home: number | null }> | null;
   /** Team hit totals (for no-hitter detection); null pre-game. */
   hits: { away: number; home: number } | null;
@@ -564,10 +583,10 @@ export interface PlayerProfileResponse {
   pitching: PlayerProfileSide | null;
 }
 
-// ── Levels (MLB and its minor-league affiliates) ────────────────────────
+// ── Levels (MLB, its minor-league affiliates and the winter leagues) ────
 
 /** MLB's `sportId` values for the levels this app covers. */
-export type LevelId = 1 | 11 | 12 | 13 | 14 | 16;
+export type LevelId = 1 | 11 | 12 | 13 | 14 | 16 | 17;
 
 export interface Level {
   id: LevelId;
@@ -582,9 +601,17 @@ export interface Level {
    * hidden rather than shown empty.
    */
   pitchTracking: 'full' | 'partial' | 'none';
+  /**
+   * True when the sportId covers several separate leagues rather than one
+   * rung of the affiliated ladder, so its schedule is grouped by league.
+   */
+  multiLeague?: boolean;
 }
 
-/** Display order runs from the majors down. */
+/** MLB's sportId for the offseason leagues (Arizona Fall, Caribbean, Australian). */
+export const WINTER_LEVEL_ID = 17;
+
+/** Display order runs from the majors down, with the winter leagues last. */
 export const LEVELS: Level[] = [
   { id: 1, abbreviation: 'MLB', name: 'Major League Baseball', pitchTracking: 'full' },
   { id: 11, abbreviation: 'AAA', name: 'Triple-A', pitchTracking: 'full' },
@@ -592,6 +619,9 @@ export const LEVELS: Level[] = [
   { id: 13, abbreviation: 'A+', name: 'High-A', pitchTracking: 'partial' },
   { id: 14, abbreviation: 'A', name: 'Single-A', pitchTracking: 'partial' },
   { id: 16, abbreviation: 'ROK', name: 'Rookie', pitchTracking: 'none' },
+  // Arizona Fall League parks have tracking; the Caribbean and Australian
+  // leagues' feeds carry pitch locations but no velocity or movement.
+  { id: 17, abbreviation: 'WIN', name: 'Winter League', pitchTracking: 'partial', multiLeague: true },
 ];
 
 export const DEFAULT_LEVEL_ID: LevelId = 1;
@@ -610,25 +640,22 @@ export interface PlayerLevels {
   levels: Array<{ id: LevelId; abbreviation: string; games: number }>;
 }
 
-/** A YouTube video for a finished game, from one of MLB's own channels. */
+/** One of MLB's own post-game videos for a finished game. */
 export interface GameVideo {
-  /** `full`: the complete broadcast. `highlights`: MLB's ~10-minute full-game highlights. */
-  kind: 'full' | 'highlights';
-  videoId: string;
+  /** `condensed`: the whole game cut to about ten minutes. `recap`: a few minutes of highlights. */
+  kind: 'condensed' | 'recap';
   title: string;
-  channelTitle: string;
-  publishedAt: string;
+  durationSeconds: number | null;
+  /** MP4 on MLB's servers, playable directly in a `<video>` element. */
+  url: string;
+  poster: string | null;
+  /** The video's page on MLB.com. */
+  pageUrl: string | null;
+  publishedAt: string | null;
 }
 
 export interface GameVideoResponse {
   gamePk: number;
-  /** Best match first: a full game when one exists, then highlights. Empty when none found. */
+  /** Condensed game first, then the recap. Empty when MLB has neither. */
   videos: GameVideo[];
-  /** MLB's YouTube channel search for this game; always present as a fallback. */
-  searchUrl: string;
-  /**
-   * `youtube` when the server searched YouTube; `disabled` when it has no API
-   * key configured, so only `searchUrl` can be offered.
-   */
-  lookup: 'youtube' | 'disabled';
 }
