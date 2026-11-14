@@ -1,5 +1,6 @@
 import { TtlCache } from './cache.js';
 import type { RawBroadcast } from './broadcasts.js';
+import type { RawGameContent } from './video/mlbContent.js';
 
 const BASE_URL = 'https://statsapi.mlb.com';
 
@@ -421,6 +422,14 @@ export interface RawLinescore {
     home: { runs: number; hits: number; errors: number };
     away: { runs: number; hits: number; errors: number };
   };
+}
+
+/**
+ * A game's editorial and video content. Several hundred KB, so like the live
+ * feed it is never held here; the video route caches the few fields it keeps.
+ */
+export function getGameContent(gamePk: number): Promise<RawGameContent> {
+  return getJson<RawGameContent>(`/api/v1/game/${gamePk}/content`, 0);
 }
 
 export function getLiveFeed(gamePk: number): Promise<RawLiveFeed> {

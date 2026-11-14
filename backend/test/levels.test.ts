@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_LEVEL_ID, LEVELS, getLevel, isLevelId } from '@mlb-scorecards/shared';
-import { isWinterLeague, leagueLabel, parseLevel } from '../src/levels.js';
+import { leagueLabel, parseLevel } from '../src/levels.js';
 
 describe('parseLevel', () => {
   it('defaults to the majors when absent or empty', () => {
@@ -66,11 +66,5 @@ describe('winter leagues', () => {
     expect(leagueLabel({ id: 131, name: 'Liga de Beisbol Dominicano' })).toBe('Dominican League (LIDOM)');
     expect(leagueLabel({ id: 9999, name: 'Some New League' })).toBe('Some New League');
     expect(leagueLabel(undefined)).toBeNull();
-  });
-
-  it('recognises winter leagues by id, and nothing else', () => {
-    expect(isWinterLeague(119)).toBe(true); // Arizona Fall League
-    expect(isWinterLeague(103)).toBe(false); // American League
-    expect(isWinterLeague(undefined)).toBe(false);
   });
 });

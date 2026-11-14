@@ -1,90 +1,27 @@
 import type { Response } from 'express';
-import type { GameVideo, GameVideoResponse } from '@mlb-scorecards/shared';
+import type { GameVideoResponse } from '@mlb-scorecards/shared';
 import { TtlCache } from '../cache.js';
-import { isWinterLeague } from '../levels.js';
-import { getScheduleGame, type RawScheduleGame } from '../mlbApi.js';
-import { channelSearchUrl, HIGHLIGHT_WINDOW, pickVideos, type SearchItem, type VideoGame } from '../video/match.js';
-import { MLB_CHANNEL_ID, officialChannelIds, searchVideos, YouTubeQuotaError, youtubeApiKey } from '../video/youtube.js';
+import { getGameContent, getScheduleGame } from '../mlbApi.js';
+import { pickGameVideos } from '../video/mlbContent.js';
 
-const HOUR = 3_600_000;
-const DAY = 24 * HOUR;
+const MINUTE = 60_000;
+const DAY = 24 * 60 * MINUTE;
 
 /**
- * Lookups by gamePk. A found video is stable, so hits are kept for a month. A
- * miss on a recent game is retried after a few hours, because MLB's highlights
- * can still be on their way; a miss on an old game is unlikely to change.
+ * Lookups by gamePk, holding only the reduced result (the raw content payload
+ * is several hundred KB). Found videos are stable, so hits are kept for a
+ * month. A miss on a recent game is retried soon, because MLB posts the recap
+ * and condensed game within an hour or so of the final out; a miss on an old
+ * game is unlikely to change.
  */
 const lookupCache = new TtlCache<GameVideoResponse>(2_000);
 const inflight = new Map<number, Promise<GameVideoResponse>>();
 
-function toVideoGame(g: RawScheduleGame): VideoGame {
-  return {
-    gameDate: g.gameDate,
-    officialDate: g.officialDate ?? g.gameDate.slice(0, 10),
-    gameType: g.gameType ?? 'R',
-    doubleHeader: g.doubleHeader ?? 'N',
-    gameNumber: g.gameNumber ?? 1,
-    away: { name: g.teams.away.team.name, teamName: g.teams.away.team.teamName },
-    home: { name: g.teams.home.team.name, teamName: g.teams.home.team.teamName },
-  };
-}
-
-function clubLabel(t: VideoGame['away']): string {
-  return t.teamName ?? t.name;
-}
-
-async function findVideos(game: VideoGame, key: string): Promise<GameVideo[]> {
-  const channels = await officialChannelIds(key);
-  const official = new Set(channels);
-  const start = Date.parse(game.gameDate);
-  const matchup = `${clubLabel(game.away)} ${clubLabel(game.home)}`;
-
-  // Two searches, run together:
-  //  1. MLB's channel in the days after the game: its "Official Full Game
-  //     Highlights" (and the rare same-week full broadcast).
-  //  2. Full games on any official channel, at any date — MLB Vault posts
-  //     classic games years later. Searched without a channel filter so one
-  //     call covers every official channel; the results are filtered to those
-  //     channels below, so a third-party upload can never get through.
-  const [recent, full] = await Promise.all([
-    searchVideos(
-      {
-        query: matchup,
-        channelId: MLB_CHANNEL_ID,
-        publishedAfter: new Date(start - HIGHLIGHT_WINDOW.beforeMs).toISOString(),
-        publishedBefore: new Date(start + HIGHLIGHT_WINDOW.afterMs).toISOString(),
-      },
-      key
-    ),
-    searchVideos(
-      { query: `${matchup} full game ${game.officialDate.slice(0, 4)}`, maxResults: 50 },
-      key
-    ),
-  ]);
-
-  const items: SearchItem[] = [...recent, ...full].filter((item) => official.has(item.channelId));
-  return pickVideos(items, game).map(({ kind, videoId, title, channelTitle, publishedAt }) => ({
-    kind,
-    videoId,
-    title,
-    channelTitle,
-    publishedAt,
-  }));
-}
-
-async function lookup(gamePk: number): Promise<GameVideoResponse | 'not-final' | 'no-video'> {
+async function lookup(gamePk: number): Promise<GameVideoResponse | 'not-final'> {
   const schedule = await getScheduleGame(gamePk);
   const raw = schedule.dates?.flatMap((d) => d.games).find((g) => g.gamePk === gamePk);
   if (!raw) throw new Error('game not found');
   if (raw.status.abstractGameState !== 'Final') return 'not-final';
-  // MLB's YouTube channels don't post winter-league games, so a search would
-  // only spend quota and the "find it on MLB's channel" link would lead nowhere.
-  if (isWinterLeague(raw.teams.home.team.league?.id)) return 'no-video';
-
-  const game = toVideoGame(raw);
-  const searchUrl = channelSearchUrl(game);
-  const key = youtubeApiKey();
-  if (!key) return { gamePk, videos: [], searchUrl, lookup: 'disabled' };
 
   const cached = lookupCache.get(String(gamePk));
   if (cached) return cached;
@@ -92,19 +29,18 @@ async function lookup(gamePk: number): Promise<GameVideoResponse | 'not-final' |
   let pending = inflight.get(gamePk);
   if (!pending) {
     pending = (async () => {
-      let videos: GameVideo[] = [];
+      let body: GameVideoResponse = { gamePk, videos: [] };
       let ttl: number;
       try {
-        videos = await findVideos(game, key);
-        const recent = Date.now() - Date.parse(game.gameDate) < 7 * DAY;
-        ttl = videos.length > 0 ? 30 * DAY : recent ? 3 * HOUR : 7 * DAY;
+        body = { gamePk, videos: pickGameVideos(await getGameContent(gamePk)) };
+        const recent = Date.now() - Date.parse(raw.gameDate) < 2 * DAY;
+        ttl = body.videos.length === 2 ? 30 * DAY : recent ? 20 * MINUTE : 7 * DAY;
       } catch (err) {
-        // A failed or over-quota search still answers with the search link,
+        // The scorecard works without video, so a failed lookup answers empty
         // and is retried after a short pause rather than on every page view.
-        console.warn(`[youtube] lookup for ${gamePk} failed:`, (err as Error).message);
-        ttl = err instanceof YouTubeQuotaError ? 2 * HOUR : 10 * 60_000;
+        console.warn(`[video] lookup for ${gamePk} failed:`, (err as Error).message);
+        ttl = 10 * MINUTE;
       }
-      const body: GameVideoResponse = { gamePk, videos, searchUrl, lookup: 'youtube' };
       lookupCache.set(String(gamePk), body, ttl);
       return body;
     })().finally(() => inflight.delete(gamePk));
@@ -120,13 +56,8 @@ export async function handleGameVideo(gamePk: number, res: Response): Promise<vo
       res.status(409).json({ error: 'game is not final' });
       return;
     }
-    if (body === 'no-video') {
-      res.status(404).json({ error: 'no official video for this league' });
-      return;
-    }
-    // Hits are stable; a miss may turn into a hit once MLB uploads, so it is
-    // reused only briefly.
-    res.set('Cache-Control', `public, max-age=${body.videos.length > 0 ? 86_400 : 900}`);
+    // A full set is stable; anything less may still fill in once MLB uploads.
+    res.set('Cache-Control', `public, max-age=${body.videos.length === 2 ? 86_400 : 900}`);
     res.json(body);
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });

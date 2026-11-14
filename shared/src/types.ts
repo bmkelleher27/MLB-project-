@@ -640,25 +640,22 @@ export interface PlayerLevels {
   levels: Array<{ id: LevelId; abbreviation: string; games: number }>;
 }
 
-/** A YouTube video for a finished game, from one of MLB's own channels. */
+/** One of MLB's own post-game videos for a finished game. */
 export interface GameVideo {
-  /** `full`: the complete broadcast. `highlights`: MLB's ~10-minute full-game highlights. */
-  kind: 'full' | 'highlights';
-  videoId: string;
+  /** `condensed`: the whole game cut to about ten minutes. `recap`: a few minutes of highlights. */
+  kind: 'condensed' | 'recap';
   title: string;
-  channelTitle: string;
-  publishedAt: string;
+  durationSeconds: number | null;
+  /** MP4 on MLB's servers, playable directly in a `<video>` element. */
+  url: string;
+  poster: string | null;
+  /** The video's page on MLB.com. */
+  pageUrl: string | null;
+  publishedAt: string | null;
 }
 
 export interface GameVideoResponse {
   gamePk: number;
-  /** Best match first: a full game when one exists, then highlights. Empty when none found. */
+  /** Condensed game first, then the recap. Empty when MLB has neither. */
   videos: GameVideo[];
-  /** MLB's YouTube channel search for this game; always present as a fallback. */
-  searchUrl: string;
-  /**
-   * `youtube` when the server searched YouTube; `disabled` when it has no API
-   * key configured, so only `searchUrl` can be offered.
-   */
-  lookup: 'youtube' | 'disabled';
 }
