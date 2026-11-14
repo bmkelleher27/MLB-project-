@@ -28,6 +28,9 @@ movement, an estimated Stuff index, usage by count, and spray charts.
 - a 13-zone hot/cold heat map on MLB's Gameday grid
 - month-by-month trends and platoon splits
 
+**Game video** — finished major-league games show MLB's own condensed game and
+recap, played straight from MLB's servers. No API key is needed.
+
 **Where to watch** — upcoming and live games show the streaming service MLB
 lists for them (MLB.TV, MiLB.TV, a national network, the free MLB.com stream),
 or say that none is listed.

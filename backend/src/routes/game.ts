@@ -56,8 +56,8 @@ router.get('/:gamePk/preview', async (req, res) => {
   }
 });
 
-// Official YouTube video for a finished game: full broadcast if MLB has posted
-// one, otherwise MLB's full-game highlights. 409 for games not yet Final.
+// MLB's own post-game video for a finished game: the condensed game and the
+// recap. 409 for games not yet Final.
 router.get('/:gamePk/video', async (req, res) => {
   const gamePk = parseGamePk(req.params.gamePk, res);
   if (gamePk === null) return;

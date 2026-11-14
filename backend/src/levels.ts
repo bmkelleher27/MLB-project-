@@ -25,10 +25,6 @@ const WINTER_LEAGUES: Record<number, string> = {
   595: 'Australian Baseball League',
 };
 
-export function isWinterLeague(leagueId: number | undefined): boolean {
-  return leagueId != null && leagueId in WINTER_LEAGUES;
-}
-
 /** Display name for a league on the schedule; falls back to the API's name. */
 export function leagueLabel(league: { id?: number; name?: string } | undefined): string | null {
   if (!league) return null;
